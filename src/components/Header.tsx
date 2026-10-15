@@ -3,8 +3,8 @@ import { Menu, X, Mail } from 'lucide-react';
 import { RussellLogo } from './RussellLogo';
 
 interface HeaderProps {
-  activeTab: 'home' | 'about' | 'work';
-  onSelectTab: (tab: 'home' | 'about' | 'work') => void;
+  activeTab: 'home' | 'about' | 'work' | 'cms';
+  onSelectTab: (tab: 'home' | 'about' | 'work' | 'cms') => void;
   onOpenHire: () => void;
 }
 
@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
 
-      {/* Center: Desktop Navigation Menus (Home, About, Work) */}
+      {/* Center: Desktop Navigation Menus (Home, About, Work, CMS Studio) */}
       <nav
         id="desktop-nav-center"
         className="hidden md:flex items-center gap-1.5 p-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#BCD5E6] shadow-xs"
