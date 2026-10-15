@@ -34,7 +34,6 @@ export const AboutPortrait: React.FC<AboutPortraitProps> = ({
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        // Compress and downscale on off-screen canvas to guarantee small size (<150KB)
         const canvas = document.createElement('canvas');
         const MAX_SIZE = 800;
         let width = img.width;
@@ -117,20 +116,15 @@ export const AboutPortrait: React.FC<AboutPortraitProps> = ({
         className="hidden"
       />
 
-      {/* Layer 1: Ambient Sage Organic Glow Backdrop */}
+      {/* Layer 1: Ambient Translucent Cyan & Steel Blue Glow (No random morphing shapes) */}
       <div
-        className="absolute inset-[-10px] sm:inset-[-16px] organic-blob-shape-about-glow bg-[#C9DAB0]/70 -z-10 blur-[8px] sm:blur-[12px] transition-transform duration-700 group-hover:scale-105"
+        className="absolute inset-[-10px] sm:inset-[-14px] rounded-3xl sm:rounded-[36px] bg-gradient-to-tr from-[#38BDF8]/25 via-[#0EA5E9]/20 to-[#1E3A5F]/20 -z-10 blur-xl transition-transform duration-700 group-hover:scale-105"
       />
 
-      {/* Layer 2: Secondary Organic Subtle Border Halo */}
+      {/* Layer 2: Clean, refined rounded frame with pure white background */}
       <div
-        className="absolute inset-[-4px] sm:inset-[-6px] organic-blob-shape-about bg-[#2F5D3A]/20 -z-10 transition-transform duration-500 group-hover:scale-102"
-      />
-
-      {/* Layer 3: Organic Curved 500px Container with pure white background */}
-      <div
-        className={`relative w-full h-full organic-blob-shape-about flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:scale-102 shadow-2xl border-4 sm:border-6 border-white bg-white ${
-          isDragging ? 'ring-4 ring-[#2F5D3A] ring-offset-2' : ''
+        className={`relative w-full h-full rounded-3xl sm:rounded-[32px] flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:scale-102 shadow-2xl border-4 sm:border-6 border-white bg-white ring-1 ring-[#38BDF8]/30 ${
+          isDragging ? 'ring-4 ring-[#0EA5E9] ring-offset-2' : ''
         }`}
         style={{ backgroundColor: '#FFFFFF' }}
       >
@@ -146,11 +140,11 @@ export const AboutPortrait: React.FC<AboutPortraitProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-5 right-5 p-3 rounded-full bg-[#2F5D3A]/90 hover:bg-[#2F5D3A] text-white shadow-xl opacity-90 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-95 group-hover:scale-100 backdrop-blur-xs cursor-pointer z-30 flex items-center gap-1.5"
-            title="Upload photo of Russell (e.g. with gimbal)"
+            className="absolute bottom-5 right-5 p-3 rounded-full bg-[#1E3A5F]/90 hover:bg-[#1E3A5F] text-white shadow-xl opacity-90 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-95 group-hover:scale-100 backdrop-blur-xs cursor-pointer z-30 flex items-center gap-1.5"
+            title="Upload photo of Russell"
             aria-label="Upload photo of Russell"
           >
-            <Camera className="w-5 h-5 text-[#C9DAB0]" />
+            <Camera className="w-5 h-5 text-[#7DD3FC]" />
             <span className="text-xs font-semibold pr-1 hidden sm:inline">Upload Photo</span>
           </button>
         )}

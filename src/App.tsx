@@ -14,18 +14,18 @@ export default function App() {
   return (
     <div
       id="app-root"
-      className="app relative min-h-screen lg:h-screen lg:max-h-screen w-full flex flex-col justify-between overflow-x-hidden lg:overflow-hidden text-[#2F5D3A] font-inter selection:bg-[#C9DAB0] selection:text-[#2F5D3A]"
+      className="app relative min-h-screen lg:h-screen lg:max-h-screen w-full flex flex-col justify-between overflow-x-hidden lg:overflow-hidden text-[#1E3A5F] font-inter selection:bg-[#38BDF8]/30 selection:text-[#1E3A5F]"
       style={{
         background: `
-          radial-gradient(ellipse at 85% 45%, rgba(201, 218, 176, 0.4) 0%, rgba(212, 226, 176, 0.15) 40%, transparent 70%),
-          radial-gradient(circle at 10% 20%, rgba(47, 93, 58, 0.04) 0%, transparent 50%),
-          radial-gradient(circle at 50% 90%, rgba(201, 218, 176, 0.25) 0%, transparent 60%),
-          #F2F2EE
+          radial-gradient(ellipse at 85% 42%, rgba(56, 189, 248, 0.16) 0%, rgba(14, 165, 233, 0.08) 35%, transparent 70%),
+          radial-gradient(circle at 12% 18%, rgba(30, 58, 95, 0.07) 0%, transparent 50%),
+          radial-gradient(circle at 50% 92%, rgba(70, 130, 180, 0.12) 0%, transparent 60%),
+          #F4F8FB
         `,
-        backgroundColor: '#F2F2EE',
+        backgroundColor: '#F4F8FB',
       }}
     >
-      {/* Top Header */}
+      {/* Top Header with R Monogram Logo (Zero random shape borders) */}
       <Header
         activeTab={activeTab}
         onSelectTab={(tab) => {

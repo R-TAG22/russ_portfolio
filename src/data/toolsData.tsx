@@ -28,7 +28,7 @@ export const ALL_TOOL_LOGOS: ToolLogoItem[] = [
           />
           <path d="M60.8 19.8v59.5l23.5-6.4 10.9-54.3-34.4 1.2z" fill="#5E8E3E" />
         </svg>
-        <span className="font-urbanist font-black text-[13px] text-[#2F5D3A] tracking-tight">
+        <span className="font-urbanist font-black text-[13px] text-[#1E3A5F] tracking-tight">
           shopify
         </span>
       </div>

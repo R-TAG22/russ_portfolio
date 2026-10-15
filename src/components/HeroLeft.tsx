@@ -47,9 +47,9 @@ export const HeroLeft: React.FC<HeroLeftProps> = ({ onOpenHire }) => {
       {/* Remote Availability Status Badge */}
       <div
         id="hero-availability-badge"
-        className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border-2 border-[#C9DAB0] shadow-xs text-[11px] sm:text-[12px] font-bold text-[#2F5D3A] mb-2 sm:mb-3 select-none"
+        className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-[#BCD5E6] shadow-xs text-[11px] sm:text-[12px] font-bold text-[#1E3A5F] mb-2 sm:mb-3 select-none backdrop-blur-xs"
       >
-        <span className="w-2 h-2 rounded-full bg-[#2F5D3A] animate-pulse" />
+        <span className="w-2 h-2 rounded-full bg-[#0EA5E9] shadow-[0_0_8px_#38BDF8] animate-pulse" />
         <span>Available for Remote Work</span>
       </div>
 
@@ -58,12 +58,12 @@ export const HeroLeft: React.FC<HeroLeftProps> = ({ onOpenHire }) => {
         id="hero-main-heading"
         className="font-urbanist font-extrabold text-[32px] sm:text-[42px] md:text-[48px] lg:text-[52px] xl:text-[56px] leading-[1.08] tracking-[-1.5px] min-h-[70px] sm:min-h-[90px] lg:min-h-[105px]"
       >
-        <span className="text-[#2F5D3A]">{typedMainText}</span>
-        <span className="text-[#3A6B4A]">{typedHighlightText}</span>
-        {/* Blinking cursor */}
+        <span className="text-[#1E3A5F]">{typedMainText}</span>
+        <span className="text-[#2D5D86]">{typedHighlightText}</span>
+        {/* Blinking cursor in translucent electric cyan */}
         <span
           id="typing-cursor"
-          className={`inline-block w-[3.5px] h-[0.85em] ml-1 bg-[#2F5D3A] align-middle ${
+          className={`inline-block w-[3.5px] h-[0.85em] ml-1 bg-[#0EA5E9] align-middle ${
             isTyping ? 'animate-blink' : 'opacity-80 animate-blink'
           }`}
           aria-hidden="true"
@@ -73,12 +73,12 @@ export const HeroLeft: React.FC<HeroLeftProps> = ({ onOpenHire }) => {
       {/* Intro Description */}
       <p
         id="hero-intro-text"
-        className="mt-2 sm:mt-3 text-xs sm:text-sm md:text-base text-[#2F5D3A]/90 font-medium leading-relaxed max-w-xl"
+        className="mt-2 sm:mt-3 text-xs sm:text-sm md:text-base text-[#1E3A5F]/85 font-medium leading-relaxed max-w-xl"
       >
         {PERSONAL_INFO.intro}
       </p>
 
-      {/* Action CTA Button: Hire Me */}
+      {/* Action CTA Button: Hire Me with Conic Steel Blue & Ice Cyan Border */}
       <div
         id="start-project-container"
         className="mt-4 sm:mt-5 flex items-center gap-4 animate-fade-up"
@@ -97,7 +97,7 @@ export const HeroLeft: React.FC<HeroLeftProps> = ({ onOpenHire }) => {
             className="btn-start cursor-pointer group px-7 py-3 select-none"
           >
             <span className="relative z-10 font-bold text-sm sm:text-base flex items-center gap-2 text-white">
-              <Mail className="w-4 h-4 text-[#C9DAB0]" />
+              <Mail className="w-4 h-4 text-[#7DD3FC]" />
               <span>Hire Me</span>
             </span>
             <ChevronRight className="w-5 h-5 text-white relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
@@ -108,7 +108,7 @@ export const HeroLeft: React.FC<HeroLeftProps> = ({ onOpenHire }) => {
       {/* Bottom Live Metrics */}
       <div
         id="hero-metrics-grid"
-        className="mt-5 sm:mt-7 pt-3 border-t-2 border-[#C9DAB0]/70 grid grid-cols-3 gap-3 sm:gap-6 w-full max-w-lg animate-fade-up"
+        className="mt-5 sm:mt-7 pt-3 border-t border-[#BCD5E6]/70 grid grid-cols-3 gap-3 sm:gap-6 w-full max-w-lg animate-fade-up"
         style={{
           animationDelay: '0.4s',
           animationFillMode: 'forwards',
@@ -118,10 +118,10 @@ export const HeroLeft: React.FC<HeroLeftProps> = ({ onOpenHire }) => {
       >
         {METRICS.map((m) => (
           <div key={m.id} id={`metric-${m.id}`} className="space-y-0.5">
-            <div className="font-urbanist font-extrabold text-2xl sm:text-3xl text-[#2F5D3A] tracking-tight flex items-baseline gap-1">
+            <div className="font-urbanist font-extrabold text-2xl sm:text-3xl text-[#1E3A5F] tracking-tight flex items-baseline gap-1">
               <span>{m.value}</span>
             </div>
-            <div className="text-[11px] sm:text-xs font-bold text-[#3A6B4A] leading-tight">
+            <div className="text-[11px] sm:text-xs font-bold text-[#2D5D86] leading-tight">
               {m.label}
             </div>
           </div>

@@ -16,10 +16,10 @@ export const LogoTicker: React.FC = () => {
         animationFillMode: 'both',
       }}
     >
-      {/* Unified White Block Marquee Container */}
+      {/* Unified Steel Blue Tint Marquee Container */}
       <div
         id="ticker-wrapper"
-        className="w-full bg-white border-2 border-[#C9DAB0] rounded-2xl shadow-xs overflow-hidden ticker-mask select-none py-2 px-3"
+        className="w-full bg-white/95 border-2 border-[#BCD5E6] rounded-2xl shadow-xs overflow-hidden ticker-mask select-none py-2 px-3 backdrop-blur-xs"
       >
         <div
           id="ticker-track"
@@ -29,7 +29,7 @@ export const LogoTicker: React.FC = () => {
             <div
               key={`tool-logo-${item.id}-${idx}`}
               id={`ticker-tool-logo-${item.id}-${idx}`}
-              className="flex-none flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F2F2EE]/70 hover:bg-white border border-[#C9DAB0]/80 hover:border-[#2F5D3A] shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer group"
+              className="flex-none flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#EFF6FB]/90 hover:bg-white border border-[#BCD5E6] hover:border-[#1E3A5F] shadow-2xs hover:shadow-sm transition-all duration-200 cursor-pointer group"
               title={`${item.name} • ${item.category}`}
             >
               {/* Individual Logo/Icon Component */}
@@ -44,11 +44,10 @@ export const LogoTicker: React.FC = () => {
       {/* Copyright text directly below footer */}
       <div
         id="footer-copyright"
-        className="mt-1.5 pt-1 text-center text-[11px] font-semibold text-[#2F5D3A]/70 tracking-wide select-none"
+        className="mt-1.5 pt-1 text-center text-[11px] font-semibold text-[#1E3A5F]/70 tracking-wide select-none"
       >
         © 2026 Russell Taga-an • E-commerce Virtual Assistant
       </div>
     </footer>
   );
 };
-

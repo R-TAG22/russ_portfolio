@@ -419,16 +419,16 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
   };
 
   const iconMap: Record<string, React.ReactNode> = {
-    ShoppingBag: <ShoppingBag className="w-3.5 h-3.5 text-[#2F5D3A]" />,
-    FileText: <FileText className="w-3.5 h-3.5 text-[#2F5D3A]" />,
-    Headphones: <Headphones className="w-3.5 h-3.5 text-[#2F5D3A]" />,
-    Video: <Video className="w-3.5 h-3.5 text-[#2F5D3A]" />,
+    ShoppingBag: <ShoppingBag className="w-3.5 h-3.5 text-[#1E3A5F]" />,
+    FileText: <FileText className="w-3.5 h-3.5 text-[#1E3A5F]" />,
+    Headphones: <Headphones className="w-3.5 h-3.5 text-[#1E3A5F]" />,
+    Video: <Video className="w-3.5 h-3.5 text-[#1E3A5F]" />,
   };
 
   return (
     <div
       id="work-page"
-      className="w-full max-w-[1700px] h-full mx-auto px-4 sm:px-8 lg:px-12 py-1 flex-1 flex flex-col justify-between animate-fade-up font-inter text-[#2F5D3A] overflow-hidden"
+      className="w-full max-w-[1700px] h-full mx-auto px-4 sm:px-8 lg:px-12 py-1 flex-1 flex flex-col justify-between animate-fade-up font-inter text-[#1E3A5F] overflow-hidden"
       style={{
         animationDuration: '0.4s',
         animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
@@ -437,30 +437,30 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
       {/* =========================================================================
           SECTION 1: Header, Title & Category Filter Buttons (Compact Header)
          ========================================================================= */}
-      <section id="work-section-1-header" className="w-full pb-1.5 border-b border-[#C9DAB0]/70 flex-none">
+      <section id="work-section-1-header" className="w-full pb-1.5 border-b border-[#BCD5E6]/70 flex-none">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-1.5">
           <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white border border-[#C9DAB0] shadow-xs text-[10px] sm:text-[11px] font-bold text-[#2F5D3A]">
-              <span className="w-2 h-2 rounded-full bg-[#2F5D3A] animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/90 border border-[#BCD5E6] shadow-xs text-[10px] sm:text-[11px] font-bold text-[#1E3A5F] backdrop-blur-xs">
+              <span className="w-2 h-2 rounded-full bg-[#0EA5E9] shadow-[0_0_8px_#38BDF8] animate-pulse" />
               <span>Client Portfolio & Work Gallery</span>
             </div>
-            <h1 className="font-urbanist font-extrabold text-base sm:text-xl lg:text-2xl text-[#2F5D3A] tracking-tight leading-none">
+            <h1 className="font-urbanist font-extrabold text-base sm:text-xl lg:text-2xl text-[#1E3A5F] tracking-tight leading-none">
               Sample Works & Picture Carousel
             </h1>
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1 p-0.5 rounded-xl bg-[#E8EDE0] border border-[#C9DAB0] self-start lg:self-auto">
+          <div className="flex flex-wrap items-center gap-1 p-0.5 rounded-xl bg-[#E3EDF6] border border-[#BCD5E6] self-start lg:self-auto">
             <button
               type="button"
               onClick={() => handleCategoryChange('all')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 selectedCategory === 'all'
-                  ? 'bg-white text-[#2F5D3A] shadow-xs border border-[#C9DAB0]'
-                  : 'text-[#2F5D3A]/70 hover:text-[#2F5D3A] hover:bg-white/50'
+                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
+                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
               }`}
             >
-              <Layers className="w-3 h-3" />
+              <Layers className="w-3 h-3 text-[#0EA5E9]" />
               <span>All Works</span>
             </button>
             <button
@@ -468,11 +468,11 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
               onClick={() => handleCategoryChange('ecommerce')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 selectedCategory === 'ecommerce'
-                  ? 'bg-white text-[#2F5D3A] shadow-xs border border-[#C9DAB0]'
-                  : 'text-[#2F5D3A]/70 hover:text-[#2F5D3A] hover:bg-white/50'
+                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
+                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
               }`}
             >
-              <ShoppingBag className="w-3 h-3" />
+              <ShoppingBag className="w-3 h-3 text-[#0EA5E9]" />
               <span>E-commerce</span>
             </button>
             <button
@@ -480,11 +480,11 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
               onClick={() => handleCategoryChange('graphic')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 selectedCategory === 'graphic'
-                  ? 'bg-white text-[#2F5D3A] shadow-xs border border-[#C9DAB0]'
-                  : 'text-[#2F5D3A]/70 hover:text-[#2F5D3A] hover:bg-white/50'
+                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
+                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
               }`}
             >
-              <Palette className="w-3 h-3" />
+              <Palette className="w-3 h-3 text-[#0EA5E9]" />
               <span>Graphic Design</span>
             </button>
             <button
@@ -492,11 +492,11 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
               onClick={() => handleCategoryChange('video')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 selectedCategory === 'video'
-                  ? 'bg-white text-[#2F5D3A] shadow-xs border border-[#C9DAB0]'
-                  : 'text-[#2F5D3A]/70 hover:text-[#2F5D3A] hover:bg-white/50'
+                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
+                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
               }`}
             >
-              <Video className="w-3 h-3" />
+              <Video className="w-3 h-3 text-[#0EA5E9]" />
               <span>Photo & Video</span>
             </button>
           </div>
@@ -509,30 +509,30 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
           - Right: High-Res Picture Carousel (4-5 images) with Slider, Thumbnails, & Zoom
          ========================================================================= */}
       <section id="work-section-2-carousel" className="w-full my-1.5 flex-1 flex flex-col min-h-0">
-        <div className="relative w-full h-full rounded-2xl bg-white border-2 border-[#C9DAB0] shadow-sm p-3 sm:p-4 flex flex-col justify-between overflow-hidden">
+        <div className="relative w-full h-full rounded-2xl bg-white border-2 border-[#BCD5E6] shadow-sm p-3 sm:p-4 flex flex-col justify-between overflow-hidden">
           
           {/* Carousel Top Project Navigation Bar */}
-          <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-[#C9DAB0]/50 flex-none">
+          <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-[#BCD5E6]/50 flex-none">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#C9DAB0]/50 text-[#2F5D3A] uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#E0F2FE] text-[#0369A1] uppercase tracking-wider border border-[#BAE6FD]">
                 {currentWork.categoryLabel}
               </span>
-              <span className="text-xs font-semibold text-[#3A6B4A]">
+              <span className="text-xs font-semibold text-[#2D5D86]">
                 Project {activeIndex + 1} of {filteredSamples.length}
               </span>
-              <span className="hidden sm:inline-block text-[11px] text-[#3A6B4A]/75 font-medium">
+              <span className="hidden sm:inline-block text-[11px] text-[#2D5D86]/75 font-medium">
                 • {images.length} sample work photos
               </span>
             </div>
 
             {/* Prev / Next Project Controls */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold text-[#2F5D3A]/70 mr-1 hidden sm:inline-block">Switch Project:</span>
+              <span className="text-[11px] font-bold text-[#1E3A5F]/70 mr-1 hidden sm:inline-block">Switch Project:</span>
               <button
                 type="button"
                 onClick={handlePrevWork}
                 aria-label="Previous sample work project"
-                className="w-7 h-7 rounded-lg bg-[#F2F2EE] hover:bg-[#C9DAB0] border border-[#C9DAB0] text-[#2F5D3A] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                className="w-7 h-7 rounded-lg bg-[#EFF6FB] hover:bg-[#BCD5E6] border border-[#BCD5E6] text-[#1E3A5F] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                 title="Previous project"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -541,7 +541,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                 type="button"
                 onClick={handleNextWork}
                 aria-label="Next sample work project"
-                className="w-7 h-7 rounded-lg bg-[#F2F2EE] hover:bg-[#C9DAB0] border border-[#C9DAB0] text-[#2F5D3A] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                className="w-7 h-7 rounded-lg bg-[#EFF6FB] hover:bg-[#BCD5E6] border border-[#BCD5E6] text-[#1E3A5F] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                 title="Next project"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -556,17 +556,17 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
             <div className="lg:col-span-5 flex flex-col justify-between space-y-2 h-full">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#2F5D3A] text-white">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#1E3A5F] text-white">
                     {currentWork.previewBadge}
                   </span>
-                  <span className="text-[11px] font-bold text-[#3A6B4A]">
+                  <span className="text-[11px] font-bold text-[#2D5D86]">
                     {currentWork.client}
                   </span>
                 </div>
-                <h3 className="font-urbanist font-extrabold text-lg sm:text-xl lg:text-2xl text-[#2F5D3A] leading-tight">
+                <h3 className="font-urbanist font-extrabold text-lg sm:text-xl lg:text-2xl text-[#1E3A5F] leading-tight">
                   {currentWork.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-[#2F5D3A]/90 font-medium leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#1E3A5F]/90 font-medium leading-relaxed">
                   {currentWork.description}
                 </p>
               </div>
@@ -574,20 +574,20 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
               {/* Verified Highlights / Bullets */}
               <div className="space-y-1.5">
                 {currentWork.highlights.map((h, hIdx) => (
-                  <div key={hIdx} className="flex items-start gap-1.5 text-xs text-[#2F5D3A]/90 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2F5D3A] flex-none mt-0.5" />
+                  <div key={hIdx} className="flex items-start gap-1.5 text-xs text-[#1E3A5F]/90 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0EA5E9] flex-none mt-0.5" />
                     <span className="leading-tight">{h}</span>
                   </div>
                 ))}
               </div>
 
               {/* Tags & Action Links */}
-              <div className="pt-2 border-t border-[#C9DAB0]/60 flex flex-wrap items-center justify-between gap-2 flex-none">
+              <div className="pt-2 border-t border-[#BCD5E6]/60 flex flex-wrap items-center justify-between gap-2 flex-none">
                 <div className="flex flex-wrap gap-1">
                   {currentWork.tags.map((t) => (
                     <span
                       key={t}
-                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F2F2EE] border border-[#C9DAB0] text-[#2F5D3A]"
+                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EFF6FB] border border-[#BCD5E6] text-[#1E3A5F]"
                     >
                       {t}
                     </span>
@@ -600,7 +600,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                       href={currentWork.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#2F5D3A] hover:bg-[#3A6B4A] px-3.5 py-1.5 rounded-full transition-all shadow-xs"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#2D5D86] px-3.5 py-1.5 rounded-full transition-all shadow-xs"
                     >
                       <span>See live site</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -609,10 +609,10 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                     <button
                       type="button"
                       onClick={onOpenHire}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#2F5D3A] hover:bg-[#3A6B4A] px-3.5 py-1.5 rounded-full transition-all cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#2D5D86] px-3.5 py-1.5 rounded-full transition-all cursor-pointer shadow-xs"
                     >
                       <span>Request Similar Work</span>
-                      <Sparkles className="w-3.5 h-3.5 text-[#C9DAB0]" />
+                      <Sparkles className="w-3.5 h-3.5 text-[#7DD3FC]" />
                     </button>
                   )}
                 </div>
@@ -621,10 +621,10 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
 
             {/* Right Column: Interactive 4-5 Image Carousel Showcase (7 Cols) */}
             <div className="lg:col-span-7 flex flex-col justify-between h-full min-h-0 space-y-2">
-              <div className="w-full h-full rounded-xl border-2 border-[#C9DAB0] bg-white overflow-hidden shadow-xs flex flex-col justify-between min-h-0">
+              <div className="w-full h-full rounded-xl border-2 border-[#BCD5E6] bg-white overflow-hidden shadow-xs flex flex-col justify-between min-h-0">
                 
                 {/* Photo Carousel Header / Counter bar */}
-                <div className="px-3 py-1.5 bg-[#E8EDE0] border-b border-[#C9DAB0] flex items-center justify-between text-[11px] flex-none">
+                <div className="px-3 py-1.5 bg-[#E3EDF6] border-b border-[#BCD5E6] flex items-center justify-between text-[11px] flex-none">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-red-400/80 flex-none" />
@@ -632,15 +632,15 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                       <div className="w-2.5 h-2.5 rounded-full bg-green-400/80 flex-none" />
                     </div>
 
-                    <div className="flex items-center gap-1.5 bg-white/90 border border-[#C9DAB0]/80 px-2 py-0.5 rounded text-[10px] font-semibold text-[#2F5D3A] ml-1 truncate">
-                      <ImageIcon className="w-3 h-3 text-[#3A6B4A] flex-none" />
+                    <div className="flex items-center gap-1.5 bg-white/90 border border-[#BCD5E6]/80 px-2 py-0.5 rounded text-[10px] font-semibold text-[#1E3A5F] ml-1 truncate">
+                      <ImageIcon className="w-3 h-3 text-[#2D5D86] flex-none" />
                       <span className="truncate">Sample Work Photos ({activeImageIndex + 1}/{images.length})</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {currentImage.tag && (
-                      <span className="text-[10px] font-bold text-[#2F5D3A] bg-white px-2 py-0.5 rounded border border-[#C9DAB0] hidden sm:inline-block">
+                      <span className="text-[10px] font-bold text-[#1E3A5F] bg-white px-2 py-0.5 rounded border border-[#BCD5E6] hidden sm:inline-block">
                         {currentImage.tag}
                       </span>
                     )}
@@ -653,7 +653,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                           title: currentWork.title,
                         })
                       }
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white hover:bg-[#C9DAB0] border border-[#C9DAB0] text-[10px] font-bold text-[#2F5D3A] transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white hover:bg-[#BCD5E6] border border-[#BCD5E6] text-[10px] font-bold text-[#1E3A5F] transition-all cursor-pointer shadow-2xs"
                       title="Enlarge Fullscreen"
                     >
                       <Maximize2 className="w-2.5 h-2.5" />
@@ -663,7 +663,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                 </div>
 
                 {/* Main Picture Stage with Carousel Slide Controls & Caption */}
-                <div className="relative flex-1 min-h-0 w-full overflow-hidden bg-[#F2F2EE] group select-none">
+                <div className="relative flex-1 min-h-0 w-full overflow-hidden bg-[#EFF6FB] group select-none">
                   <img
                     key={currentImage.url}
                     src={currentImage.url}
@@ -678,7 +678,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                     type="button"
                     onClick={handlePrevImage}
                     aria-label="Previous work photo"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-[#2F5D3A] text-white border border-white/30 flex items-center justify-center transition-all cursor-pointer opacity-80 group-hover:opacity-100 hover:scale-110 shadow-lg z-10"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-[#1E3A5F] text-white border border-white/30 flex items-center justify-center transition-all cursor-pointer opacity-80 group-hover:opacity-100 hover:scale-110 shadow-lg z-10"
                     title="Previous photo"
                   >
                     <ChevronLeft className="w-5 h-5" />
@@ -688,7 +688,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                     type="button"
                     onClick={handleNextImage}
                     aria-label="Next work photo"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-[#2F5D3A] text-white border border-white/30 flex items-center justify-center transition-all cursor-pointer opacity-80 group-hover:opacity-100 hover:scale-110 shadow-lg z-10"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-[#1E3A5F] text-white border border-white/30 flex items-center justify-center transition-all cursor-pointer opacity-80 group-hover:opacity-100 hover:scale-110 shadow-lg z-10"
                     title="Next photo"
                   >
                     <ChevronRight className="w-5 h-5" />
@@ -710,7 +710,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                         href={currentWork.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-2.5 py-1 rounded-lg bg-[#2F5D3A] hover:bg-[#3A6B4A] text-white text-[10px] font-bold border border-[#C9DAB0]/40 flex items-center gap-1 shadow-sm transition-all flex-none"
+                        className="px-2.5 py-1 rounded-lg bg-[#1E3A5F] hover:bg-[#2D5D86] text-white text-[10px] font-bold border border-[#38BDF8]/40 flex items-center gap-1 shadow-sm transition-all flex-none"
                       >
                         <span>See live site</span>
                         <ExternalLink className="w-2.5 h-2.5" />
@@ -720,7 +720,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                 </div>
 
                 {/* 4-5 Image Thumbnail Strip Bar */}
-                <div className="p-1.5 bg-[#F2F2EE] border-t border-[#C9DAB0] flex items-center justify-between gap-2 flex-none">
+                <div className="p-1.5 bg-[#EFF6FB] border-t border-[#BCD5E6] flex items-center justify-between gap-2 flex-none">
                   <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 flex-1 min-w-0">
                     {images.map((img, imgIdx) => (
                       <button
@@ -729,8 +729,8 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                         onClick={() => setActiveImageIndex(imgIdx)}
                         className={`relative rounded-lg overflow-hidden flex-none w-12 sm:w-16 h-8 sm:h-9 border-2 transition-all cursor-pointer ${
                           imgIdx === activeImageIndex
-                            ? 'border-[#2F5D3A] scale-105 shadow-xs ring-1 ring-[#2F5D3A]'
-                            : 'border-[#C9DAB0] opacity-60 hover:opacity-100'
+                            ? 'border-[#0EA5E9] scale-105 shadow-xs ring-1 ring-[#0EA5E9]'
+                            : 'border-[#BCD5E6] opacity-60 hover:opacity-100'
                         }`}
                         title={img.caption}
                       >
@@ -741,13 +741,13 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                           referrerPolicy="no-referrer"
                         />
                         {imgIdx === activeImageIndex && (
-                          <div className="absolute inset-0 bg-[#2F5D3A]/20 pointer-events-none" />
+                          <div className="absolute inset-0 bg-[#0EA5E9]/20 pointer-events-none" />
                         )}
                       </button>
                     ))}
                   </div>
 
-                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-white border border-[#C9DAB0] text-[#2F5D3A] flex-none hidden sm:inline-block">
+                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-white border border-[#BCD5E6] text-[#1E3A5F] flex-none hidden sm:inline-block">
                     {currentWork.metrics}
                   </span>
                 </div>
@@ -769,7 +769,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
                 }}
                 aria-label={`Go to project ${dotIdx + 1}`}
                 className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  dotIdx === activeIndex ? 'w-6 bg-[#2F5D3A]' : 'w-2 bg-[#C9DAB0] hover:bg-[#3A6B4A]'
+                  dotIdx === activeIndex ? 'w-6 bg-[#0EA5E9]' : 'w-2 bg-[#BCD5E6] hover:bg-[#2D5D86]'
                 }`}
               />
             ))}
@@ -805,7 +805,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
             />
 
             <div className="mt-3 text-center text-white px-4 py-2 rounded-xl bg-black/60 border border-white/10 max-w-2xl">
-              <div className="text-xs font-bold text-[#C9DAB0]">{lightboxImage.title}</div>
+              <div className="text-xs font-bold text-[#7DD3FC]">{lightboxImage.title}</div>
               <div className="text-sm font-medium">{lightboxImage.caption}</div>
             </div>
           </div>
@@ -817,38 +817,38 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
          ========================================================================= */}
       <section id="work-section-3-services" className="w-full pt-0.5 flex-none">
         <div className="flex items-center justify-between mb-1 px-0.5">
-          <h2 className="font-urbanist font-bold text-xs sm:text-sm text-[#2F5D3A] flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-[#3A6B4A]" />
+          <h2 className="font-urbanist font-bold text-xs sm:text-sm text-[#1E3A5F] flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-[#0EA5E9]" />
             <span>Core Operations & Services</span>
           </h2>
-          <span className="text-[11px] font-bold text-[#3A6B4A]">4+ Years Experience</span>
+          <span className="text-[11px] font-bold text-[#2D5D86]">4+ Years Experience</span>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {SERVICES.map((s, idx) => (
             <div
               key={idx}
-              className="p-2 rounded-xl bg-white border-2 border-[#C9DAB0] shadow-xs flex flex-col justify-between space-y-0.5"
+              className="p-2 rounded-xl bg-white border-2 border-[#BCD5E6] shadow-xs flex flex-col justify-between space-y-0.5"
             >
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-md bg-[#C9DAB0]/40 border border-[#2F5D3A]/30 flex items-center justify-center flex-none">
-                    {iconMap[s.iconName] || <ShoppingBag className="w-3 h-3 text-[#2F5D3A]" />}
+                  <div className="w-5 h-5 rounded-md bg-[#EFF6FB] border border-[#BCD5E6] flex items-center justify-center flex-none">
+                    {iconMap[s.iconName] || <ShoppingBag className="w-3 h-3 text-[#1E3A5F]" />}
                   </div>
-                  <h3 className="font-urbanist font-bold text-[11px] sm:text-xs text-[#2F5D3A] leading-tight truncate">
+                  <h3 className="font-urbanist font-bold text-[11px] sm:text-xs text-[#1E3A5F] leading-tight truncate">
                     {s.title}
                   </h3>
                 </div>
-                <p className="text-[9.5px] text-[#2F5D3A]/80 font-medium leading-tight line-clamp-1 sm:line-clamp-2">
+                <p className="text-[9.5px] text-[#1E3A5F]/80 font-medium leading-tight line-clamp-1 sm:line-clamp-2">
                   {s.description}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-1 pt-0.5 border-t border-[#C9DAB0]/50">
+              <div className="flex flex-wrap gap-1 pt-0.5 border-t border-[#BCD5E6]/50">
                 {s.tags.slice(0, 2).map((t) => (
                   <span
                     key={t}
-                    className="px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-[#F2F2EE] border border-[#C9DAB0] text-[#2F5D3A]"
+                    className="px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-[#EFF6FB] border border-[#BCD5E6] text-[#1E3A5F]"
                   >
                     {t}
                   </span>

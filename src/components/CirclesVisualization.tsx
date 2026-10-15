@@ -162,20 +162,20 @@ export const CirclesVisualization: React.FC = () => {
               {item.isBlank ? (
                 // Blank planet placeholder slot
                 <div
-                  className="rounded-full bg-white/70 border-2 border-dashed border-[#C9DAB0] flex items-center justify-center transition-all duration-300 group-hover:border-[#2F5D3A] group-hover:scale-110 shadow-xs cursor-pointer group-hover:bg-[#C9DAB0]/30"
+                  className="rounded-full bg-white/80 border-2 border-dashed border-[#BCD5E6] flex items-center justify-center transition-all duration-300 group-hover:border-[#1E3A5F] group-hover:scale-110 shadow-xs cursor-pointer group-hover:bg-[#38BDF8]/15"
                   style={{
                     width: `${item.size}px`,
                     height: `${item.size}px`,
                   }}
                 >
-                  <Plus className="w-4 h-4 text-[#3A6B4A]/60 group-hover:text-[#2F5D3A]" />
+                  <Plus className="w-4 h-4 text-[#2D5D86]/60 group-hover:text-[#1E3A5F]" />
                 </div>
               ) : (
                 // Active Planet (Client Store or Facebook Page)
                 <button
                   type="button"
                   onClick={() => handlePlanetClick(item)}
-                  className="relative rounded-full bg-white border-2 border-[#2F5D3A] flex items-center justify-center transition-all duration-300 group-hover:scale-115 shadow-[0_6px_20px_rgba(47,93,58,0.25)] group-hover:shadow-[0_8px_25px_rgba(47,93,58,0.4)] cursor-pointer overflow-hidden p-1 bg-white/95"
+                  className="relative rounded-full bg-white border-2 border-[#1E3A5F] flex items-center justify-center transition-all duration-300 group-hover:scale-115 shadow-[0_6px_20px_rgba(30,58,95,0.22)] group-hover:shadow-[0_8px_25px_rgba(56,189,248,0.45)] group-hover:border-[#0EA5E9] cursor-pointer overflow-hidden p-1 bg-white/95"
                   style={{
                     width: `${item.size}px`,
                     height: `${item.size}px`,
@@ -205,13 +205,13 @@ export const CirclesVisualization: React.FC = () => {
                   ) : null}
 
                   {/* Fallback Badge / Monogram with branding styling */}
-                  <div className="font-urbanist font-extrabold text-xs text-[#2F5D3A] select-none absolute inset-0 -z-10 flex flex-col items-center justify-center bg-gradient-to-br from-[#F2F2EE] to-[#E5E5DE]">
+                  <div className="font-urbanist font-extrabold text-xs text-[#1E3A5F] select-none absolute inset-0 -z-10 flex flex-col items-center justify-center bg-gradient-to-br from-[#EFF6FB] to-[#DBEAFE]">
                     {item.badgeType === 'camera' ? (
-                      <span className="text-[11px] font-black text-[#2F5D3A]">📷 {item.fallbackInitials}</span>
+                      <span className="text-[11px] font-black text-[#1E3A5F]">📷 {item.fallbackInitials}</span>
                     ) : item.badgeType === 'facebook' ? (
                       <span className="text-[11px] font-black text-[#1877F2]">f • {item.fallbackInitials}</span>
                     ) : (
-                      <span className="text-xs font-bold text-[#2F5D3A]">{item.fallbackInitials}</span>
+                      <span className="text-xs font-bold text-[#1E3A5F]">{item.fallbackInitials}</span>
                     )}
                   </div>
 
@@ -225,7 +225,7 @@ export const CirclesVisualization: React.FC = () => {
                       f
                     </div>
                   ) : (
-                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#2F5D3A] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
+                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
                       <ExternalLink className="w-2.5 h-2.5" />
                     </div>
                   )}
@@ -233,8 +233,8 @@ export const CirclesVisualization: React.FC = () => {
               )}
 
               {/* Hover Tooltip Card */}
-              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none bg-[#2F5D3A] text-[#F2F2EE] border-2 border-[#C9DAB0] px-3 py-1.5 rounded-xl text-center z-40 shadow-2xl whitespace-nowrap min-w-[120px]">
-                <div className="font-bold text-xs text-[#C9DAB0] flex items-center justify-center gap-1">
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none bg-[#1E3A5F] text-white border border-[#38BDF8]/50 px-3 py-1.5 rounded-xl text-center z-40 shadow-2xl whitespace-nowrap min-w-[120px]">
+                <div className="font-bold text-xs text-[#7DD3FC] flex items-center justify-center gap-1">
                   {(item.badgeType === 'facebook' || item.badgeType === 'camera') && (
                     <span className="text-[#1877F2] font-black bg-white rounded-full w-3.5 h-3.5 inline-flex items-center justify-center text-[9px]">
                       f
@@ -242,7 +242,7 @@ export const CirclesVisualization: React.FC = () => {
                   )}
                   <span>{item.name}</span>
                 </div>
-                <div className="text-[10px] text-[#F2F2EE]/90 font-medium">{item.sublabel}</div>
+                <div className="text-[10px] text-white/85 font-medium">{item.sublabel}</div>
               </div>
             </div>
           </div>
@@ -281,27 +281,26 @@ export const CirclesVisualization: React.FC = () => {
         {renderOrbitLayer(1, 'ccw', 36)}
       </div>
 
-      {/* Center Hub: Russell's Photo with Organic Blob Shape (Big, Clear & Prominent) */}
+      {/* Center Hub: Russell's Portrait with Random Shape Interaction & Translucent Cyan Glow */}
       <div
         id="center-curve-hub"
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] flex items-center justify-center z-10 select-none group"
       >
-        {/* Layer 1: Ambient Sage Glow */}
-        <div
-          className="absolute w-[500px] h-[500px] organic-blob-shape-delayed bg-[#C9DAB0]/70 -z-20 blur-[6px] transition-transform duration-700 group-hover:scale-105"
-        />
-
-        {/* Layer 2: Main Russell Portrait Component */}
+        {/* Main Russell Portrait Component with Rich Interactive Random Shape Morphing */}
         <RussellPortrait
-          className="w-[500px] h-[500px]"
+          className="w-[480px] h-[480px]"
           blobVariant="white"
           showUploadControl={true}
+          enableRandomShapeInteraction={true}
         />
 
-        {/* Floating Name Badge */}
-        <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-[#2F5D3A] text-[#F2F2EE] border-2 border-[#C9DAB0] text-[12px] font-bold px-4 py-1 rounded-full shadow-lg whitespace-nowrap flex items-center gap-2 pointer-events-none z-30 transition-transform duration-300 group-hover:scale-105">
-          <span className="w-2 h-2 rounded-full bg-[#C9DAB0] animate-pulse" />
+        {/* Floating Name Badge with Random Shape Hint */}
+        <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-[#1E3A5F] text-white border border-[#38BDF8]/60 text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap flex items-center gap-2 pointer-events-none z-30 transition-transform duration-300 group-hover:scale-105 backdrop-blur-xs">
+          <span className="w-2 h-2 rounded-full bg-[#38BDF8] shadow-[0_0_8px_#38BDF8] animate-pulse" />
           <span>Russell Taga-an</span>
+          <span className="text-[#7DD3FC]/80 text-[10px] font-medium border-l border-[#38BDF8]/40 pl-2">
+            🎲 Click to morph
+          </span>
         </div>
       </div>
     </div>
