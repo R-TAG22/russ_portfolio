@@ -1,99 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Camera } from 'lucide-react';
+import React from 'react';
 import defaultRussellPhoto from '../assets/images/regenerated_image_1788105616348.png';
 
 interface RussellPortraitProps {
   className?: string;
   blobVariant?: 'green' | 'blue' | 'steel' | 'white';
-  showUploadControl?: boolean;
   enableRandomShapeInteraction?: boolean;
 }
 
 export const RussellPortrait: React.FC<RussellPortraitProps> = ({
   className = 'w-full h-full',
   blobVariant = 'white',
-  showUploadControl = true,
   enableRandomShapeInteraction = true,
 }) => {
-  const [customPhoto, setCustomPhoto] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('russell_custom_photo');
-      if (saved) {
-        setCustomPhoto(saved);
-      }
-    } catch {
-      // Ignore localStorage read errors in restricted contexts
-    }
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 700;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height = Math.round((height * MAX_SIZE) / width);
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width = Math.round((width * MAX_SIZE) / height);
-            height = MAX_SIZE;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-          setCustomPhoto(compressedDataUrl);
-
-          try {
-            localStorage.setItem('russell_custom_photo', compressedDataUrl);
-          } catch (storageErr) {
-            console.warn('Storage quota exceeded, keeping photo in session memory:', storageErr);
-          }
-        } else {
-          const rawResult = event.target?.result as string;
-          setCustomPhoto(rawResult);
-        }
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const activePhoto = customPhoto || defaultRussellPhoto;
+  const activePhoto = defaultRussellPhoto;
 
   return (
     <div
       className={`relative flex items-center justify-center select-none group ${className}`}
     >
-      {/* Hidden file input for uploading custom photo */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
 
       {/* Layer 0: Ambient Liquid Translucent Cyan & Steel Blue Glow matching dynamic shape */}
       {enableRandomShapeInteraction ? (
@@ -275,22 +199,6 @@ export const RussellPortrait: React.FC<RussellPortraitProps> = ({
               <path d="M 154 416 L 158 416" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
             </g>
           </svg>
-        )}
-
-        {/* Quick Upload / Replace Image Overlay Button on Hover */}
-        {showUploadControl && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
-            }}
-            title="Upload photo"
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/95 hover:bg-white text-[#1E3A5F] shadow-md border border-[#BCD5E6] opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110 cursor-pointer z-30 flex items-center gap-1.5 text-[11px] font-bold"
-          >
-            <Camera className="w-3.5 h-3.5 text-[#2D5D86]" />
-            <span className="hidden sm:inline">Upload</span>
-          </button>
         )}
       </div>
     </div>

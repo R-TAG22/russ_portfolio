@@ -187,6 +187,78 @@ export const WORK_SAMPLES: WorkSample[] = [
     ],
   },
   {
+    id: 'diyative-store',
+    category: 'ecommerce',
+    categoryLabel: 'E-commerce Store',
+    title: 'DIYATIVE — 3D Wooden Kits & Models',
+    client: 'DIYATIVE',
+    url: 'https://diyative.com/',
+    metrics: 'Multi-Variant Kits & Global DTC Ops',
+    description:
+      'Store catalog operations, 3D puzzle SKU variant architectures, product demonstration photography optimization, and multi-channel fulfillment.',
+    highlights: [
+      'Complex multi-part wooden puzzle & model SKU attributes',
+      'Inventory synchronization, dropshipping pipelines & packaging QA',
+      'High-converting product gallery imagery and visual instruction guides',
+    ],
+    tags: ['Shopify', 'Catalog Architecture', 'Global DTC', 'Inventory'],
+    previewType: 'website',
+    previewBadge: '3D Wooden Models & Kits',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1400&q=90',
+        caption: 'Precision Mechanical Wooden Model & Gear Assembly Showcase',
+        tag: 'Model Showcase',
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=90',
+        caption: 'Architectural Miniature Book Nook & Shelf Decor Scene',
+        tag: 'Book Nook Kit',
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1400&q=90',
+        caption: 'Laser-Cut Wood Sheet Matrix & Component Assembly Guide',
+        tag: 'Laser Cut Parts',
+      },
+    ],
+  },
+  {
+    id: 'skin-by-brownlee',
+    category: 'ecommerce',
+    categoryLabel: 'E-commerce Store',
+    title: 'Skin by Brownlee & Co. — Clinical DTC',
+    client: 'Skin by Brownlee & Co.',
+    url: 'https://skinbybrownleeandco.com/',
+    metrics: 'Clinical Skincare Catalog & DTC Operations',
+    description:
+      'Backend store operations, clinical formulation compliance, variant bundle architectures, and subscription product configuration for a leading skincare brand.',
+    highlights: [
+      'Clean beauty ingredients formatting & compliance documentation',
+      'Shopify Plus bundle setups, recurring subscription flows, and inventory tracking',
+      'High-res product silhouette cutouts and skincare routine infographics',
+    ],
+    tags: ['Shopify Plus', 'Clinical DTC', 'Subscriptions', 'SPS Compliance'],
+    previewType: 'website',
+    previewBadge: 'Clinical Skincare DTC',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1400&q=90',
+        caption: 'Clinical Skincare Serum Bottle & Pure White Product Silhouettes',
+        tag: 'Serum Line',
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1400&q=90',
+        caption: 'Clean Beauty Daily Cleanser & Hydrabalance Moisturizer Suite',
+        tag: 'Product Suite',
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=90',
+        caption: 'Dermatological Treatment Regimen & Target Retail Partner Line',
+        tag: 'Retail Expansion',
+      },
+    ],
+  },
+  {
     id: 'graphic-product-hero',
     category: 'graphic',
     categoryLabel: 'Graphic Design',
@@ -282,14 +354,13 @@ export const WORK_SAMPLES: WorkSample[] = [
     categoryLabel: 'Photo & Video',
     title: 'Candid Click — Wedding Stories & Media',
     client: 'Candid Click by MBS',
-    url: 'https://www.facebook.com/CandidclickbyMbs',
     metrics: 'Wedding Stories & Video Production',
     description:
       'Videography, cinematography, and social media production for weddings, events, and prenup films with creative storytelling.',
     highlights: [
       'Cinematic wedding highlight reels, teasers, and full event coverage',
       'Dynamic color grading, multi-camera audio sync, and drone footage editing',
-      'High-engagement Facebook and Instagram social content delivery',
+      'High-engagement social media video and cinematic content delivery',
     ],
     tags: ['Premiere Pro', 'DaVinci Resolve', 'Wedding Video', 'Social Media'],
     previewType: 'video',

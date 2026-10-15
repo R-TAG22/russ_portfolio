@@ -14,7 +14,9 @@ export default function App() {
   return (
     <div
       id="app-root"
-      className="app relative min-h-screen lg:h-screen lg:max-h-screen w-full flex flex-col justify-between overflow-x-hidden lg:overflow-hidden text-[#1E3A5F] font-inter selection:bg-[#38BDF8]/30 selection:text-[#1E3A5F]"
+      className={`app relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden text-[#1E3A5F] font-inter selection:bg-[#38BDF8]/30 selection:text-[#1E3A5F] ${
+        activeTab === 'home' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : 'lg:min-h-screen'
+      }`}
       style={{
         background: `
           radial-gradient(ellipse at 85% 42%, rgba(56, 189, 248, 0.16) 0%, rgba(14, 165, 233, 0.08) 35%, transparent 70%),

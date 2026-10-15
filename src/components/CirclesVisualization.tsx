@@ -1,131 +1,98 @@
 import React from 'react';
-import { ExternalLink, Plus } from 'lucide-react';
-import { PERSONAL_INFO } from '../data/portfolioData';
+import { ExternalLink } from 'lucide-react';
 import { RussellPortrait } from './RussellPortrait';
 
 interface StoreOrbitItem {
   id: string;
   name: string;
   sublabel: string;
-  url?: string;
-  isBlank: boolean;
+  url: string;
   angle: number;
   radius: number;
   size: number;
   orbitIndex: number;
   flyInDelay: number;
-  fallbackInitials?: string;
-  faviconDomain?: string;
-  profilePicUrl?: string;
-  badgeType?: 'shopify' | 'fabrics' | 'restaurant' | 'facebook' | 'camera';
+  fallbackInitials: string;
+  faviconDomain: string;
 }
 
 export const CirclesVisualization: React.FC = () => {
-  // 6 Active Planetarium Orbit Slots across 2 concentric layers (3 E-Commerce Stores + 3 Facebook Client Pages)
+  // 5 Active Client E-Commerce Stores across 2 concentric orbit rings
+  // Inner Orbit: DIYATIVE & Skin by Brownlee & Co. (180° apart)
+  // Outer Orbit: Willow Bath & Vanity, Sultan's Fine Fabrics & Canton Roast (120° apart)
   const orbitItems: StoreOrbitItem[] = [
-    // --- Layer 1 (Inner Orbit - Radius 295px) ---
-    // 1st site: Willow Bath and Vanity
+    // --- Layer 1 (Inner Orbit - Radius 295px, spins CCW 36s) ---
+    {
+      id: 'store-diyative',
+      name: 'DIYATIVE',
+      sublabel: '3D Wooden Models & Kits • Visit ↗',
+      url: 'https://diyative.com/',
+      angle: 45,
+      radius: 295,
+      size: 72,
+      orbitIndex: 1,
+      flyInDelay: 0.4,
+      fallbackInitials: 'DIY',
+      faviconDomain: 'diyative.com',
+    },
+    {
+      id: 'store-skin-by-brownlee',
+      name: 'Skin by Brownlee & Co.',
+      sublabel: 'Clinical Skincare DTC • Visit ↗',
+      url: 'https://skinbybrownleeandco.com/',
+      angle: 225,
+      radius: 295,
+      size: 72,
+      orbitIndex: 1,
+      flyInDelay: 0.6,
+      fallbackInitials: 'SB',
+      faviconDomain: 'skinbybrownleeandco.com',
+    },
+
+    // --- Layer 2 (Outer Orbit - Radius 390px, spins CW 48s) ---
     {
       id: 'store-willow-bath',
       name: 'Willow Bath & Vanity',
       sublabel: 'Shopify & Home Depot • Visit ↗',
       url: 'https://willowbathandvanity.com/',
-      isBlank: false,
-      angle: 270,
-      radius: 295,
+      angle: 30,
+      radius: 390,
       size: 70,
-      orbitIndex: 1,
-      flyInDelay: 0.3,
+      orbitIndex: 2,
+      flyInDelay: 0.8,
       fallbackInitials: 'WB',
       faviconDomain: 'willowbathandvanity.com',
-      badgeType: 'shopify',
     },
-    // 2nd site: Sultan's Fine Fabrics
     {
       id: 'store-sultans-fabrics',
       name: "Sultan's Fine Fabrics",
       sublabel: 'Luxury Textiles • Visit ↗',
       url: 'https://www.sultansfinefabrics.com/',
-      isBlank: false,
-      angle: 30,
-      radius: 295,
-      size: 68,
-      orbitIndex: 1,
-      flyInDelay: 0.5,
+      angle: 150,
+      radius: 390,
+      size: 70,
+      orbitIndex: 2,
+      flyInDelay: 1.0,
       fallbackInitials: 'SF',
       faviconDomain: 'sultansfinefabrics.com',
-      badgeType: 'fabrics',
     },
-    // 3rd site: Candid Click (Facebook Page)
-    {
-      id: 'fb-candid-click',
-      name: 'Candid Click',
-      sublabel: 'Wedding Stories & Media • Facebook ↗',
-      url: 'https://www.facebook.com/CandidclickbyMbs',
-      isBlank: false,
-      angle: 150,
-      radius: 295,
-      size: 72,
-      orbitIndex: 1,
-      flyInDelay: 0.7,
-      fallbackInitials: 'CC',
-      profilePicUrl: 'https://graph.facebook.com/CandidclickbyMbs/picture?type=large',
-      badgeType: 'camera',
-    },
-
-    // --- Layer 2 (Outer Orbit - Radius 390px) ---
-    // 4th site: Canton Roast
     {
       id: 'store-canton-roast',
       name: 'Canton Roast',
       sublabel: 'Online Ordering • Visit ↗',
       url: 'https://cantonroast.com/',
-      isBlank: false,
-      angle: 90,
+      angle: 270,
       radius: 390,
       size: 70,
       orbitIndex: 2,
-      flyInDelay: 0.9,
+      flyInDelay: 1.2,
       fallbackInitials: 'CR',
       faviconDomain: 'cantonroast.com',
-      badgeType: 'restaurant',
-    },
-    // 5th site: Facebook Client Page 1 (ID: 100076379971186)
-    {
-      id: 'fb-client-page-1',
-      name: 'Ivan Lee / Media Page',
-      sublabel: 'Creative & Media • Facebook ↗',
-      url: 'https://www.facebook.com/profile.php?id=100076379971186',
-      isBlank: false,
-      angle: 210,
-      radius: 390,
-      size: 68,
-      orbitIndex: 2,
-      flyInDelay: 1.1,
-      fallbackInitials: 'IL',
-      profilePicUrl: 'https://graph.facebook.com/100076379971186/picture?type=large',
-      badgeType: 'facebook',
-    },
-    // 6th site: Facebook Client Page 2 (ID: 100089849743160)
-    {
-      id: 'fb-client-page-2',
-      name: 'Facebook Client Page',
-      sublabel: 'Social Media & Brand • Facebook ↗',
-      url: 'https://www.facebook.com/profile.php?id=100089849743160',
-      isBlank: false,
-      angle: 330,
-      radius: 390,
-      size: 68,
-      orbitIndex: 2,
-      flyInDelay: 1.3,
-      fallbackInitials: 'FB',
-      profilePicUrl: 'https://graph.facebook.com/100089849743160/picture?type=large',
-      badgeType: 'facebook',
     },
   ];
 
   const handlePlanetClick = (item: StoreOrbitItem) => {
-    if (!item.isBlank && item.url) {
+    if (item.url) {
       window.open(item.url, '_blank', 'noopener,noreferrer');
     }
   };
@@ -159,88 +126,45 @@ export const CirclesVisualization: React.FC = () => {
                 animationDuration: `${durationSec}s`,
               }}
             >
-              {item.isBlank ? (
-                // Blank planet placeholder slot
-                <div
-                  className="rounded-full bg-white/80 border-2 border-dashed border-[#BCD5E6] flex items-center justify-center transition-all duration-300 group-hover:border-[#1E3A5F] group-hover:scale-110 shadow-xs cursor-pointer group-hover:bg-[#38BDF8]/15"
-                  style={{
-                    width: `${item.size}px`,
-                    height: `${item.size}px`,
-                  }}
-                >
-                  <Plus className="w-4 h-4 text-[#2D5D86]/60 group-hover:text-[#1E3A5F]" />
+              {/* Active Planet: Click directly navigates to client e-commerce store */}
+              <button
+                type="button"
+                onClick={() => handlePlanetClick(item)}
+                className="relative rounded-full bg-white border-2 border-[#1E3A5F] flex items-center justify-center transition-all duration-300 group-hover:scale-115 shadow-[0_6px_20px_rgba(30,58,95,0.22)] group-hover:shadow-[0_8px_25px_rgba(56,189,248,0.45)] group-hover:border-[#0EA5E9] cursor-pointer overflow-hidden p-1.5 bg-white/95"
+                style={{
+                  width: `${item.size}px`,
+                  height: `${item.size}px`,
+                }}
+                title={`Open ${item.name} (${item.sublabel})`}
+              >
+                {/* Official Store Favicon */}
+                {item.faviconDomain && (
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${item.faviconDomain}&sz=128`}
+                    alt={item.name}
+                    className="w-full h-full object-contain rounded-full select-none p-1 transition-transform duration-300 group-hover:scale-110"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                )}
+
+                {/* Fallback Monogram with branding styling */}
+                <div className="font-urbanist font-extrabold text-xs text-[#1E3A5F] select-none absolute inset-0 -z-10 flex flex-col items-center justify-center bg-gradient-to-br from-[#EFF6FB] to-[#DBEAFE]">
+                  <span className="text-xs font-bold text-[#1E3A5F]">{item.fallbackInitials}</span>
                 </div>
-              ) : (
-                // Active Planet (Client Store or Facebook Page)
-                <button
-                  type="button"
-                  onClick={() => handlePlanetClick(item)}
-                  className="relative rounded-full bg-white border-2 border-[#1E3A5F] flex items-center justify-center transition-all duration-300 group-hover:scale-115 shadow-[0_6px_20px_rgba(30,58,95,0.22)] group-hover:shadow-[0_8px_25px_rgba(56,189,248,0.45)] group-hover:border-[#0EA5E9] cursor-pointer overflow-hidden p-1 bg-white/95"
-                  style={{
-                    width: `${item.size}px`,
-                    height: `${item.size}px`,
-                  }}
-                  title={`Open ${item.name} (${item.sublabel})`}
-                >
-                  {/* Photo or Favicon */}
-                  {item.profilePicUrl ? (
-                    <img
-                      src={item.profilePicUrl}
-                      alt={item.name}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover rounded-full select-none"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  ) : item.faviconDomain ? (
-                    <img
-                      src={`https://www.google.com/s2/favicons?domain=${item.faviconDomain}&sz=128`}
-                      alt={item.name}
-                      className="w-full h-full object-contain rounded-full select-none p-1"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  ) : null}
 
-                  {/* Fallback Badge / Monogram with branding styling */}
-                  <div className="font-urbanist font-extrabold text-xs text-[#1E3A5F] select-none absolute inset-0 -z-10 flex flex-col items-center justify-center bg-gradient-to-br from-[#EFF6FB] to-[#DBEAFE]">
-                    {item.badgeType === 'camera' ? (
-                      <span className="text-[11px] font-black text-[#1E3A5F]">📷 {item.fallbackInitials}</span>
-                    ) : item.badgeType === 'facebook' ? (
-                      <span className="text-[11px] font-black text-[#1877F2]">f • {item.fallbackInitials}</span>
-                    ) : (
-                      <span className="text-xs font-bold text-[#1E3A5F]">{item.fallbackInitials}</span>
-                    )}
-                  </div>
-
-                  {/* Corner Brand / Platform Indicator Badge */}
-                  {item.badgeType === 'camera' ? (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#1877F2] text-white flex items-center justify-center text-[9px] font-black shadow-xs border border-white">
-                      f
-                    </div>
-                  ) : item.badgeType === 'facebook' ? (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#1877F2] text-white flex items-center justify-center text-[9px] font-black shadow-xs border border-white">
-                      f
-                    </div>
-                  ) : (
-                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
-                      <ExternalLink className="w-2.5 h-2.5" />
-                    </div>
-                  )}
-                </button>
-              )}
+                {/* Corner Store External Link Indicator Badge */}
+                <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#1E3A5F] group-hover:bg-[#0EA5E9] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-xs">
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </div>
+              </button>
 
               {/* Hover Tooltip Card */}
-              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none bg-[#1E3A5F] text-white border border-[#38BDF8]/50 px-3 py-1.5 rounded-xl text-center z-40 shadow-2xl whitespace-nowrap min-w-[120px]">
-                <div className="font-bold text-xs text-[#7DD3FC] flex items-center justify-center gap-1">
-                  {(item.badgeType === 'facebook' || item.badgeType === 'camera') && (
-                    <span className="text-[#1877F2] font-black bg-white rounded-full w-3.5 h-3.5 inline-flex items-center justify-center text-[9px]">
-                      f
-                    </span>
-                  )}
+              <div className="absolute -bottom-11 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none bg-[#1E3A5F] text-white border border-[#38BDF8]/50 px-3 py-1.5 rounded-xl text-center z-40 shadow-2xl whitespace-nowrap min-w-[130px]">
+                <div className="font-bold text-xs text-[#7DD3FC] flex items-center justify-center gap-1.5">
                   <span>{item.name}</span>
+                  <ExternalLink className="w-3 h-3 text-[#38BDF8]" />
                 </div>
                 <div className="text-[10px] text-white/85 font-medium">{item.sublabel}</div>
               </div>
@@ -290,7 +214,6 @@ export const CirclesVisualization: React.FC = () => {
         <RussellPortrait
           className="w-[480px] h-[480px]"
           blobVariant="white"
-          showUploadControl={true}
           enableRandomShapeInteraction={true}
         />
       </div>

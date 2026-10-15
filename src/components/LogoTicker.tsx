@@ -46,7 +46,7 @@ export const LogoTicker: React.FC = () => {
         id="footer-copyright"
         className="mt-1.5 pt-1 text-center text-[11px] font-semibold text-[#1E3A5F]/70 tracking-wide select-none"
       >
-        © 2026 Russell Taga-an • E-commerce Virtual Assistant
+        © 2026 Russell Taga-an • E-commerce Operations Manager & Catalog Systems Specialist
       </div>
     </footer>
   );
