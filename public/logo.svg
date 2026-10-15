@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="54 52 94 94" fill="none">
+  <defs>
+    <!-- Steel Blue Metallic Gradient for upper hood & back leg -->
+    <linearGradient id="steelMetallic" x1="20%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#1E3E60" />
+      <stop offset="35%" stop-color="#2D5D86" />
+      <stop offset="65%" stop-color="#3C739E" />
+      <stop offset="100%" stop-color="#1B3855" />
+    </linearGradient>
+
+    <!-- Steel Blue Shadow Gradient -->
+    <linearGradient id="steelDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#19334D" />
+      <stop offset="100%" stop-color="#254F73" />
+    </linearGradient>
+
+    <!-- Translucent Glowing Cyan Glass Gradient -->
+    <linearGradient id="translucentIceCyan" x1="0%" y1="20%" x2="100%" y2="90%">
+      <stop offset="0%" stop-color="#7DD3FC" stop-opacity="0.95" />
+      <stop offset="40%" stop-color="#38BDF8" stop-opacity="0.9" />
+      <stop offset="85%" stop-color="#0EA5E9" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.95" />
+    </linearGradient>
+
+    <!-- Crystal Bevel Highlight Gradient -->
+    <linearGradient id="crystalHighlight" x1="10%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#BAE6FD" stop-opacity="0.9" />
+      <stop offset="60%" stop-color="#38BDF8" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.6" />
+    </linearGradient>
+
+    <!-- Specular Inner Glint -->
+    <linearGradient id="specularGlint" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Translucent Ambient Glow Filter -->
+    <filter id="iceGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur" />
+      <feColorMatrix
+        type="matrix"
+        values="0 0 0 0 0.22  0 0 0 0 0.74  0 0 0 0 0.97  0 0 0 0.45 0"
+      />
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 1. Subtle Translucent Ambient Back Glow behind the glass wing -->
+  <path
+    d="M 98 116 C 114 116 128 110 137 96 C 144 85 146 72 143 65 C 140 76 130 98 108 108 C 96 113 90 115 90 115 Z"
+    fill="#38BDF8"
+    opacity="0.35"
+    filter="url(#iceGlow)"
+  />
+
+  <!-- 2. Steel Blue Upper Arch / Hood of the 'R' -->
+  <path
+    d="M 72 58 C 70 65 74 73 85 73 L 118 73 C 127 73 133 79 133 88 C 133 97 127 103 118 103 L 105 103 C 118 101 133 94 135 78 C 137 62 124 58 110 58 L 77 58 C 74 58 72 58 72 58 Z"
+    fill="url(#steelMetallic)"
+  />
+  <!-- Upper Arch bevel top reflection -->
+  <path
+    d="M 72 58 C 76 58 106 58 112 58 C 126 58 136 63 134 76 C 132 84 125 91 116 93 C 124 88 128 82 128 75 C 128 66 121 63 110 63 L 78 63 C 73 63 71 60 72 58 Z"
+    fill="#5B94BC"
+    opacity="0.5"
+  />
+
+  <!-- 3. Steel Blue Lower Diagonal Right Leg -->
+  <path
+    d="M 103 117 L 123 117 L 143 142 L 122 142 Z"
+    fill="url(#steelDark)"
+  />
+  <!-- Lower Leg metallic facet shine -->
+  <path
+    d="M 112 117 L 123 117 L 143 142 L 136 142 Z"
+    fill="#3A6E94"
+    opacity="0.75"
+  />
+
+  <!-- 4. Translucent Cyan / Ice-Blue Left Faceted Blade ("7" / front bar) -->
+  <path
+    d="M 66 85 L 116 85 L 94 95 L 72 95 L 60 142 L 76 142 L 91 97 L 116 85 Z"
+    fill="url(#translucentIceCyan)"
+  />
+  <!-- Blade Gloss Rim -->
+  <path
+    d="M 66 85 L 116 85 L 111 87 L 69 87 L 61 140 L 60 142 Z"
+    fill="url(#specularGlint)"
+  />
+  <!-- Inner crystal facet -->
+  <path
+    d="M 69 88 L 108 88 L 88 142 L 76 142 L 91 97 L 72 97 Z"
+    fill="url(#crystalHighlight)"
+    opacity="0.85"
+  />
+
+  <!-- 5. Translucent Cyan Dynamic Curved Swoosh Wing (Right loop of the R) -->
+  <path
+    d="M 90 115 C 102 115 118 112 129 100 C 138 89 143 75 142 65 C 140 76 132 94 116 103 C 104 109 92 112 90 115 Z"
+    fill="url(#translucentIceCyan)"
+  />
+  <!-- Outer luminous rim on the curved wing -->
+  <path
+    d="M 142 65 C 143 75 138 89 129 100 C 118 112 102 115 90 115 C 96 114 112 110 123 99 C 133 89 138 76 137 66 C 139 65 141 65 142 65 Z"
+    fill="#BAE6FD"
+    opacity="0.9"
+  />
+
+  <!-- 6. Precision Core Facet / Intersection Refraction -->
+  <path
+    d="M 90 115 L 105 103 C 114 100 122 93 125 85 L 121 85 C 117 92 110 98 100 102 L 90 115 Z"
+    fill="#E0F2FE"
+    opacity="0.4"
+  />
+</svg>

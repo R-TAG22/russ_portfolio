@@ -281,27 +281,18 @@ export const CirclesVisualization: React.FC = () => {
         {renderOrbitLayer(1, 'ccw', 36)}
       </div>
 
-      {/* Center Hub: Russell's Portrait with Random Shape Interaction & Translucent Cyan Glow */}
+      {/* Center Hub: Russell's Portrait with Random Shape Changing Animation & Translucent Cyan Glow */}
       <div
         id="center-curve-hub"
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] flex items-center justify-center z-10 select-none group"
       >
-        {/* Main Russell Portrait Component with Rich Interactive Random Shape Morphing */}
+        {/* Main Russell Portrait with Continuous Random Shape Changing Animation */}
         <RussellPortrait
           className="w-[480px] h-[480px]"
           blobVariant="white"
           showUploadControl={true}
           enableRandomShapeInteraction={true}
         />
-
-        {/* Floating Name Badge with Random Shape Hint */}
-        <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-[#1E3A5F] text-white border border-[#38BDF8]/60 text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap flex items-center gap-2 pointer-events-none z-30 transition-transform duration-300 group-hover:scale-105 backdrop-blur-xs">
-          <span className="w-2 h-2 rounded-full bg-[#38BDF8] shadow-[0_0_8px_#38BDF8] animate-pulse" />
-          <span>Russell Taga-an</span>
-          <span className="text-[#7DD3FC]/80 text-[10px] font-medium border-l border-[#38BDF8]/40 pl-2">
-            🎲 Click to morph
-          </span>
-        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Camera, Shuffle, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera } from 'lucide-react';
 import defaultRussellPhoto from '../assets/images/regenerated_image_1788105616348.png';
 
 interface RussellPortraitProps {
@@ -9,35 +9,6 @@ interface RussellPortraitProps {
   enableRandomShapeInteraction?: boolean;
 }
 
-// Curated organic blob shapes for smooth liquid transitions
-const CURATED_BLOBS = [
-  '60% 40% 30% 70% / 60% 30% 70% 40%',
-  '45% 55% 70% 30% / 35% 65% 35% 65%',
-  '70% 30% 50% 50% / 30% 60% 40% 70%',
-  '50% 50% 30% 70% / 55% 45% 55% 45%',
-  '40% 60% 65% 35% / 40% 45% 55% 60%',
-  '65% 35% 40% 60% / 55% 35% 65% 45%',
-  '35% 65% 60% 40% / 65% 50% 50% 35%',
-  '58% 42% 48% 52% / 43% 57% 43% 57%',
-  '73% 27% 55% 45% / 38% 68% 32% 62%',
-  '42% 58% 33% 67% / 61% 37% 63% 39%',
-];
-
-/**
- * Generate a randomized organic CSS border-radius
- */
-const generateRandomBlob = (): string => {
-  const r1 = Math.floor(Math.random() * 38) + 32;
-  const r2 = Math.floor(Math.random() * 38) + 32;
-  const r3 = Math.floor(Math.random() * 38) + 32;
-  const r4 = Math.floor(Math.random() * 38) + 32;
-  const r5 = Math.floor(Math.random() * 38) + 32;
-  const r6 = Math.floor(Math.random() * 38) + 32;
-  const r7 = Math.floor(Math.random() * 38) + 32;
-  const r8 = Math.floor(Math.random() * 38) + 32;
-  return `${r1}% ${100 - r1}% ${r2}% ${100 - r2}% / ${r3}% ${r4}% ${100 - r4}% ${100 - r3}%`;
-};
-
 export const RussellPortrait: React.FC<RussellPortraitProps> = ({
   className = 'w-full h-full',
   blobVariant = 'white',
@@ -45,16 +16,7 @@ export const RussellPortrait: React.FC<RussellPortraitProps> = ({
   enableRandomShapeInteraction = true,
 }) => {
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
-  const [activeShape, setActiveShape] = useState<string>(CURATED_BLOBS[0]);
-  const [morphCount, setMorphCount] = useState<number>(1);
-  const [isPopping, setIsPopping] = useState<boolean>(false);
-  const [showMorphNotification, setShowMorphNotification] = useState<boolean>(false);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [mouseOffset, setMouseOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const portraitContainerRef = useRef<HTMLDivElement | null>(null);
-  const notifyTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     try {
@@ -66,74 +28,6 @@ export const RussellPortrait: React.FC<RussellPortraitProps> = ({
       // Ignore localStorage read errors in restricted contexts
     }
   }, []);
-
-  // Cycle or roll a brand-new random shape
-  const triggerRandomShape = (e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    if (!enableRandomShapeInteraction) return;
-
-    // Pick random blob that is distinct from current
-    let nextShape = generateRandomBlob();
-    while (nextShape === activeShape) {
-      nextShape = generateRandomBlob();
-    }
-
-    setActiveShape(nextShape);
-    setMorphCount((prev) => prev + 1);
-    setIsPopping(true);
-    setShowMorphNotification(true);
-
-    if (notifyTimeoutRef.current) {
-      window.clearTimeout(notifyTimeoutRef.current);
-    }
-    notifyTimeoutRef.current = window.setTimeout(() => {
-      setShowMorphNotification(false);
-    }, 1800);
-
-    setTimeout(() => {
-      setIsPopping(false);
-    }, 450);
-  };
-
-  // Interactive mouse tracking over portrait to create fluid organic distortion
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!enableRandomShapeInteraction || !portraitContainerRef.current) return;
-    const rect = portraitContainerRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const relX = (e.clientX - centerX) / (rect.width / 2); // -1 to 1
-    const relY = (e.clientY - centerY) / (rect.height / 2); // -1 to 1
-
-    setMouseOffset({
-      x: Math.max(-1, Math.min(1, relX)),
-      y: Math.max(-1, Math.min(1, relY)),
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setMouseOffset({ x: 0, y: 0 });
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  // Compute dynamic responsive border radius combining activeShape + mouse physics
-  const dynamicBorderRadius = useMemo(() => {
-    if (!enableRandomShapeInteraction) return '50%';
-    if (!isHovered || (mouseOffset.x === 0 && mouseOffset.y === 0)) {
-      return activeShape;
-    }
-
-    // Slightly modulate corner weights based on mouse position
-    const dx = Math.round(mouseOffset.x * 12);
-    const dy = Math.round(mouseOffset.y * 12);
-
-    return `calc(55% + ${dx}px) calc(45% - ${dx}px) calc(48% - ${dy}px) calc(52% + ${dy}px) / calc(58% - ${dy}px) calc(42% + ${dy}px) calc(54% + ${dx}px) calc(46% - ${dx}px)`;
-  }, [enableRandomShapeInteraction, isHovered, mouseOffset, activeShape]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,13 +84,7 @@ export const RussellPortrait: React.FC<RussellPortraitProps> = ({
 
   return (
     <div
-      ref={portraitContainerRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={() => triggerRandomShape()}
-      className={`relative flex items-center justify-center cursor-pointer select-none group ${className}`}
-      title={enableRandomShapeInteraction ? 'Click to morph into a new random shape!' : undefined}
+      className={`relative flex items-center justify-center select-none group ${className}`}
     >
       {/* Hidden file input for uploading custom photo */}
       <input
@@ -207,37 +95,35 @@ export const RussellPortrait: React.FC<RussellPortraitProps> = ({
         className="hidden"
       />
 
-      {/* Layer 0: Ambient Liquid Translucent Cyan & Steel Blue Glow matching the dynamic shape */}
-      {enableRandomShapeInteraction && (
+      {/* Layer 0: Ambient Liquid Translucent Cyan & Steel Blue Glow matching dynamic shape */}
+      {enableRandomShapeInteraction ? (
         <div
-          className="absolute inset-[-12px] bg-gradient-to-tr from-[#38BDF8]/40 via-[#0EA5E9]/30 to-[#1E3A5F]/25 blur-2xl -z-20 transition-all duration-700 ease-out"
-          style={{
-            borderRadius: dynamicBorderRadius,
-            transform: isPopping ? 'scale(1.12)' : isHovered ? 'scale(1.06)' : 'scale(1.0)',
-          }}
+          className="absolute inset-[-14px] bg-gradient-to-tr from-[#38BDF8]/40 via-[#0EA5E9]/30 to-[#1E3A5F]/25 blur-2xl -z-20 animate-hero-glow pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+      ) : (
+        <div
+          className="absolute inset-[-10px] rounded-full bg-gradient-to-tr from-[#38BDF8]/30 via-[#0EA5E9]/20 to-[#1E3A5F]/20 blur-xl -z-20 pointer-events-none"
         />
       )}
 
-      {/* Layer 1: Rotating/Pulsing Liquid Steel Blue Outer Border Frame */}
-      {enableRandomShapeInteraction && (
+      {/* Layer 1: Liquid Steel Blue & Ice Cyan Outer Frame with Random Shape Changing Animation */}
+      {enableRandomShapeInteraction ? (
         <div
-          className="absolute inset-[-4px] bg-gradient-to-br from-[#38BDF8] via-[#1E3A5F] to-[#7DD3FC] opacity-75 -z-10 transition-all duration-700 ease-out shadow-[0_10px_35px_rgba(30,58,95,0.3)]"
-          style={{
-            borderRadius: dynamicBorderRadius,
-            transform: isPopping ? 'scale(1.04) rotate(2deg)' : 'scale(1.0) rotate(0deg)',
-          }}
+          className="absolute inset-[-4px] bg-gradient-to-br from-[#38BDF8] via-[#1E3A5F] to-[#7DD3FC] opacity-80 -z-10 shadow-[0_10px_35px_rgba(30,58,95,0.3)] animate-hero-morph pointer-events-none transition-transform duration-700 ease-out group-hover:scale-[1.01]"
+        />
+      ) : (
+        <div
+          className="absolute inset-[-4px] rounded-full bg-gradient-to-br from-[#38BDF8] via-[#1E3A5F] to-[#7DD3FC] opacity-80 -z-10 shadow-[0_10px_35px_rgba(30,58,95,0.3)] pointer-events-none"
         />
       )}
 
-      {/* Layer 2: Main Portrait Frame with Dynamic Organic Shape */}
+      {/* Layer 2: Main Portrait Frame with Continuous Random Shape Changing Animation */}
       <div
-        className={`relative w-full h-full flex items-center justify-center overflow-hidden transition-all duration-700 ease-out shadow-2xl border-4 border-white bg-white ${
-          isPopping ? 'scale-[0.97]' : 'scale-100 group-hover:scale-[1.02]'
+        className={`relative w-full h-full flex items-center justify-center overflow-hidden shadow-2xl border-4 border-white bg-white transition-transform duration-500 ease-out group-hover:scale-[1.02] ${
+          enableRandomShapeInteraction ? 'animate-hero-morph' : 'rounded-full'
         }`}
         style={{
-          borderRadius: dynamicBorderRadius,
           backgroundColor: '#FFFFFF',
-          transition: 'border-radius 0.65s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease-out',
         }}
       >
         {activePhoto ? (
@@ -399,33 +285,12 @@ export const RussellPortrait: React.FC<RussellPortraitProps> = ({
               e.stopPropagation();
               fileInputRef.current?.click();
             }}
-            title="Click to use/upload your photo file directly"
+            title="Upload photo"
             className="absolute top-4 right-4 p-2 rounded-full bg-white/95 hover:bg-white text-[#1E3A5F] shadow-md border border-[#BCD5E6] opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110 cursor-pointer z-30 flex items-center gap-1.5 text-[11px] font-bold"
           >
             <Camera className="w-3.5 h-3.5 text-[#2D5D86]" />
             <span className="hidden sm:inline">Upload</span>
           </button>
-        )}
-
-        {/* Interactive Random Shape Morph Trigger Button in Corner */}
-        {enableRandomShapeInteraction && (
-          <button
-            type="button"
-            onClick={triggerRandomShape}
-            title="Click to generate another random shape"
-            className="absolute top-4 left-4 p-2 rounded-full bg-[#1E3A5F]/90 hover:bg-[#1E3A5F] text-[#7DD3FC] shadow-md border border-[#38BDF8]/40 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110 cursor-pointer z-30 flex items-center gap-1.5 text-[11px] font-bold backdrop-blur-xs"
-          >
-            <Shuffle className="w-3.5 h-3.5 text-[#38BDF8]" />
-            <span className="hidden sm:inline">Morph Shape</span>
-          </button>
-        )}
-
-        {/* Morph Ripple Notification Toast */}
-        {showMorphNotification && (
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-[#1E3A5F]/95 text-[#7DD3FC] border border-[#38BDF8]/70 px-3.5 py-1.5 rounded-full text-[11px] font-bold shadow-xl flex items-center gap-1.5 pointer-events-none z-40 animate-fade-down backdrop-blur-xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#38BDF8] animate-spin" />
-            <span>Random Shape #{morphCount}</span>
-          </div>
         )}
       </div>
     </div>
