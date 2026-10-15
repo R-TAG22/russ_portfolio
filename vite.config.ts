@@ -5,7 +5,9 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/Portfolio-Site/',
+    base: process.env.GITHUB_ACTIONS === 'true' || process.env.GITHUB_PAGES === 'true' 
+      ? '/russ_portfolio/' 
+      : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
