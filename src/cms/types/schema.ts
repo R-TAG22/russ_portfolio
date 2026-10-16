@@ -205,7 +205,15 @@ export interface ExperienceTimelineContent {
   items: ExperienceTimelineItem[];
 }
 
+export interface WorkShowcaseGalleryImage {
+  id: string;
+  url: string;
+  caption?: string;
+  altText?: string;
+}
+
 export interface WorkShowcaseProject {
+  id?: string;
   title: string;
   client: string;
   category: string;
@@ -214,7 +222,10 @@ export interface WorkShowcaseProject {
   highlights?: string[];
   tags: string[];
   imageUrl: string;
+  galleryImages?: WorkShowcaseGalleryImage[];
   url?: string;
+  caseStudyUrl?: string;
+  actionLabel?: string;
 }
 
 export interface WorkShowcaseContent {
