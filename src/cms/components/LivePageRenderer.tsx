@@ -5,19 +5,61 @@ import { ELEMENT_REGISTRY } from '../registry/ElementRegistry';
 interface LivePageRendererProps {
   page: PageDocument;
   className?: string;
+  onSelectProjectCard?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => void;
+  selectedProjectId?: string | null;
+  onUpdateElementContent?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    content: any
+  ) => void;
 }
 
-export const LivePageRenderer: React.FC<LivePageRendererProps> = ({ page, className = '' }) => {
+export const LivePageRenderer: React.FC<LivePageRendererProps> = ({
+  page,
+  className = '',
+  onSelectProjectCard,
+  selectedProjectId,
+  onUpdateElementContent,
+}) => {
   return (
     <article className={`w-full font-inter text-[#1E3A5F] ${className}`}>
       {(page.sections || []).map((row) => (
-        <RenderRow key={row.id} row={row} />
+        <RenderRow
+          key={row.id}
+          row={row}
+          onSelectProjectCard={onSelectProjectCard}
+          selectedProjectId={selectedProjectId}
+          onUpdateElementContent={onUpdateElementContent}
+        />
       ))}
     </article>
   );
 };
 
-const RenderRow: React.FC<{ row: RowBlock }> = ({ row }) => {
+const RenderRow: React.FC<{
+  row: RowBlock;
+  onSelectProjectCard?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => void;
+  selectedProjectId?: string | null;
+  onUpdateElementContent?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    content: any
+  ) => void;
+}> = ({ row, onSelectProjectCard, selectedProjectId, onUpdateElementContent }) => {
   const { settings } = row;
 
   // Background style
@@ -59,7 +101,14 @@ const RenderRow: React.FC<{ row: RowBlock }> = ({ row }) => {
           }`}
         >
           {(row.columns || []).map((col) => (
-            <RenderColumn key={col.id} column={col} />
+            <RenderColumn
+              key={col.id}
+              rowId={row.id}
+              column={col}
+              onSelectProjectCard={onSelectProjectCard}
+              selectedProjectId={selectedProjectId}
+              onUpdateElementContent={onUpdateElementContent}
+            />
           ))}
         </div>
       </div>
@@ -67,7 +116,24 @@ const RenderRow: React.FC<{ row: RowBlock }> = ({ row }) => {
   );
 };
 
-const RenderColumn: React.FC<{ column: ColumnBlock }> = ({ column }) => {
+const RenderColumn: React.FC<{
+  rowId: string;
+  column: ColumnBlock;
+  onSelectProjectCard?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => void;
+  selectedProjectId?: string | null;
+  onUpdateElementContent?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    content: any
+  ) => void;
+}> = ({ rowId, column, onSelectProjectCard, selectedProjectId, onUpdateElementContent }) => {
   const { width, settings, elements } = column;
 
   // Width translation
@@ -107,14 +173,47 @@ const RenderColumn: React.FC<{ column: ColumnBlock }> = ({ column }) => {
         style={colStyle}
       >
         {(elements || []).map((el) => (
-          <RenderElement key={el.id} element={el} />
+          <RenderElement
+            key={el.id}
+            rowId={rowId}
+            colId={column.id}
+            element={el}
+            onSelectProjectCard={onSelectProjectCard}
+            selectedProjectId={selectedProjectId}
+            onUpdateElementContent={onUpdateElementContent}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-const RenderElement: React.FC<{ element: ElementBlock }> = ({ element }) => {
+const RenderElement: React.FC<{
+  rowId: string;
+  colId: string;
+  element: ElementBlock;
+  onSelectProjectCard?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => void;
+  selectedProjectId?: string | null;
+  onUpdateElementContent?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    content: any
+  ) => void;
+}> = ({
+  rowId,
+  colId,
+  element,
+  onSelectProjectCard,
+  selectedProjectId,
+  onUpdateElementContent,
+}) => {
   const entry = ELEMENT_REGISTRY[element.type];
   if (!entry) {
     return (
@@ -136,7 +235,17 @@ const RenderElement: React.FC<{ element: ElementBlock }> = ({ element }) => {
 
   return (
     <div id={element.id} style={style} className="w-full">
-      <Render content={(content as any).data} settings={settings} />
+      <Render
+        content={(content as any).data}
+        settings={settings}
+        selectedProjectId={selectedProjectId}
+        onSelectProjectCard={(project, idx) =>
+          onSelectProjectCard?.(rowId, colId, element.id, project, idx)
+        }
+        onUpdateContent={(newData) =>
+          onUpdateElementContent?.(rowId, colId, element.id, newData)
+        }
+      />
     </div>
   );
 };

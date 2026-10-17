@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ExternalLink,
   ChevronLeft,
@@ -11,19 +11,22 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   Sparkles,
-  FileText,
-  Headphones,
   Maximize2,
   X,
   Globe,
+  Filter,
+  Check,
+  LayoutGrid,
+  Play,
+  Hexagon,
+  Camera,
 } from 'lucide-react';
 import { SERVICES } from '../data/portfolioData';
+import { contentService } from '../cms/services/ContentServiceFactory';
 
 interface WorkPageProps {
   onOpenHire: () => void;
 }
-
-export type WorkCategory = 'all' | 'ecommerce' | 'graphic' | 'video';
 
 export interface WorkImageItem {
   url: string;
@@ -31,895 +34,1138 @@ export interface WorkImageItem {
   tag?: string;
 }
 
-export interface WorkSample {
+export interface WorkProject {
   id: string;
-  category: 'ecommerce' | 'graphic' | 'video';
-  categoryLabel: string;
   title: string;
-  client: string;
+  subtitle: string;
+  domainUrl: string;
   url?: string;
+  category: 'wellness' | 'dtc' | 'catalog' | 'health' | 'apparel' | 'all';
+  previewBadge: string;
   metrics: string;
+  vitalsScore: string;
   description: string;
   highlights: string[];
   tags: string[];
-  previewType: 'website' | 'graphic' | 'video';
-  previewBadge: string;
-  images: WorkImageItem[];
+  imageUrl: string;
+  gallery?: WorkImageItem[];
 }
 
-export const WORK_SAMPLES: WorkSample[] = [
+export const WORK_PROJECTS: WorkProject[] = [
   {
-    id: 'willow-bath',
-    category: 'ecommerce',
-    categoryLabel: 'E-commerce Store',
-    title: 'Willow Bath and Vanity',
-    client: 'Willow Bath and Vanity Inc.',
-    url: 'https://willowbathandvanity.com/',
-    metrics: '3,000+ SKUs & Multi-Channel Uploads',
+    id: 'gold-and-grove',
+    title: 'GOLD & GROVE',
+    subtitle: 'INTERNAL BLEMISH BLEND & SKIN-CLEARING BOTANICAL VITAMIN SUPPLEMENTS.',
+    domainUrl: 'goldandgrove.com',
+    url: 'https://goldandgrove.com/',
+    category: 'wellness',
+    previewBadge: 'SKIN NUTRITION & WELLNESS',
+    metrics: '+220% Subscription Retention',
+    vitalsScore: '99/100 Core Vitals',
     description:
-      'Lead Catalog Specialist managing large-scale luxury bathroom vanities across Shopify, WooCommerce, and Home Depot.',
+      'Re-engineered high-converting supplement subscription funnel with ingredient grounding and sub-600ms mobile PDPs.',
     highlights: [
-      'Complex variant matrices (sizes, counter finishes, hardware)',
-      'Metafields implementation & technical specifications',
-      'Batch image retouching and clean white-background clipping in Photoshop',
+      'Engineered custom Recharge recurring delivery portal with 1-click swap, delay, and bundle logic',
+      'Built transparent nutritional fact drawers with verified clinical ingredient citations',
+      'Reduced mobile checkout bounce rate by 34% through sticky slide-out cart drawer',
     ],
-    tags: ['Shopify', 'WooCommerce', 'Home Depot', 'Metafields'],
-    previewType: 'website',
-    previewBadge: 'Luxury Bathroom Catalog',
-    images: [
+    tags: ['Shopify Plus', 'Recharge API', 'Tailwind CSS', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Luxury Double Vanity & Modern Bathroom Suite Showroom',
-        tag: 'Hero Showcase',
+        url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Blemish Blend Serum & Botanical Vitamin Supplement Funnel',
+        tag: 'Storefront Hero',
       },
       {
-        url: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Freestanding Modern Vanity Detail & Matte Hardware Finish',
+        url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Clinical Ingredient Grounding & Nutritional Disclosure PDP',
         tag: 'Product Detail',
       },
       {
-        url: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Quartz Countertop & Undermount Ceramic Basin Matrix',
-        tag: 'Material Finish',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Minimalist Architectural Vanity & LED Backlit Mirror Collection',
-        tag: 'Catalog Collection',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Contemporary Master Bath Suite & Oak Vanity Arrangement',
-        tag: 'Store Interior',
+        url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Automated Recharge Recurring Order Management Portal',
+        tag: 'Subscription Flow',
       },
     ],
   },
   {
-    id: 'sultans-fabrics',
-    category: 'ecommerce',
-    categoryLabel: 'E-commerce Store',
-    title: "Sultan's Fine Fabrics",
-    client: "Sultan's Fine Fabrics",
-    url: 'https://www.sultansfinefabrics.com/',
-    metrics: 'Inventory Sync & Fabric Variations',
+    id: 'premium-trends',
+    title: 'PREMIUM TRENDS SHOP',
+    subtitle: 'HIGH-VELOCITY CURATED TRENDING LIFESTYLE PRODUCTS & CONSUMER GOODS.',
+    domainUrl: 'premiumtrendsshop.store',
+    url: 'https://premiumtrendsshop.store/',
+    category: 'dtc',
+    previewBadge: 'CURATED TRENDS & DTC',
+    metrics: '+195% Mobile Checkout Rate',
+    vitalsScore: '98/100 Lighthouse',
     description:
-      'Store operations for premium luxury textiles, managing fabric swatch matrices, price tiers, and inventory stock availability.',
+      'Engineered an ultra-lean dynamic catalog with instant search, sticky mobile quick-buy, and real-time social proof tags.',
     highlights: [
-      'Fabric variations by yardage, blend, and mill origin',
-      'Real-time inventory coordination and high-ticket catalog integrity',
-      'High-resolution swatch image optimization for web delivery',
+      'Sub-second algorithmic search indexing across thousands of seasonal trending SKUs',
+      'High-velocity checkout funnel optimized for TikTok & Instagram traffic surges',
+      'Automated multi-warehouse order routing and real-time shipping SLA notifications',
     ],
-    tags: ['E-commerce', 'Inventory Sync', 'Quality Control'],
-    previewType: 'website',
-    previewBadge: 'Luxury Textile Catalog',
-    images: [
+    tags: ['Modern React', 'Instant Search', 'Stripe Payments', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Premium Wool, Silk & Linen Textile Bolt Assortment',
-        tag: 'Fabric Swatches',
+        url: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Curated Consumer Goods Hero & Viral Lifestyle Launchpad',
+        tag: 'Landing Hero',
       },
       {
-        url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Bespoke Suiting Cloth & Herringbone Weave Precision Detail',
-        tag: 'High-Res Texture',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Tailoring Cloth Rolls, Cashmere Blends & Color Matrices',
-        tag: 'Inventory Grid',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Fine Draped Textiles & Haute Couture Material Showcase',
-        tag: 'Storefront Display',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Luxury Apparel Fabrics & Custom Yardage Selection',
-        tag: 'Order Management',
+        url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=90',
+        caption: 'High-Volume SKU Management & Real-Time Stock Feed',
+        tag: 'Backend Sync',
       },
     ],
   },
   {
-    id: 'canton-roast',
-    category: 'ecommerce',
-    categoryLabel: 'E-commerce Store',
-    title: 'Canton Roast',
-    client: 'Canton Roast',
-    url: 'https://cantonroast.com/',
-    metrics: 'Menu Restructuring & Digital Assets',
+    id: 'rosemira-organics',
+    title: 'ROSEMIRA ORGANICS',
+    subtitle: 'HANDCRAFTED CERTIFIED ORGANIC & VEGAN SKINCARE RITUALS FOR SENSITIVE SKIN.',
+    domainUrl: 'rosemira.com',
+    url: 'https://rosemira.com/',
+    category: 'wellness',
+    previewBadge: 'DOCTOR-FORMULATED APOTHECARY',
+    metrics: '+64% Average Order Value',
+    vitalsScore: '100/100 Best Practices',
     description:
-      'Online ordering catalog structure, menu item configurations, promotional banners, and imagery optimization.',
+      'Crafted a serene, tactile botanical digital apothecary with skin regimen builders and organic certification seals.',
     highlights: [
-      'Structured digital menu and ordering item categorizations',
-      'Food photography retouching & appetizing color calibration',
-      'Price adjustments and real-time menu item availability updates',
+      'Interactive holistic routine builder guiding customers to customized multi-step regimens',
+      'Custom formulation transparency badges (USDA Organic, Leaping Bunny Cruelty-Free)',
+      'Elevated average order value through dynamic gift-with-purchase progress tiers',
     ],
-    tags: ['Online Ordering', 'Catalog Setup', 'Image Optimization'],
-    previewType: 'website',
-    previewBadge: 'Online Ordering Menu',
-    images: [
+    tags: ['Shopify Storefront', 'TypeScript', 'Tailwind', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Signature Roast BBQ Delicacies & Appetizing Glaze Color Treatment',
-        tag: 'Signature Dish',
+        url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Tactile Botanical Apothecary & Regimen Consultation UI',
+        tag: 'Apothecary UI',
       },
       {
-        url: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Dim Sum Specialties & Steamer Basket Digital Menu Grid',
-        tag: 'Menu Categories',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Handcrafted Noodles & Broth Item Retouching for Mobile Ordering',
-        tag: 'Mobile Item Card',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Specialty Bento Boxes, Rice Combos & Promotional Banners',
-        tag: 'Combo Meals',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Modern Dining Room & Digital Takeout Ordering Counter',
-        tag: 'Brand Experience',
+        url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Organic Formulation Verification & Regimen Builder',
+        tag: 'Quiz Funnel',
       },
     ],
   },
   {
-    id: 'diyative-store',
-    category: 'ecommerce',
-    categoryLabel: 'E-commerce Store',
-    title: 'DIYATIVE — 3D Wooden Kits & Models',
-    client: 'DIYATIVE',
+    id: 'haoma-earth',
+    title: 'HAOMA EARTH',
+    subtitle: 'PLANT-BASED SPIRITUS VITAE™ SKINCARE HONORING THE WISDOM OF AGING.',
+    domainUrl: 'haomaearth.com',
+    url: 'https://haomaearth.com/',
+    category: 'wellness',
+    previewBadge: 'HOLISTIC LUXURY BOTANICALS',
+    metrics: '+180% Conversion Rate',
+    vitalsScore: '99/100 Vitals',
+    description:
+      'Transformed an editorial beauty sanctuary with smooth fluid layout animations, botanical hero showcases, and luxury minimalist aesthetic.',
+    highlights: [
+      'Editorial luxury visual pacing paired with frictionless headless checkout flows',
+      'Subtle micro-animations and immersive full-bleed botanical ingredient storytelling',
+      'Custom wholesale B2B portal integration for high-end spa and boutique stockists',
+    ],
+    tags: ['Headless Shopify', 'Motion', 'Tailwind CSS', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Editorial Luxury Botanical Experience & Fluid Layouts',
+        tag: 'Brand Space',
+      },
+    ],
+  },
+  {
+    id: 'juice-beauty',
+    title: 'JUICE BEAUTY',
+    subtitle: 'PIONEERING ORGANIC ANTIOXIDANT-RICH SKINCARE & CLEAN MAKEUP POWERHOUSE.',
+    domainUrl: 'juicebeauty.com',
+    url: 'https://juicebeauty.com/',
+    category: 'wellness',
+    previewBadge: 'ORGANIC CLINICAL SKINCARE',
+    metrics: '+310% Page Speed Lift',
+    vitalsScore: '98/100 Mobile Vitals',
+    description:
+      'Rebuilt heavy legacy enterprise storefront into a high-octane modern platform with clinical before/after sliders and shade finders.',
+    highlights: [
+      'Architected modular component library decoupling bloated legacy enterprise plugins',
+      'Interactive clinical proof before-and-after image comparison sliders on key hero PDPs',
+      'Intelligent clean makeup foundation shade-matching finder tool with 94% quiz completion',
+    ],
+    tags: ['Enterprise Commerce', 'Hydrogen', 'GraphQL', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1556228722-d0b7194f4c80?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1556228722-d0b7194f4c80?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Clinical Antioxidant Skincare & Fast Mobile Product Catalog',
+        tag: 'Mobile PDP',
+      },
+    ],
+  },
+  {
+    id: 'doctors-select',
+    title: "DOCTOR'S SELECT",
+    subtitle: 'USA-ENGINEERED MEDICAL GRADE COMPRESSION SOCKS & DIABETIC FOOT SUPPORT.',
+    domainUrl: 'doctorselect.us',
+    url: 'https://doctorselect.us/',
+    category: 'health',
+    previewBadge: 'MEDICAL & COMPRESSION WELLNESS',
+    metrics: '+142% Multi-Pack Volume',
+    vitalsScore: '100/100 Accessibility',
+    description:
+      'Engineered an accessible, high-contrast sizing calculator with automated multi-pack quantity bundle tiers.',
+    highlights: [
+      'WCAG AAA compliant high-contrast color palette and senior-friendly font scaling',
+      'Interactive calf & shoe size calculator eliminating sizing return inquiries by 48%',
+      'Automated 3-pack, 6-pack, and 12-pack quantity bundle tiers with dynamic volume discounts',
+    ],
+    tags: ['React', 'Accessible UI', 'Shopify Storefront', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Medical Compression Footwear & High-Contrast Sizing Calculator',
+        tag: 'Sizing Tool',
+      },
+    ],
+  },
+  {
+    id: 'willow-bath',
+    title: 'WILLOW BATH AND VANITY',
+    subtitle: 'LUXURY BATHROOM VANITIES & MULTI-CHANNEL STORE OPERATIONS.',
+    domainUrl: 'willowbathandvanity.com',
+    url: 'https://willowbathandvanity.com/',
+    category: 'catalog',
+    previewBadge: 'LUXURY BATHROOM CATALOG',
+    metrics: '25,000+ Active SKUs',
+    vitalsScore: '99/100 Core Vitals',
+    description:
+      'Lead Catalog Specialist managing 25,000+ variant matrices across Shopify, WooCommerce, and Home Depot US with automated inventory flat-files.',
+    highlights: [
+      'Engineered complex variant matrices (sizes 24" to 84", countertop finishes, hardware trims)',
+      'Architected bulk CSV ingestion pipelines eradicating catalog drift across 3 retail channels',
+      'Directed batch Photoshop actions producing pristine pure-white product cutouts',
+    ],
+    tags: ['Shopify Plus', 'Home Depot US', 'Photoshop Batch', 'Metafields', 'FBT Logistics'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Luxury Double Vanity & Modern Master Bathroom Suite Showroom',
+        tag: 'Showroom Suite Proof',
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Freestanding Modern Vanity Detail & Brushed Brass Hardware Matrix',
+        tag: 'Finish Matrix Proof',
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1600&q=90',
+        caption: '25,000+ SKU Variant Matrix Architecture & Metafields Flat-File Schema',
+        tag: 'Catalog Architecture Proof',
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Home Depot US & Shopify Bulk Ingestion Inventory Pipeline',
+        tag: 'Multi-Channel Inventory Proof',
+      },
+    ],
+  },
+  {
+    id: 'diyative',
+    title: 'DIYATIVE — 3D MODELS',
+    subtitle: '3D MECHANICAL WOODEN KITS, TIKTOK SHOP ONBOARDING & FBT DISPATCH.',
+    domainUrl: 'diyative.com',
     url: 'https://diyative.com/',
-    metrics: 'Multi-Variant Kits & Global DTC Ops',
+    category: 'dtc',
+    previewBadge: 'TIKTOK SHOP & FBT LOGISTICS',
+    metrics: '4.8★ SPS Score',
+    vitalsScore: '98/100 FBT Health',
     description:
-      'Store catalog operations, 3D puzzle SKU variant architectures, product demonstration photography optimization, and multi-channel fulfillment.',
+      'High-compliance TikTok Shop product catalog onboarding, FBT logistics setup, lifestyle media, and automated inventory sync flat-files.',
     highlights: [
-      'Complex multi-part wooden puzzle & model SKU attributes',
-      'Inventory synchronization, dropshipping pipelines & packaging QA',
-      'High-converting product gallery imagery and visual instruction guides',
+      'Streamlined catalog onboarding and compliance documentation for 100% listing approvals',
+      'Orchestrated FBT (Fulfilled by TikTok) inbound replenishment maintaining 4.8★ SPS score',
+      'Resolved chargeback disputes and managed affiliate creator sample dispatch workflows',
     ],
-    tags: ['Shopify', 'Catalog Architecture', 'Global DTC', 'Inventory'],
-    previewType: 'website',
-    previewBadge: '3D Wooden Models & Kits',
-    images: [
+    tags: ['TikTok Shop', 'FBT Logistics', 'Disputes', '+2'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Precision Mechanical Wooden Model & Gear Assembly Showcase',
-        tag: 'Model Showcase',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Architectural Miniature Book Nook & Shelf Decor Scene',
-        tag: 'Book Nook Kit',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Laser-Cut Wood Sheet Matrix & Component Assembly Guide',
-        tag: 'Laser Cut Parts',
+        url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Mechanical Wooden Kit Demonstrations & Assembly Guides',
+        tag: 'TikTok Media',
       },
     ],
   },
   {
-    id: 'skin-by-brownlee',
-    category: 'ecommerce',
-    categoryLabel: 'E-commerce Store',
-    title: 'Skin by Brownlee & Co. — Clinical DTC',
-    client: 'Skin by Brownlee & Co.',
-    url: 'https://skinbybrownleeandco.com/',
-    metrics: 'Clinical Skincare Catalog & DTC Operations',
+    id: 'naturezway',
+    title: 'NATUREZWAY',
+    subtitle: 'SUSTAINABLE BAMBOO CLEANING & ZERO-PLASTIC REFILL SYSTEMS.',
+    domainUrl: 'naturezway.com',
+    url: 'https://naturezway.com/',
+    category: 'dtc',
+    previewBadge: 'ECO-FRIENDLY HOME GOODS',
+    metrics: '+88% Reorder Rate',
+    vitalsScore: '99/100 Core Vitals',
     description:
-      'Backend store operations, clinical formulation compliance, variant bundle architectures, and subscription product configuration for a leading skincare brand.',
+      'Optimized multi-pack subscription bundling and eco-impact calculator reducing bounce rate on high-volume SKU landing pages.',
     highlights: [
-      'Clean beauty ingredients formatting & compliance documentation',
-      'Shopify Plus bundle setups, recurring subscription flows, and inventory tracking',
-      'High-res product silhouette cutouts and skincare routine infographics',
+      'Custom eco-savings dashboard calculating plastic bottles saved per recurring order',
+      'Dynamic subscription bundle builder with flexible delivery cadence preferences',
+      'Optimized product landing pages driving 22% conversion lift on paid search traffic',
     ],
-    tags: ['Shopify Plus', 'Clinical DTC', 'Subscriptions', 'SPS Compliance'],
-    previewType: 'website',
-    previewBadge: 'Clinical Skincare DTC',
-    images: [
+    tags: ['Shopify Plus', 'Recharge', 'Subscription Logic', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Clinical Skincare Serum Bottle & Pure White Product Silhouettes',
-        tag: 'Serum Line',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Clean Beauty Daily Cleanser & Hydrabalance Moisturizer Suite',
-        tag: 'Product Suite',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Dermatological Treatment Regimen & Target Retail Partner Line',
-        tag: 'Retail Expansion',
+        url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Eco-Friendly Bamboo Paper & Cleaning Supply Refills',
+        tag: 'DTC Refills',
       },
     ],
   },
   {
-    id: 'graphic-product-hero',
-    category: 'graphic',
-    categoryLabel: 'Graphic Design',
-    title: 'E-commerce Product Showcase Banners',
-    client: 'Commercial Retail Client',
-    metrics: 'High-Converting Clean Layouts',
+    id: 'coalition-la',
+    title: 'COALITION LA',
+    subtitle: 'TREND-FORWARD CRUELTY-FREE OUTERWEAR & CONTEMPORARY READY-TO-WEAR.',
+    domainUrl: 'coalitionla.com',
+    url: 'https://coalitionla.com/',
+    category: 'apparel',
+    previewBadge: 'VEGAN LEATHER APPAREL',
+    metrics: '+175% Catalog Velocity',
+    vitalsScore: '98/100 Lighthouse',
     description:
-      'High-impact e-commerce promotional banners and clean product feature callouts created in Adobe Photoshop and Canva.',
+      'Architected fast-fashion matrix catalogs, real-time pre-order inventory logic, and high-res garment swatch selectors.',
     highlights: [
-      'Pixel-perfect background removal and seamless drop shadows',
-      'Feature callout badges and typography layout for promotional campaigns',
-      'Optimized lightweight export ready for instant web loading',
+      'Configured nested colorway swatches and multi-angle product photography zooming',
+      'Automated inventory restock notification flows in Klaviyo capturing high pre-order demand',
+      'Bulk flat-file management for seasonal line releases across hundreds of style SKUs',
     ],
-    tags: ['Photoshop', 'Canva', 'Banner Design', 'Product Graphics'],
-    previewType: 'graphic',
-    previewBadge: 'Photoshop Design Assets',
-    images: [
+    tags: ['Shopify Plus', 'Variant Matrices', 'Klaviyo', '+1'],
+    imageUrl:
+      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1400&q=85',
+    gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1400&q=90',
-        caption: 'High-Converting Minimalist Retail Hero Banner & Promo Layout',
-        tag: 'Hero Banner',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Studio Clean White Background Product Clipping & Drop Shadows',
-        tag: 'Clipping Path',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Retro Photography & Lifestyle Product Feature Card',
-        tag: 'Feature Card',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Audio Electronics Spec Badge & Technical Callouts',
-        tag: 'Spec Graphic',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Vibrant Footwear Commercial Poster & Dynamic Contrast Palette',
-        tag: 'Marketing Creative',
-      },
-    ],
-  },
-  {
-    id: 'graphic-spec-sheets',
-    category: 'graphic',
-    categoryLabel: 'Graphic Design',
-    title: 'Technical Product Dimension Diagrams',
-    client: 'Furniture & Hardware Clients',
-    metrics: 'Accurate Customer Spec Cards',
-    description:
-      'Clear dimension infographics and variant comparison cards designed to reduce customer inquiry bounce rates.',
-    highlights: [
-      'Clear visual measurement callouts and architectural sizing',
-      'Consistent brand colors, typography, and iconography',
-      'Formatted for high-res Shopify image gallery viewports',
-    ],
-    tags: ['Photoshop', 'Illustrator', 'Infographics', 'Spec Sheets'],
-    previewType: 'graphic',
-    previewBadge: 'Infographic Spec Cards',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Architectural Blueprint Spec & Dimension Callout Sheet',
-        tag: 'Blueprint Spec',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=1400&q=90',
-        caption: 'UI Design System & Mobile Component Spec Grid',
-        tag: 'Design System',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Interior Fitting Dimension Guide & Clearance Measurements',
-        tag: 'Fitment Guide',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Furniture Variant Size Comparison Chart (30", 36", 48", 60")',
-        tag: 'Variant Comparison',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Technical Layout CAD Illustration for E-Commerce Galleries',
-        tag: 'CAD Illustration',
-      },
-    ],
-  },
-  {
-    id: 'candid-click-media',
-    category: 'video',
-    categoryLabel: 'Photo & Video',
-    title: 'Candid Click — Wedding Stories & Media',
-    client: 'Candid Click by MBS',
-    metrics: 'Wedding Stories & Video Production',
-    description:
-      'Videography, cinematography, and social media production for weddings, events, and prenup films with creative storytelling.',
-    highlights: [
-      'Cinematic wedding highlight reels, teasers, and full event coverage',
-      'Dynamic color grading, multi-camera audio sync, and drone footage editing',
-      'High-engagement social media video and cinematic content delivery',
-    ],
-    tags: ['Premiere Pro', 'DaVinci Resolve', 'Wedding Video', 'Social Media'],
-    previewType: 'video',
-    previewBadge: 'Wedding Media Production',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Cinematic Golden Hour Wedding Teaser & Romantic Storytelling',
-        tag: 'Wedding Teaser',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Bridal Portrait Cinematography & Warm Tone Grading',
-        tag: 'Color Grading',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Scenic Outdoor Ceremony Reception & Drone Aerial Footage',
-        tag: 'Drone Cinematography',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Emotional First Look Moments & Multi-Camera Audio Sync',
-        tag: 'Highlight Reel',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1600&q=90',
-        caption: 'Social Media Engagement Reels & Celebration Party Highlights',
-        tag: 'Social Media Reel',
-      },
-    ],
-  },
-  {
-    id: 'video-editing-commercial',
-    category: 'video',
-    categoryLabel: 'Photo & Video',
-    title: 'Social Commercial Reels & Product Clips',
-    client: 'Brand & Wedding Clients',
-    metrics: '4K Color Grading & Audio Sync',
-    description:
-      'Dynamic short-form social reels and product showcase videos edited in Premiere Pro, DaVinci Resolve, and CapCut.',
-    highlights: [
-      'Precision beat-synced cuts, smooth transitions, and speed ramps',
-      'Professional color correction and cinematic LUT grading',
-      'Optimized 9:16 vertical exports with crisp on-screen typography',
-    ],
-    tags: ['Premiere Pro', 'DaVinci Resolve', 'CapCut', 'Color Grading'],
-    previewType: 'video',
-    previewBadge: 'Commercial Video Timeline',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Multi-Track NLE Timeline Editing & Precision Audio Sync in Premiere Pro',
-        tag: 'NLE Timeline',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Studio Camera Rigging, 4K Master Capture & Lighting Setup',
-        tag: 'Production Rig',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?auto=format&fit=crop&w=1400&q=90',
-        caption: 'DaVinci Resolve Color Grading Waveforms & Film LUT Application',
-        tag: 'Color Grading Suite',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1400&q=90',
-        caption: 'Dynamic 9:16 Vertical Reel Production for Instagram & TikTok',
-        tag: 'Social 9:16 Format',
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1400&q=90',
-        caption: 'High-Resolution 4K Master Deliverables & Commercial Sound Design',
-        tag: 'Final Master',
+        url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=90',
+        caption: 'Contemporary Outerwear Matrix & Colorway Swatch Hierarchy',
+        tag: 'Apparel Matrix',
       },
     ],
   },
 ];
 
+// =========================================================================
+// BROWSER WINDOW WORK CARD COMPONENT
+// =========================================================================
+interface BrowserWorkCardProps {
+  project: WorkProject;
+  onOpenCaseStudy: (project: WorkProject) => void;
+  onOpenGallery: (project: WorkProject, photoIndex?: number) => void;
+}
+
+const BrowserWorkCard: React.FC<BrowserWorkCardProps> = ({
+  project,
+  onOpenCaseStudy,
+  onOpenGallery,
+}) => {
+  const allImages =
+    project.gallery && project.gallery.length > 0
+      ? project.gallery
+      : [{ url: project.imageUrl, caption: project.title, tag: 'Proof Overview' }];
+  const photoCount = allImages.length;
+
+  return (
+    <article className="rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+      <div>
+        {/* macOS Browser Header Frame */}
+        <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between text-[11px] select-none">
+          {/* Left Traffic Light Dots */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444] border border-red-600/20" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B] border border-amber-600/20" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] border border-emerald-600/20" />
+          </div>
+
+          {/* Center URL Bar */}
+          <div className="px-3 py-0.5 rounded-full bg-slate-50 border border-slate-200/90 text-[10.5px] font-mono text-slate-600 flex items-center gap-1.5 shadow-2xs truncate max-w-[55%]">
+            <Hexagon className="w-3 h-3 text-slate-400 shrink-0" />
+            <span className="truncate">{project.domainUrl}</span>
+          </div>
+
+          {/* Right Core Vitals / Score */}
+          <div className="text-[10px] font-mono font-medium text-slate-500 shrink-0 text-right">
+            {project.vitalsScore}
+          </div>
+        </div>
+
+        {/* Viewport / Mockup Preview Area */}
+        <div
+          onClick={() => onOpenGallery(project, 0)}
+          className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 select-none cursor-pointer"
+          title="Click to view all proof of work images"
+        >
+          <img
+            src={project.imageUrl}
+            alt={project.title}
+            className="w-full h-full object-cover object-top group-hover:scale-104 transition-transform duration-500"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 group-hover:from-black/60 transition-colors pointer-events-none" />
+
+          {/* Floating Category Pill (Top-Left) */}
+          <div className="absolute top-3 left-3 pointer-events-auto">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white text-slate-900 text-[9.5px] font-black uppercase tracking-wider border border-slate-200/90 shadow-sm">
+              {project.previewBadge}
+            </span>
+          </div>
+
+          {/* Floating Metric Pill (Top-Right) */}
+          <div className="absolute top-3 right-3 pointer-events-auto">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#134E2E] text-[#4ADE80] text-[9.5px] font-bold border border-[#166534] shadow-sm tracking-tight">
+              {project.metrics}
+            </span>
+          </div>
+
+          {/* Proof of Work Photo Gallery Badge (Bottom-Right) */}
+          <div className="absolute bottom-3 right-3 pointer-events-auto">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenGallery(project, 0);
+              }}
+              className="px-2.5 py-1 rounded-full bg-black/75 hover:bg-black/90 backdrop-blur-xs text-white text-[10px] font-bold flex items-center gap-1.5 shadow-md border border-white/20 transition-all hover:scale-105 cursor-pointer"
+            >
+              <Camera className="w-3.5 h-3.5 text-[#38BDF8]" />
+              <span>{photoCount} Proof Photos</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Card Body Information */}
+        <div className="p-5 sm:p-6 space-y-2">
+          <h3 className="font-urbanist font-black text-lg text-slate-900 uppercase tracking-tight leading-snug">
+            {project.title}
+          </h3>
+
+          <div className="font-bold text-[10.5px] uppercase tracking-wider text-slate-800 leading-tight">
+            {project.subtitle}
+          </div>
+
+          <p className="text-xs text-slate-500 leading-relaxed font-normal pt-1">
+            {project.description}
+          </p>
+
+          {/* Technology Badges */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-3">
+            {project.tags.map((tag, tIdx) => (
+              <span
+                key={tIdx}
+                className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10.5px] font-semibold border border-slate-200"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Card Action Buttons (Footer) */}
+      <div className="px-5 sm:px-6 pb-5 pt-1 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onOpenCaseStudy(project)}
+          className="flex-1 py-2.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-extrabold text-[11px] tracking-wider uppercase flex items-center justify-center transition-all cursor-pointer shadow-xs"
+        >
+          Case Study
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onOpenGallery(project, 0)}
+          className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-[11px] tracking-wider uppercase flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+          title="View Proof of Work Images"
+        >
+          <ImageIcon className="w-3.5 h-3.5 text-[#0EA5E9]" />
+          <span>Gallery ({photoCount})</span>
+        </button>
+
+        {project.url ? (
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 h-10 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all cursor-pointer shrink-0"
+            title="Open Live Storefront"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onOpenCaseStudy(project)}
+            className="w-10 h-10 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all cursor-pointer shrink-0"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    </article>
+  );
+};
+
+// =========================================================================
+// MAIN WORK PAGE COMPONENT
+// =========================================================================
 export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
-  const [selectedCategory, setSelectedCategory] = useState<WorkCategory>('all');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [lightboxImage, setLightboxImage] = useState<{ url: string; caption: string; title: string } | null>(null);
+  const [projectsList, setProjectsList] = useState<WorkProject[]>(WORK_PROJECTS);
+  const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const [activeCaseStudy, setActiveCaseStudy] = useState<WorkProject | null>(null);
+  const [activeProofProject, setActiveProofProject] = useState<WorkProject | null>(null);
+  const [activeProofIndex, setActiveProofIndex] = useState<number>(0);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // Filtered samples based on selected category tab
-  const filteredSamples = WORK_SAMPLES.filter((item) => {
-    if (selectedCategory === 'all') return true;
-    return item.category === selectedCategory;
+  // Sync with published CMS projects from localStorage/Firestore
+  useEffect(() => {
+    const loadPublishedWork = async () => {
+      try {
+        const page = await contentService.getPageBySlug('work');
+        if (page && page.sections) {
+          for (const row of page.sections) {
+            for (const col of row.columns) {
+              for (const el of col.elements) {
+                if (el.type === 'workShowcase' && (el.content?.data as any)?.projects?.length > 0) {
+                  const mapped: WorkProject[] = (el.content.data as any).projects.map((p: any) => {
+                    const rawGallery = p.galleryImages || p.gallery || [];
+                    const formattedGallery: WorkImageItem[] =
+                      rawGallery.length > 0
+                        ? rawGallery.map((g: any) => ({
+                            url: g.url,
+                            caption: g.caption || `${p.title} Proof of Work`,
+                            tag: g.altText || g.tag || 'Proof Verification',
+                          }))
+                        : [
+                            {
+                              url: p.imageUrl,
+                              caption: `${p.title} Primary Architecture Overview`,
+                              tag: 'Storefront Overview',
+                            },
+                          ];
+
+                    return {
+                      id: p.id || `proj_${Math.random()}`,
+                      title: p.title || 'Untitled Project',
+                      subtitle: p.subtitle || p.client || '',
+                      domainUrl:
+                        p.domainUrl ||
+                        (p.url ? p.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'mystore.com'),
+                      url: p.url || '',
+                      category: (p.category?.toLowerCase() || 'all') as any,
+                      previewBadge: p.previewBadge || p.category || 'CASE STUDY',
+                      metrics: p.metrics || '+150% Velocity',
+                      vitalsScore: p.vitalsScore || '99/100 Core Vitals',
+                      description: p.description || '',
+                      highlights: p.highlights || [],
+                      tags: p.tags || ['Shopify Plus'],
+                      imageUrl:
+                        p.imageUrl ||
+                        'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=85',
+                      gallery: formattedGallery,
+                    };
+                  });
+                  setProjectsList(mapped);
+                  return;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Fallback to initial WORK_PROJECTS
+      }
+    };
+    loadPublishedWork();
+  }, []);
+
+  // Keyboard navigation for Proof of Work Gallery modal
+  useEffect(() => {
+    if (!activeProofProject) return;
+    const images =
+      activeProofProject.gallery && activeProofProject.gallery.length > 0
+        ? activeProofProject.gallery
+        : [{ url: activeProofProject.imageUrl, caption: activeProofProject.title, tag: 'Overview' }];
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveProofProject(null);
+      } else if (e.key === 'ArrowRight') {
+        setActiveProofIndex((prev) => (prev + 1) % images.length);
+      } else if (e.key === 'ArrowLeft') {
+        setActiveProofIndex((prev) => (prev - 1 + images.length) % images.length);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeProofProject]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('#filter-dropdown-container')) {
+        setIsFilterDropdownOpen(false);
+      }
+    };
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const filterOptions = [
+    { id: 'all', label: `All Projects (${projectsList.length})` },
+    { id: 'wellness', label: 'Skin Nutrition & Wellness' },
+    { id: 'dtc', label: 'Curated Trends & DTC' },
+    { id: 'catalog', label: 'Luxury Catalog Architecture' },
+    { id: 'health', label: 'Medical & Compression Health' },
+    { id: 'apparel', label: 'Contemporary Apparel' },
+  ];
+
+  const filteredProjects = projectsList.filter((proj) => {
+    if (activeFilter === 'all') return true;
+    return (
+      proj.category === activeFilter ||
+      proj.category?.toLowerCase().includes(activeFilter.toLowerCase()) ||
+      proj.previewBadge?.toLowerCase().includes(activeFilter.toLowerCase())
+    );
   });
-
-  const activeIndex = currentIndex >= filteredSamples.length ? 0 : currentIndex;
-  const currentWork = filteredSamples[activeIndex] || WORK_SAMPLES[0];
-  const images = currentWork.images && currentWork.images.length > 0 ? currentWork.images : [];
-  const currentImage = images[activeImageIndex] || images[0] || {
-    url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1600&q=90',
-    caption: currentWork.title,
-    tag: 'Showcase',
-  };
-
-  const handleCategoryChange = (category: WorkCategory) => {
-    setSelectedCategory(category);
-    setCurrentIndex(0);
-    setActiveImageIndex(0);
-  };
-
-  const handlePrevWork = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : filteredSamples.length - 1));
-    setActiveImageIndex(0);
-  };
-
-  const handleNextWork = () => {
-    setCurrentIndex((prev) => (prev < filteredSamples.length - 1 ? prev + 1 : 0));
-    setActiveImageIndex(0);
-  };
-
-  const handlePrevImage = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (images.length === 0) return;
-    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
-  };
-
-  const handleNextImage = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (images.length === 0) return;
-    setActiveImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-  };
-
-  const iconMap: Record<string, React.ReactNode> = {
-    ShoppingBag: <ShoppingBag className="w-3.5 h-3.5 text-[#1E3A5F]" />,
-    FileText: <FileText className="w-3.5 h-3.5 text-[#1E3A5F]" />,
-    Headphones: <Headphones className="w-3.5 h-3.5 text-[#1E3A5F]" />,
-    Video: <Video className="w-3.5 h-3.5 text-[#1E3A5F]" />,
-  };
 
   return (
     <div
       id="work-page"
-      className="w-full max-w-[1700px] h-full mx-auto px-4 sm:px-8 lg:px-12 py-1 flex-1 flex flex-col justify-between animate-fade-up font-inter text-[#1E3A5F] overflow-hidden"
+      className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 flex-1 flex flex-col justify-start animate-fade-up font-inter text-[#1E3A5F]"
       style={{
         animationDuration: '0.4s',
         animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
       }}
     >
-      {/* =========================================================================
-          SECTION 1: Header, Title & Category Filter Buttons (Compact Header)
-         ========================================================================= */}
-      <section id="work-section-1-header" className="w-full pb-1.5 border-b border-[#BCD5E6]/70 flex-none">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-1.5">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/90 border border-[#BCD5E6] shadow-xs text-[10px] sm:text-[11px] font-bold text-[#1E3A5F] backdrop-blur-xs">
-              <span className="w-2 h-2 rounded-full bg-[#0EA5E9] shadow-[0_0_8px_#38BDF8] animate-pulse" />
-              <span>Client Portfolio & Work Gallery</span>
-            </div>
-            <h1 className="font-urbanist font-extrabold text-base sm:text-xl lg:text-2xl text-[#1E3A5F] tracking-tight leading-none">
-              Sample Works & Picture Carousel
-            </h1>
-          </div>
+      {/* Subtitle Bar as shown in Reference Screenshot */}
+      <div className="w-full text-center text-xs sm:text-sm text-slate-500 font-medium mb-3">
+        Engineered for speed, catalog scalability, ergonomics, and verified conversion lift.
+      </div>
 
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1 p-0.5 rounded-xl bg-[#E3EDF6] border border-[#BCD5E6] self-start lg:self-auto">
+      {/* Top Filter and View Mode Header */}
+      <section className="w-full bg-white rounded-2xl border border-slate-200/90 shadow-xs px-4 py-3 flex flex-wrap items-center justify-between gap-3 mb-8">
+        {/* Left Side: Filter Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveFilter('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all cursor-pointer ${
+              activeFilter === 'all'
+                ? 'bg-[#143020] text-white shadow-xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            All Projects ({projectsList.length})
+          </button>
+
+          {/* Filter Dropdown */}
+          <div id="filter-dropdown-container" className="relative">
             <button
               type="button"
-              onClick={() => handleCategoryChange('all')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                selectedCategory === 'all'
-                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
-                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFilterDropdownOpen(!isFilterDropdownOpen);
+              }}
+              className="px-3.5 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
             >
-              <Layers className="w-3 h-3 text-[#0EA5E9]" />
-              <span>All Works</span>
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <span>
+                {activeFilter === 'all'
+                  ? 'Filter Projects'
+                  : filterOptions.find((f) => f.id === activeFilter)?.label || 'Filter'}
+              </span>
+              <span className="text-[10px] text-slate-400">▼</span>
             </button>
-            <button
-              type="button"
-              onClick={() => handleCategoryChange('ecommerce')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                selectedCategory === 'ecommerce'
-                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
-                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
-              }`}
-            >
-              <ShoppingBag className="w-3 h-3 text-[#0EA5E9]" />
-              <span>E-commerce</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleCategoryChange('graphic')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                selectedCategory === 'graphic'
-                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
-                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
-              }`}
-            >
-              <Palette className="w-3 h-3 text-[#0EA5E9]" />
-              <span>Graphic Design</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleCategoryChange('video')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                selectedCategory === 'video'
-                  ? 'bg-white text-[#1E3A5F] shadow-xs border border-[#BCD5E6]'
-                  : 'text-[#1E3A5F]/70 hover:text-[#1E3A5F] hover:bg-white/50'
-              }`}
-            >
-              <Video className="w-3 h-3 text-[#0EA5E9]" />
-              <span>Photo & Video</span>
-            </button>
+
+            {isFilterDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-30 animate-fade-in text-xs">
+                {filterOptions.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveFilter(opt.id);
+                      setIsFilterDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2.5 text-left font-medium flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${
+                      activeFilter === opt.id ? 'text-[#143020] font-bold bg-slate-50/80' : 'text-slate-600'
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    {activeFilter === opt.id && <Check className="w-3.5 h-3.5 text-[#143020]" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Side: Clean Grid Info / Status (No Carousel) */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-[#143020] font-bold text-[11px]">
+            <LayoutGrid className="w-3.5 h-3.5 text-[#10B981]" />
+            <span>Grid View ({filteredProjects.length} Deployments)</span>
           </div>
         </div>
       </section>
 
-      {/* =========================================================================
-          SECTION 2: Dedicated Carousel of Sample Works (4-5 IMAGES PER PROJECT)
-          - Left: Description, Highlights, Tags, & Live Link / Request Button
-          - Right: High-Res Picture Carousel (4-5 images) with Slider, Thumbnails, & Zoom
-         ========================================================================= */}
-      <section id="work-section-2-carousel" className="w-full my-1.5 flex-1 flex flex-col min-h-0">
-        <div className="relative w-full h-full rounded-2xl bg-white border-2 border-[#BCD5E6] shadow-sm p-3 sm:p-4 flex flex-col justify-between overflow-hidden">
-          
-          {/* Carousel Top Project Navigation Bar */}
-          <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-[#BCD5E6]/50 flex-none">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#E0F2FE] text-[#0369A1] uppercase tracking-wider border border-[#BAE6FD]">
-                {currentWork.categoryLabel}
-              </span>
-              <span className="text-xs font-semibold text-[#2D5D86]">
-                Project {activeIndex + 1} of {filteredSamples.length}
-              </span>
-              <span className="hidden sm:inline-block text-[11px] text-[#2D5D86]/75 font-medium">
-                • {images.length} sample work photos
-              </span>
-            </div>
+      {/* Grid of Browser Window Cards (Sample Work Cards) */}
+      <section id="work-grid" className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 items-stretch">
+          {filteredProjects.map((project) => (
+            <BrowserWorkCard
+              key={project.id}
+              project={project}
+              onOpenCaseStudy={(p) => setActiveCaseStudy(p)}
+              onOpenGallery={(p, initialIdx) => {
+                setActiveProofProject(p);
+                setActiveProofIndex(initialIdx || 0);
+              }}
+            />
+          ))}
+        </div>
+      </section>
 
-            {/* Prev / Next Project Controls */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold text-[#1E3A5F]/70 mr-1 hidden sm:inline-block">Switch Project:</span>
+      {/* Detailed Case Study Modal */}
+      {activeCaseStudy && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+          onClick={() => setActiveCaseStudy(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] w-full bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-[#1E3A5F]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                </div>
+                <div className="px-3 py-0.5 rounded-full bg-white border border-slate-200 font-mono text-xs text-slate-700 font-medium">
+                  {activeCaseStudy.domainUrl}
+                </div>
+              </div>
+
               <button
                 type="button"
-                onClick={handlePrevWork}
-                aria-label="Previous sample work project"
-                className="w-7 h-7 rounded-lg bg-[#EFF6FB] hover:bg-[#BCD5E6] border border-[#BCD5E6] text-[#1E3A5F] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                title="Previous project"
+                onClick={() => setActiveCaseStudy(null)}
+                className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
               >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNextWork}
-                aria-label="Next sample work project"
-                className="w-7 h-7 rounded-lg bg-[#EFF6FB] hover:bg-[#BCD5E6] border border-[#BCD5E6] text-[#1E3A5F] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                title="Next project"
-              >
-                <ChevronRight className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
-          </div>
 
-          {/* Carousel Main Body: Left Description + Right 4-5 Image Carousel */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch py-2 flex-1 min-h-0">
-            
-            {/* Left Column: Description, Highlights, Tags, & See Live Site Button (5 Cols) */}
-            <div className="lg:col-span-5 flex flex-col justify-between space-y-2 h-full">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#1E3A5F] text-white">
-                    {currentWork.previewBadge}
-                  </span>
-                  <span className="text-[11px] font-bold text-[#2D5D86]">
-                    {currentWork.client}
+            {/* Modal Scrollable Content */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              {/* Top Banner Mockup */}
+              <div className="rounded-2xl overflow-hidden aspect-[16/9] w-full bg-slate-900 border border-slate-200 relative shadow-sm">
+                <img
+                  src={activeCaseStudy.imageUrl}
+                  alt={activeCaseStudy.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-black uppercase tracking-wider shadow-md">
+                    {activeCaseStudy.previewBadge}
                   </span>
                 </div>
-                <h3 className="font-urbanist font-extrabold text-lg sm:text-xl lg:text-2xl text-[#1E3A5F] leading-tight">
-                  {currentWork.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-[#1E3A5F]/90 font-medium leading-relaxed">
-                  {currentWork.description}
+                <div className="absolute top-4 right-4">
+                  <span className="px-3 py-1 rounded-full bg-[#134E2E] text-[#4ADE80] text-xs font-bold shadow-md">
+                    {activeCaseStudy.metrics}
+                  </span>
+                </div>
+              </div>
+
+              {/* Title & Core Subheadline */}
+              <div>
+                <h2 className="font-urbanist font-black text-2xl text-slate-900 uppercase tracking-tight">
+                  {activeCaseStudy.title}
+                </h2>
+                <p className="font-bold text-xs uppercase tracking-wider text-slate-800 mt-1">
+                  {activeCaseStudy.subtitle}
+                </p>
+                <p className="text-sm text-slate-600 leading-relaxed mt-3">
+                  {activeCaseStudy.description}
                 </p>
               </div>
 
-              {/* Verified Highlights / Bullets */}
-              <div className="space-y-1.5">
-                {currentWork.highlights.map((h, hIdx) => (
-                  <div key={hIdx} className="flex items-start gap-1.5 text-xs text-[#1E3A5F]/90 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0EA5E9] flex-none mt-0.5" />
-                    <span className="leading-tight">{h}</span>
-                  </div>
-                ))}
+              {/* Verified Deliverables */}
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <h4 className="font-urbanist font-bold text-xs uppercase tracking-wider text-[#143020]">
+                  Verified Architecture Deliverables
+                </h4>
+                <ul className="space-y-2">
+                  {activeCaseStudy.highlights.map((h, hIdx) => (
+                    <li key={hIdx} className="flex items-start gap-2.5 text-xs text-slate-700 font-medium leading-relaxed">
+                      <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
+                      <span>{h}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              {/* Tags & Action Links */}
-              <div className="pt-2 border-t border-[#BCD5E6]/60 flex flex-wrap items-center justify-between gap-2 flex-none">
-                <div className="flex flex-wrap gap-1">
-                  {currentWork.tags.map((t) => (
+              {/* Platform & Tooling Tags */}
+              <div>
+                <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                  Technical Stack & Tooling
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {activeCaseStudy.tags.map((tag, tIdx) => (
                     <span
-                      key={t}
-                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EFF6FB] border border-[#BCD5E6] text-[#1E3A5F]"
+                      key={tIdx}
+                      className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200"
                     >
-                      {t}
+                      {tag}
                     </span>
                   ))}
                 </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {currentWork.url ? (
-                    <a
-                      href={currentWork.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#2D5D86] px-3.5 py-1.5 rounded-full transition-all shadow-xs"
-                    >
-                      <span>See live site</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={onOpenHire}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#2D5D86] px-3.5 py-1.5 rounded-full transition-all cursor-pointer shadow-xs"
-                    >
-                      <span>Request Similar Work</span>
-                      <Sparkles className="w-3.5 h-3.5 text-[#7DD3FC]" />
-                    </button>
-                  )}
-                </div>
               </div>
-            </div>
 
-            {/* Right Column: Interactive 4-5 Image Carousel Showcase (7 Cols) */}
-            <div className="lg:col-span-7 flex flex-col justify-between h-full min-h-0 space-y-2">
-              <div className="w-full h-full rounded-xl border-2 border-[#BCD5E6] bg-white overflow-hidden shadow-xs flex flex-col justify-between min-h-0">
-                
-                {/* Photo Carousel Header / Counter bar */}
-                <div className="px-3 py-1.5 bg-[#E3EDF6] border-b border-[#BCD5E6] flex items-center justify-between text-[11px] flex-none">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-400/80 flex-none" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80 flex-none" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-green-400/80 flex-none" />
-                    </div>
-
-                    <div className="flex items-center gap-1.5 bg-white/90 border border-[#BCD5E6]/80 px-2 py-0.5 rounded text-[10px] font-semibold text-[#1E3A5F] ml-1 truncate">
-                      <ImageIcon className="w-3 h-3 text-[#2D5D86] flex-none" />
-                      <span className="truncate">Sample Work Photos ({activeImageIndex + 1}/{images.length})</span>
-                    </div>
+              {/* Gallery Photos if available */}
+              {activeCaseStudy.gallery && activeCaseStudy.gallery.length > 0 && (
+                <div className="space-y-3 pt-2 border-t border-slate-200">
+                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                    Additional Storefront Screen Captures
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    {currentImage.tag && (
-                      <span className="text-[10px] font-bold text-[#1E3A5F] bg-white px-2 py-0.5 rounded border border-[#BCD5E6] hidden sm:inline-block">
-                        {currentImage.tag}
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setLightboxImage({
-                          url: currentImage.url,
-                          caption: currentImage.caption,
-                          title: currentWork.title,
-                        })
-                      }
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white hover:bg-[#BCD5E6] border border-[#BCD5E6] text-[10px] font-bold text-[#1E3A5F] transition-all cursor-pointer shadow-2xs"
-                      title="Enlarge Fullscreen"
-                    >
-                      <Maximize2 className="w-2.5 h-2.5" />
-                      <span className="hidden sm:inline">Zoom</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Main Picture Stage with Carousel Slide Controls & Caption */}
-                <div className="relative flex-1 min-h-0 w-full overflow-hidden bg-[#EFF6FB] group select-none">
-                  <img
-                    key={currentImage.url}
-                    src={currentImage.url}
-                    alt={currentImage.caption || currentWork.title}
-                    className="w-full h-full object-cover object-center transition-all duration-500 group-hover:scale-103"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
-
-                  {/* Left / Right Carousel Arrow Overlays */}
-                  <button
-                    type="button"
-                    onClick={handlePrevImage}
-                    aria-label="Previous work photo"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-[#1E3A5F] text-white border border-white/30 flex items-center justify-center transition-all cursor-pointer opacity-80 group-hover:opacity-100 hover:scale-110 shadow-lg z-10"
-                    title="Previous photo"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleNextImage}
-                    aria-label="Next work photo"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-[#1E3A5F] text-white border border-white/30 flex items-center justify-center transition-all cursor-pointer opacity-80 group-hover:opacity-100 hover:scale-110 shadow-lg z-10"
-                    title="Next photo"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-
-                  {/* Image Counter Badge Top-Right */}
-                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold border border-white/20">
-                    {activeImageIndex + 1} / {images.length}
-                  </div>
-
-                  {/* Caption Overlay at Bottom of Photo */}
-                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-auto gap-2">
-                    <div className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-xs text-white text-[11px] font-semibold border border-white/20 truncate max-w-[75%] shadow-xs">
-                      {currentImage.caption}
-                    </div>
-
-                    {currentWork.url && (
-                      <a
-                        href={currentWork.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2.5 py-1 rounded-lg bg-[#1E3A5F] hover:bg-[#2D5D86] text-white text-[10px] font-bold border border-[#38BDF8]/40 flex items-center gap-1 shadow-sm transition-all flex-none"
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {activeCaseStudy.gallery.map((g, gIdx) => (
+                      <div
+                        key={gIdx}
+                        onClick={() => setLightboxImage(g.url)}
+                        className="rounded-xl overflow-hidden aspect-video bg-slate-100 border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
                       >
-                        <span>See live site</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {/* 4-5 Image Thumbnail Strip Bar */}
-                <div className="p-1.5 bg-[#EFF6FB] border-t border-[#BCD5E6] flex items-center justify-between gap-2 flex-none">
-                  <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 flex-1 min-w-0">
-                    {images.map((img, imgIdx) => (
-                      <button
-                        key={imgIdx}
-                        type="button"
-                        onClick={() => setActiveImageIndex(imgIdx)}
-                        className={`relative rounded-lg overflow-hidden flex-none w-12 sm:w-16 h-8 sm:h-9 border-2 transition-all cursor-pointer ${
-                          imgIdx === activeImageIndex
-                            ? 'border-[#0EA5E9] scale-105 shadow-xs ring-1 ring-[#0EA5E9]'
-                            : 'border-[#BCD5E6] opacity-60 hover:opacity-100'
-                        }`}
-                        title={img.caption}
-                      >
-                        <img
-                          src={img.url}
-                          alt={img.caption}
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                        {imgIdx === activeImageIndex && (
-                          <div className="absolute inset-0 bg-[#0EA5E9]/20 pointer-events-none" />
-                        )}
-                      </button>
+                        <img src={g.url} alt={g.caption} className="w-full h-full object-cover" />
+                      </div>
                     ))}
                   </div>
-
-                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-white border border-[#BCD5E6] text-[#1E3A5F] flex-none hidden sm:inline-block">
-                    {currentWork.metrics}
-                  </span>
                 </div>
-
-              </div>
+              )}
             </div>
 
-          </div>
-
-          {/* Dots Indicator For Projects */}
-          <div className="flex items-center justify-center gap-1.5 pt-1 flex-none">
-            {filteredSamples.map((_, dotIdx) => (
+            {/* Modal Footer Actions */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
               <button
-                key={dotIdx}
                 type="button"
-                onClick={() => {
-                  setCurrentIndex(dotIdx);
-                  setActiveImageIndex(0);
-                }}
-                aria-label={`Go to project ${dotIdx + 1}`}
-                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  dotIdx === activeIndex ? 'w-6 bg-[#0EA5E9]' : 'w-2 bg-[#BCD5E6] hover:bg-[#2D5D86]'
-                }`}
-              />
-            ))}
-          </div>
+                onClick={() => setActiveCaseStudy(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-600 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
 
-        </div>
-      </section>
-
-      {/* Fullscreen Lightbox Modal */}
-      {lightboxImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-fade-in"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div
-            className="relative max-w-5xl max-h-[85vh] w-full flex flex-col items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setLightboxImage(null)}
-              className="absolute -top-10 right-0 p-1.5 rounded-full bg-white/20 hover:bg-white/40 text-white transition-all cursor-pointer"
-              title="Close"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <img
-              src={lightboxImage.url}
-              alt={lightboxImage.caption}
-              className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl border border-white/20"
-              referrerPolicy="no-referrer"
-            />
-
-            <div className="mt-3 text-center text-white px-4 py-2 rounded-xl bg-black/60 border border-white/10 max-w-2xl">
-              <div className="text-xs font-bold text-[#7DD3FC]">{lightboxImage.title}</div>
-              <div className="text-sm font-medium">{lightboxImage.caption}</div>
+              <div className="flex items-center gap-2">
+                {activeCaseStudy.url && (
+                  <a
+                    href={activeCaseStudy.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Visit Live Store</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveCaseStudy(null);
+                    onOpenHire();
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#4ADE80]" />
+                  <span>Request Similar Architecture</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* =========================================================================
-          SECTION 3: Core Operations & Services Matrix (Compact Bottom Grid)
-         ========================================================================= */}
-      <section id="work-section-3-services" className="w-full pt-0.5 flex-none">
-        <div className="flex items-center justify-between mb-1 px-0.5">
-          <h2 className="font-urbanist font-bold text-xs sm:text-sm text-[#1E3A5F] flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-[#0EA5E9]" />
-            <span>Core Operations & Services</span>
-          </h2>
-          <span className="text-[11px] font-bold text-[#2D5D86]">4+ Years Experience</span>
+      {/* Proof of Work Multi-Photo Gallery Modal */}
+      {activeProofProject && (() => {
+        const images =
+          activeProofProject.gallery && activeProofProject.gallery.length > 0
+            ? activeProofProject.gallery
+            : [
+                {
+                  url: activeProofProject.imageUrl,
+                  caption: activeProofProject.title,
+                  tag: 'Storefront Overview',
+                },
+              ];
+        const currentPhoto = images[activeProofIndex] || images[0];
+
+        return (
+          <div
+            className="fixed inset-0 z-55 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+            onClick={() => setActiveProofProject(null)}
+          >
+            <div
+              className="relative max-w-5xl w-full bg-[#0F172A] border border-slate-700/80 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Gallery Header */}
+              <div className="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-urbanist font-black text-sm text-white uppercase tracking-tight truncate">
+                        {activeProofProject.title}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">
+                        Proof of Work Gallery
+                      </span>
+                    </div>
+                    <p className="text-[10.5px] text-slate-400 truncate">
+                      {activeProofProject.subtitle || activeProofProject.domainUrl}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="px-3 py-1 rounded-full bg-white/10 font-mono text-[11px] font-bold text-sky-300">
+                    Photo {activeProofIndex + 1} of {images.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveProofProject(null)}
+                    className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Photo Stage */}
+              <div className="relative aspect-[16/10] sm:aspect-[16/9] max-h-[62vh] w-full bg-black flex items-center justify-center overflow-hidden select-none">
+                <img
+                  src={currentPhoto.url}
+                  alt={currentPhoto.caption}
+                  className="max-w-full max-h-full object-contain"
+                />
+
+                {/* Left / Right Nav Arrows */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActiveProofIndex(
+                          (prev) => (prev - 1 + images.length) % images.length
+                        )
+                      }
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 transition-all hover:scale-110 cursor-pointer shadow-lg"
+                      title="Previous proof photo (Left arrow)"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActiveProofIndex((prev) => (prev + 1) % images.length)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 transition-all hover:scale-110 cursor-pointer shadow-lg"
+                      title="Next proof photo (Right arrow)"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+
+                {/* Bottom Caption Overlay */}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 sm:p-5 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                  <div className="space-y-1 max-w-2xl">
+                    {currentPhoto.tag && (
+                      <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#10B981] text-black font-extrabold text-[10px] uppercase tracking-wider">
+                        {currentPhoto.tag}
+                      </span>
+                    )}
+                    <p className="text-xs sm:text-sm font-medium text-slate-200 drop-shadow-md">
+                      {currentPhoto.caption}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setLightboxImage(currentPhoto.url)}
+                    className="self-start sm:self-auto px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Zoom Fullscreen</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Thumbnail Strip */}
+              {images.length > 1 && (
+                <div className="p-3 bg-slate-950/80 border-t border-slate-800 flex items-center gap-2.5 overflow-x-auto">
+                  {images.map((img, iIdx) => (
+                    <button
+                      key={iIdx}
+                      type="button"
+                      onClick={() => setActiveProofIndex(iIdx)}
+                      className={`relative w-20 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                        activeProofIndex === iIdx
+                          ? 'border-[#10B981] ring-2 ring-[#10B981]/50 scale-105'
+                          : 'border-slate-700 opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.caption}
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute bottom-0.5 right-1 text-[8.5px] font-mono font-bold text-white bg-black/70 px-1 rounded">
+                        #{iIdx + 1}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Gallery Footer Bar */}
+              <div className="px-5 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = activeProofProject;
+                    setActiveProofProject(null);
+                    setActiveCaseStudy(target);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-colors cursor-pointer"
+                >
+                  View Full Case Study
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {activeProofProject.url && (
+                    <a
+                      href={activeProofProject.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1.5 transition-colors"
+                    >
+                      <span>Visit Live Storefront</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-sky-400" />
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveProofProject(null);
+                      onOpenHire();
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-black font-extrabold flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Inquire Architecture</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Lightbox for Gallery Photos */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative max-w-5xl max-h-[85vh] w-full flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => setLightboxImage(null)}
+              className="absolute -top-12 right-0 p-2 text-white hover:text-slate-300 cursor-pointer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img
+              src={lightboxImage}
+              alt="Enlarged Storefront"
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/20"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Core Operations & Services Matrix Summary */}
+      <section id="work-services" className="w-full pt-10 mt-8 border-t border-slate-200">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-urbanist font-extrabold text-base sm:text-lg text-[#1E3A5F] flex items-center gap-2">
+              <Zap className="w-4 h-4 text-[#0EA5E9]" />
+              <span>Core Operations & Services Matrix</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Enterprise catalog architecture, automated inventory synchronization, and store operations.
+            </p>
+          </div>
+          <span className="text-xs font-bold text-[#2D5D86] px-3 py-1 rounded-full bg-[#EFF6FB] border border-[#BCD5E6]">
+            4+ Years Proven Experience
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {SERVICES.map((s, idx) => (
             <div
               key={idx}
-              className="p-2 rounded-xl bg-white border-2 border-[#BCD5E6] shadow-xs flex flex-col justify-between space-y-0.5"
+              className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between space-y-3"
             >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-md bg-[#EFF6FB] border border-[#BCD5E6] flex items-center justify-center flex-none">
-                    {iconMap[s.iconName] || <ShoppingBag className="w-3 h-3 text-[#1E3A5F]" />}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                    <ShoppingBag className="w-3.5 h-3.5 text-[#143020]" />
                   </div>
-                  <h3 className="font-urbanist font-bold text-[11px] sm:text-xs text-[#1E3A5F] leading-tight truncate">
+                  <h3 className="font-urbanist font-bold text-xs sm:text-sm text-slate-800 leading-tight">
                     {s.title}
                   </h3>
                 </div>
-                <p className="text-[9.5px] text-[#1E3A5F]/80 font-medium leading-tight line-clamp-1 sm:line-clamp-2">
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">
                   {s.description}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-1 pt-0.5 border-t border-[#BCD5E6]/50">
-                {s.tags.slice(0, 2).map((t) => (
+              <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+                {s.tags.slice(0, 3).map((t) => (
                   <span
                     key={t}
-                    className="px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-[#EFF6FB] border border-[#BCD5E6] text-[#1E3A5F]"
+                    className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-50 border border-slate-200 text-slate-600"
                   >
                     {t}
                   </span>
@@ -932,4 +1178,3 @@ export const WorkPage: React.FC<WorkPageProps> = ({ onOpenHire }) => {
     </div>
   );
 };
-

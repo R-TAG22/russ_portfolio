@@ -34,6 +34,15 @@ export const DashboardOverviewView: React.FC<DashboardOverviewViewProps> = ({
 }) => {
   const quickCards = [
     {
+      id: 'work',
+      slug: 'work',
+      title: 'Work Page',
+      category: 'Client Portfolio',
+      description: 'Filterable deployments: 25K+ SKU Matrix, Willow Bath, TikTok Shop 4.8★ SPS, and Proof of Work Gallery.',
+      badge: 'Case Studies',
+      icon: Sparkles,
+    },
+    {
       id: 'homepage',
       slug: 'homepage',
       title: 'Homepage',
@@ -50,15 +59,6 @@ export const DashboardOverviewView: React.FC<DashboardOverviewViewProps> = ({
       description: 'Profile Card, Executive Background, and Verified Career Milestones Timeline.',
       badge: 'Career History',
       icon: FileText,
-    },
-    {
-      id: 'work',
-      slug: 'work',
-      title: 'Work',
-      category: 'Client Portfolio',
-      description: 'Filterable deployments: 25K+ SKU Matrix, TikTok Shop 4.8★ SPS, and Automation.',
-      badge: 'Case Studies',
-      icon: Sparkles,
     },
     {
       id: 'navigation',

@@ -17,8 +17,17 @@ import {
   User,
   SlidersHorizontal,
   ChevronRight,
+  ChevronLeft,
   Plus,
   Trash2,
+  Hexagon,
+  Edit3,
+  Upload,
+  X,
+  Eye,
+  Sliders,
+  Copy,
+  Camera,
 } from 'lucide-react';
 import {
   ElementType,
@@ -38,9 +47,12 @@ import {
   ExperienceTimelineContent,
   ExperienceTimelineItem,
   WorkShowcaseContent,
+  WorkShowcaseProject,
 } from '../types/schema';
 import defaultRussellPhoto from '../../assets/images/regenerated_image_1788105616348.png';
 import defaultAboutPhoto from '../../assets/images/regenerated_image_1788105382320.jpg';
+import { WorkShowcaseInspector } from '../components/WorkShowcaseInspector';
+import { WorkProjectEditModal } from '../components/WorkProjectEditModal';
 
 export interface ElementRegistryEntry {
   type: ElementType;
@@ -50,7 +62,13 @@ export interface ElementRegistryEntry {
   category: 'Typography' | 'Media' | 'Action' | 'Commerce' | 'Advanced';
   defaultContent: () => ElementContent;
   defaultSettings: () => ElementSettings;
-  Render: React.FC<{ content: any; settings: ElementSettings }>;
+  Render: React.FC<{
+    content: any;
+    settings: ElementSettings;
+    onUpdateContent?: (newContent: any) => void;
+    onSelectProjectCard?: (project: any, projectIndex: number) => void;
+    selectedProjectId?: string | null;
+  }>;
   Editor: React.FC<{
     content: any;
     settings: ElementSettings;
@@ -1195,9 +1213,18 @@ const ExperienceTimelineEditor: React.FC<{
 // =========================================================================
 // 13. WORK SHOWCASE ELEMENT (WORK PAGE)
 // =========================================================================
-const WorkShowcaseRender: React.FC<{ content: WorkShowcaseContent; settings: ElementSettings }> = ({
+const WorkShowcaseRender: React.FC<{
+  content: WorkShowcaseContent;
+  settings: ElementSettings;
+  onUpdateContent?: (c: WorkShowcaseContent) => void;
+  onSelectProjectCard?: (project: WorkShowcaseProject, projectIndex: number) => void;
+  selectedProjectId?: string | null;
+}> = ({
   content,
   settings,
+  onUpdateContent,
+  onSelectProjectCard,
+  selectedProjectId,
 }) => {
   const [activeFilter, setActiveFilter] = useState('All');
   const filters = content.filters && content.filters.length > 0
@@ -1205,21 +1232,150 @@ const WorkShowcaseRender: React.FC<{ content: WorkShowcaseContent; settings: Ele
     : ['All', 'Catalog Architecture', 'Marketplace Ops', 'Automation'];
   const projects = content.projects || [];
 
+  const [editingCanvasProject, setEditingCanvasProject] = useState<WorkShowcaseProject | null>(null);
+  const [editingCanvasIndex, setEditingCanvasIndex] = useState<number | null>(null);
+
   const filtered = activeFilter === 'All'
     ? projects
     : projects.filter(
         (p) =>
           p.category?.toLowerCase() === activeFilter.toLowerCase() ||
+          p.previewBadge?.toLowerCase() === activeFilter.toLowerCase() ||
           (p.tags || []).some((t) => t.toLowerCase().includes(activeFilter.toLowerCase()))
       );
 
+  const handleSaveCanvasProject = (saved: WorkShowcaseProject) => {
+    if (onUpdateContent) {
+      const targetIdx = projects.findIndex(
+        (p) => p.id === saved.id || (editingCanvasIndex !== null && projects[editingCanvasIndex]?.id === p.id)
+      );
+      if (targetIdx >= 0) {
+        const updated = [...projects];
+        updated[targetIdx] = saved;
+        onUpdateContent({ ...content, projects: updated });
+      } else {
+        onUpdateContent({ ...content, projects: [saved, ...projects] });
+      }
+    }
+    setEditingCanvasProject(null);
+    setEditingCanvasIndex(null);
+  };
+
+  const handleCreateNewCard = () => {
+    if (!onUpdateContent) return;
+    const newProject: WorkShowcaseProject = {
+      id: `proj_${Date.now()}`,
+      title: 'New Sample Work Storefront',
+      client: 'Brand Partner Inc.',
+      subtitle: 'Luxury E-Commerce Catalog & Store Operations',
+      domainUrl: 'mystore.com',
+      url: 'https://mystore.com/',
+      category: filters[1] || 'Catalog Architecture',
+      previewBadge: 'CASE STUDY',
+      metrics: '+180% Velocity Lift',
+      vitalsScore: '99/100 Core Vitals',
+      description:
+        'Architected 25,000+ variant matrices with nested countertop cutouts, finishes, and custom hardware logic across Shopify and Home Depot with automated inventory flat-files.',
+      highlights: [
+        'Configured scalable variant matrix architecture and automated SKU synchronization',
+        'Built high-converting checkout flows and optimized mobile ergonomics',
+      ],
+      tags: ['Shopify Plus', 'Home Depot US', 'Photoshop Batch', 'Metafields', 'FBT Logistics'],
+      imageUrl: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=85',
+      galleryImages: [],
+      actionLabel: 'CASE STUDY',
+    };
+    const updated = [newProject, ...projects];
+    onUpdateContent({ ...content, projects: updated });
+    setEditingCanvasProject(newProject);
+    setEditingCanvasIndex(0);
+  };
+
+  const handleDuplicateCard = (projId: string) => {
+    if (!onUpdateContent) return;
+    const targetIdx = projects.findIndex((p) => p.id === projId);
+    if (targetIdx === -1) return;
+    const target = projects[targetIdx];
+    const duplicated: WorkShowcaseProject = {
+      ...target,
+      id: `proj_${Date.now()}`,
+      title: `${target.title} (Copy)`,
+    };
+    const updated = [...projects];
+    updated.splice(targetIdx + 1, 0, duplicated);
+    onUpdateContent({ ...content, projects: updated });
+  };
+
+  const handleDeleteCard = (projId: string) => {
+    if (!onUpdateContent) return;
+    if (window.confirm('Are you sure you want to delete this sample work card?')) {
+      const updated = projects.filter((p) => p.id !== projId);
+      onUpdateContent({ ...content, projects: updated });
+    }
+  };
+
+  const handleUploadPhotosForCard = (projId: string, files: File[]) => {
+    if (!onUpdateContent || !files.length) return;
+    const targetIdx = projects.findIndex((p) => p.id === projId);
+    if (targetIdx === -1) return;
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          const newImg = {
+            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            url: reader.result,
+            caption: `${file.name.replace(/\.[^/.]+$/, '')} Proof Photo`,
+            altText: projects[targetIdx].title || 'Proof photo',
+          };
+          const updated = [...projects];
+          updated[targetIdx] = {
+            ...updated[targetIdx],
+            galleryImages: [...(updated[targetIdx].galleryImages || []), newImg],
+          };
+          onUpdateContent({ ...content, projects: updated });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   return (
-    <div className={`w-full space-y-5 ${settings.customClass || ''}`}>
+    <div className={`w-full space-y-6 ${settings.customClass || ''}`}>
+      {/* Admin Quick Action Bar for Sample Cards */}
+      {onUpdateContent && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-sky-50 via-emerald-50 to-white border border-[#BCD5E6] shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#0EA5E9] text-white flex items-center justify-center font-bold shadow-xs">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h4 className="font-urbanist font-extrabold text-sm text-[#1E3A5F]">
+                Sample Work Cards Manager ({projects.length} Total Cards)
+              </h4>
+              <p className="text-[11px] text-slate-500">
+                Click any card to edit title, subtitle, description, tags, storefront links & multi-photo gallery.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCreateNewCard}
+            className="px-4 py-2 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-extrabold text-xs shadow-sm flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 text-[#4ADE80]" />
+            <span>+ Add New Sample Work Card</span>
+          </button>
+        </div>
+      )}
+
       {/* Header and Filter Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#BCD5E6]/70">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <div>
           {content.headline && (
-            <h3 className="font-urbanist font-extrabold text-xl text-[#1E3A5F]">
+            <h3 className="font-urbanist font-extrabold text-xl sm:text-2xl text-slate-900">
               {content.headline}
             </h3>
           )}
@@ -1229,16 +1385,16 @@ const WorkShowcaseRender: React.FC<{ content: WorkShowcaseContent; settings: Ele
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-slate-100 border border-slate-200">
           {filters.map((f) => (
             <button
               key={f}
               type="button"
               onClick={() => setActiveFilter(f)}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeFilter === f
-                  ? 'bg-[#1E3A5F] text-white shadow-xs'
-                  : 'bg-white hover:bg-[#EFF6FB] text-slate-600 border border-[#BCD5E6]'
+                  ? 'bg-[#143020] text-white shadow-xs'
+                  : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/60'
               }`}
             >
               {f}
@@ -1247,64 +1403,250 @@ const WorkShowcaseRender: React.FC<{ content: WorkShowcaseContent; settings: Ele
         </div>
       </div>
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((proj, idx) => (
-          <div
-            key={idx}
-            className="p-4 rounded-2xl bg-white border-2 border-[#BCD5E6] hover:border-[#0EA5E9] shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
-          >
-            <div>
-              {proj.imageUrl && (
-                <div className="w-full h-36 rounded-xl overflow-hidden mb-3 bg-slate-100 border border-slate-200">
-                  <img
-                    src={proj.imageUrl}
-                    alt={proj.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+      {/* Projects Grid (macOS Browser Frame Cards) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map((proj, idx) => {
+          const photoCount = 1 + (proj.galleryImages?.length || 0);
+          const realIndex = projects.findIndex((p) => p.id === proj.id);
+          const isSelected = selectedProjectId === proj.id;
+
+          return (
+            <div
+              key={proj.id || idx}
+              onClick={() => {
+                if (onSelectProjectCard) {
+                  onSelectProjectCard(proj, realIndex >= 0 ? realIndex : idx);
+                } else if (onUpdateContent) {
+                  setEditingCanvasProject(proj);
+                  setEditingCanvasIndex(realIndex >= 0 ? realIndex : idx);
+                }
+              }}
+              className={`rounded-3xl bg-white border shadow-xs hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group relative cursor-pointer ${
+                isSelected
+                  ? 'border-[#0EA5E9] ring-4 ring-[#0EA5E9]/50 shadow-2xl scale-[1.015]'
+                  : onSelectProjectCard
+                  ? 'border-slate-200/90 hover:border-[#0EA5E9] hover:ring-2 hover:ring-[#0EA5E9]/30'
+                  : onUpdateContent
+                  ? 'border-slate-200/90 hover:border-[#0EA5E9] hover:ring-2 hover:ring-[#0EA5E9]/50'
+                  : 'border-slate-200/90'
+              }`}
+            >
+              {/* Selected in Left Editor Badge */}
+              {isSelected && (
+                <div className="absolute top-2 left-2 z-25 px-2.5 py-1 rounded-full bg-[#0EA5E9] text-white text-[10px] font-black tracking-wider uppercase shadow-md flex items-center gap-1.5 animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+                  <span>Editing on Left Panel</span>
                 </div>
               )}
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#EFF6FB] text-[#0EA5E9] border border-[#BCD5E6]">
-                  {proj.category}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 font-mono">
-                  {proj.metrics}
-                </span>
-              </div>
-              <h4 className="font-urbanist font-extrabold text-base text-[#1E3A5F] group-hover:text-[#0EA5E9] transition-colors">
-                {proj.title}
-              </h4>
-              <p className="text-[11px] font-semibold text-[#2D5D86] mt-0.5">{proj.client}</p>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">{proj.description}</p>
-            </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap gap-1">
-                {(proj.tags || []).slice(0, 3).map((t, tIdx) => (
-                  <span
-                    key={tIdx}
-                    className="text-[9px] px-1.5 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-200 font-medium"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-              {proj.url && (
-                <a
-                  href={proj.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-[#0EA5E9] hover:underline flex items-center gap-1"
-                >
-                  <span>Storefront</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+              {/* Hover Badge if Clickable for Left Editor */}
+              {!isSelected && onSelectProjectCard && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 left-2 z-25 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-xs text-white text-[9.5px] font-bold shadow-md flex items-center gap-1">
+                  <span>Click to edit in left side 👈</span>
+                </div>
               )}
+              {/* Quick Actions Overlay for CMS Canvas */}
+              {onUpdateContent && (
+                <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSelectProjectCard) {
+                        onSelectProjectCard(proj, realIndex >= 0 ? realIndex : idx);
+                      } else {
+                        setEditingCanvasProject(proj);
+                        setEditingCanvasIndex(realIndex >= 0 ? realIndex : idx);
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white text-[10.5px] font-bold shadow-md flex items-center gap-1 cursor-pointer backdrop-blur-xs transition-all hover:scale-105"
+                    title="Edit text, photos, and links in left panel"
+                  >
+                    <Edit3 className="w-3 h-3 text-[#4ADE80]" />
+                    <span>Edit Card</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDuplicateCard(proj.id);
+                    }}
+                    className="p-1 rounded-xl bg-white/90 hover:bg-white text-slate-700 shadow-md border border-slate-200 transition-all hover:scale-105 cursor-pointer"
+                    title="Duplicate card"
+                  >
+                    <Copy className="w-3 h-3 text-slate-600" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteCard(proj.id);
+                    }}
+                    className="p-1 rounded-xl bg-white/90 hover:bg-red-50 text-slate-400 hover:text-red-600 shadow-md border border-slate-200 transition-all hover:scale-105 cursor-pointer"
+                    title="Delete card"
+                  >
+                    <Trash2 className="w-3 h-3 text-red-500" />
+                  </button>
+                </div>
+              )}
+
+              <div>
+                {/* Browser Window Header */}
+                <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between text-[11px] select-none">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                  </div>
+
+                  <div className="px-3 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-mono text-slate-600 flex items-center gap-1 truncate max-w-[55%]">
+                    <Hexagon className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span className="truncate">{proj.domainUrl || 'store.com'}</span>
+                  </div>
+
+                  <div className="text-[10px] font-mono font-medium text-slate-400 shrink-0">
+                    {proj.vitalsScore || '99/100 Vitals'}
+                  </div>
+                </div>
+
+                {/* Viewport Image Area */}
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 select-none group/img">
+                  {proj.imageUrl ? (
+                    <img
+                      src={proj.imageUrl}
+                      alt={proj.title}
+                      className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-500">
+                      <ImageIcon className="w-8 h-8" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none" />
+
+                  {/* Top-Left Category Badge */}
+                  <div className="absolute top-3 left-3 pointer-events-auto">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white text-slate-900 text-[9px] font-black uppercase tracking-wider border border-slate-200 shadow-sm">
+                      {proj.previewBadge || proj.category}
+                    </span>
+                  </div>
+
+                  {/* Top-Right Metric Pill */}
+                  <div className="absolute top-3 right-3 pointer-events-auto">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#134E2E] text-[#4ADE80] text-[9.5px] font-bold border border-[#166534] shadow-sm">
+                      {proj.metrics}
+                    </span>
+                  </div>
+
+                  {/* Bottom Gallery Badge & Quick Photo Upload */}
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-auto">
+                    <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-xs text-white text-[9.5px] font-bold flex items-center gap-1 border border-white/20">
+                      <Camera className="w-3 h-3 text-sky-400" />
+                      <span>{photoCount} Proof Photos</span>
+                    </span>
+
+                    {onUpdateContent && (
+                      <label
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-2 py-0.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[9.5px] font-bold flex items-center gap-1 cursor-pointer shadow-md transition-colors"
+                        title="Upload photos directly to this card"
+                      >
+                        <Upload className="w-2.5 h-2.5" />
+                        <span>+ Upload Photos</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []) as File[];
+                            handleUploadPhotosForCard(proj.id, files);
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-5 space-y-2">
+                  <h4 className="font-urbanist font-black text-base text-slate-900 uppercase tracking-tight group-hover:text-[#0EA5E9] transition-colors">
+                    {proj.title}
+                  </h4>
+
+                  <p className="font-bold text-[10px] uppercase tracking-wider text-slate-800 leading-tight">
+                    {proj.subtitle || proj.client}
+                  </p>
+
+                  <p className="text-xs text-slate-500 leading-relaxed font-normal line-clamp-3">
+                    {proj.description}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                    {(proj.tags || []).slice(0, 5).map((t, tIdx) => (
+                      <span
+                        key={tIdx}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-medium border border-slate-200"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Footer */}
+              <div className="px-5 pb-5 pt-1 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onSelectProjectCard) {
+                      onSelectProjectCard(proj, realIndex >= 0 ? realIndex : idx);
+                    } else {
+                      setEditingCanvasProject(proj);
+                      setEditingCanvasIndex(realIndex >= 0 ? realIndex : idx);
+                    }
+                  }}
+                  className="flex-1 py-2 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-extrabold text-[11px] tracking-wider uppercase transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
+                >
+                  <Edit3 className="w-3 h-3 text-[#4ADE80]" />
+                  <span>{proj.actionLabel || 'Edit Card Details'}</span>
+                </button>
+
+                {proj.url && (
+                  <a
+                    href={proj.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600"
+                    title="Open live storefront"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* In-Canvas Direct Project Edit Modal */}
+      {editingCanvasProject && (
+        <WorkProjectEditModal
+          project={editingCanvasProject}
+          availableCategories={filters}
+          isOpen={true}
+          onClose={() => {
+            setEditingCanvasProject(null);
+            setEditingCanvasIndex(null);
+          }}
+          onSave={handleSaveCanvasProject}
+        />
+      )}
     </div>
   );
 };
@@ -1314,41 +1656,10 @@ const WorkShowcaseEditor: React.FC<{
   onUpdateContent: (c: WorkShowcaseContent) => void;
 }> = ({ content, onUpdateContent }) => {
   return (
-    <div className="space-y-3 text-xs">
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Headline</label>
-        <input
-          type="text"
-          value={content.headline || ''}
-          onChange={(e) => onUpdateContent({ ...content, headline: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="Featured Systems & Catalog Deployments"
-        />
-      </div>
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Subhead</label>
-        <input
-          type="text"
-          value={content.subhead || ''}
-          onChange={(e) => onUpdateContent({ ...content, subhead: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="Real-world operational architecture and catalog scale"
-        />
-      </div>
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Filter Categories (comma-separated)</label>
-        <input
-          type="text"
-          value={(content.filters || []).join(', ')}
-          onChange={(e) => {
-            const filters = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
-            onUpdateContent({ ...content, filters });
-          }}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="All, Catalog Architecture, Marketplace Ops, Automation"
-        />
-      </div>
-    </div>
+    <WorkShowcaseInspector
+      content={content}
+      onUpdateContent={onUpdateContent}
+    />
   );
 };
 

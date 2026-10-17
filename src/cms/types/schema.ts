@@ -216,8 +216,12 @@ export interface WorkShowcaseProject {
   id?: string;
   title: string;
   client: string;
+  subtitle?: string;
+  domainUrl?: string;
   category: string;
+  previewBadge?: string;
   metrics: string;
+  vitalsScore?: string;
   description: string;
   highlights?: string[];
   tags: string[];

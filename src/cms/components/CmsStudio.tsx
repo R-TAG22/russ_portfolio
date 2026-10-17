@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Layers,
   Eye,
@@ -23,7 +23,14 @@ import {
   Check,
   Globe,
 } from 'lucide-react';
-import { PageDocument, RowBlock, GlobalConfigurations, MediaItem } from '../types/schema';
+import {
+  PageDocument,
+  RowBlock,
+  GlobalConfigurations,
+  MediaItem,
+  WorkShowcaseProject,
+  WorkShowcaseContent,
+} from '../types/schema';
 import { PageSummary } from '../repositories/ContentRepository';
 import { contentService } from '../services/ContentServiceFactory';
 import { LocalStorageContentService } from '../services/LocalStorageContentService';
@@ -35,6 +42,7 @@ import { AdminSidebar, AdminActiveSection } from './AdminSidebar';
 import { DashboardOverviewView } from './DashboardOverviewView';
 import { GlobalContentEditor, GlobalSectionKey } from './GlobalContentEditor';
 import { MediaLibraryView } from './MediaLibraryView';
+import { WorkCardLeftEditor } from './WorkCardLeftEditor';
 import { useAuth } from '../auth/AuthContext';
 
 type StudioViewMode = 'split' | 'builder' | 'preview';
@@ -58,6 +66,13 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
 
   // Editor states
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
+  const [activeEditingCard, setActiveEditingCard] = useState<{
+    rowId: string;
+    colId: string;
+    elId: string;
+    projectIndex: number;
+    projectId: string;
+  } | null>(null);
   const [viewMode, setViewMode] = useState<StudioViewMode>('split');
   const [deviceViewport, setDeviceViewport] = useState<DeviceViewport>('desktop');
   const [isFirebaseGuideOpen, setIsFirebaseGuideOpen] = useState(false);
@@ -268,6 +283,238 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     setHasPendingChanges(true);
   };
 
+  // ---------------- Project Card Left Editor Helpers ----------------
+  const projectContext = useMemo(() => {
+    if (!activeEditingCard || !currentPage) return null;
+    for (const row of currentPage.sections || []) {
+      for (const col of row.columns || []) {
+        for (const el of col.elements || []) {
+          if (el.type === 'workShowcase') {
+            const content = (el.content as any)?.data as WorkShowcaseContent | undefined;
+            if (content && Array.isArray(content.projects)) {
+              let idx = content.projects.findIndex((p) => p.id === activeEditingCard.projectId);
+              if (idx === -1 && activeEditingCard.projectIndex < content.projects.length) {
+                idx = activeEditingCard.projectIndex;
+              }
+              if (idx !== -1) {
+                return {
+                  rowId: row.id,
+                  colId: col.id,
+                  elId: el.id,
+                  content,
+                  project: content.projects[idx],
+                  projectIndex: idx,
+                  allProjects: content.projects,
+                  filters:
+                    content.filters && content.filters.length > 0
+                      ? content.filters
+                      : ['All', 'Catalog Architecture', 'Marketplace Ops', 'Automation'],
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }, [activeEditingCard, currentPage]);
+
+  const handleUpdateActiveProject = (updatedProject: WorkShowcaseProject) => {
+    if (!projectContext || !currentPage) return;
+    const updatedProjects = [...projectContext.allProjects];
+    updatedProjects[projectContext.projectIndex] = updatedProject;
+
+    const newContent = {
+      ...projectContext.content,
+      projects: updatedProjects,
+    };
+
+    handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
+      content: { data: newContent },
+    });
+    setHasPendingChanges(true);
+  };
+
+  const handleSelectProjectIndex = (index: number) => {
+    if (!projectContext) return;
+    const target = projectContext.allProjects[index];
+    if (target) {
+      setActiveEditingCard({
+        rowId: projectContext.rowId,
+        colId: projectContext.colId,
+        elId: projectContext.elId,
+        projectIndex: index,
+        projectId: target.id || '',
+      });
+    }
+  };
+
+  const handleAddProject = () => {
+    if (!projectContext || !currentPage) return;
+    const newProject: WorkShowcaseProject = {
+      id: `proj_${Date.now()}`,
+      title: 'New Sample Work Storefront',
+      client: 'Brand Partner Inc.',
+      subtitle: 'Luxury E-Commerce Catalog & Store Operations',
+      domainUrl: 'mystore.com',
+      url: 'https://mystore.com/',
+      category: projectContext.filters[1] || 'Catalog Architecture',
+      previewBadge: 'CASE STUDY',
+      metrics: '+180% Velocity Lift',
+      vitalsScore: '99/100 Core Vitals',
+      description:
+        'Architected 25,000+ variant matrices with nested countertop cutouts, finishes, and custom hardware logic across Shopify and Home Depot with automated inventory flat-files.',
+      highlights: [
+        'Configured scalable variant matrix architecture and automated SKU synchronization',
+        'Built high-converting checkout flows and optimized mobile ergonomics',
+      ],
+      tags: ['Shopify Plus', 'Home Depot US', 'Photoshop Batch', 'Metafields', 'FBT Logistics'],
+      imageUrl:
+        'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=85',
+      galleryImages: [],
+      actionLabel: 'CASE STUDY',
+    };
+
+    const updatedProjects = [newProject, ...projectContext.allProjects];
+    const newContent = {
+      ...projectContext.content,
+      projects: updatedProjects,
+    };
+
+    handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
+      content: { data: newContent },
+    });
+    setActiveEditingCard({
+      rowId: projectContext.rowId,
+      colId: projectContext.colId,
+      elId: projectContext.elId,
+      projectIndex: 0,
+      projectId: newProject.id,
+    });
+    setHasPendingChanges(true);
+  };
+
+  const handleDuplicateProject = () => {
+    if (!projectContext || !currentPage) return;
+    const target = projectContext.project;
+    const duplicated: WorkShowcaseProject = {
+      ...JSON.parse(JSON.stringify(target)),
+      id: `proj_${Date.now()}_copy`,
+      title: `${target.title} (Copy)`,
+    };
+
+    const updatedProjects = [...projectContext.allProjects];
+    updatedProjects.splice(projectContext.projectIndex + 1, 0, duplicated);
+
+    const newContent = {
+      ...projectContext.content,
+      projects: updatedProjects,
+    };
+
+    handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
+      content: { data: newContent },
+    });
+    setActiveEditingCard({
+      rowId: projectContext.rowId,
+      colId: projectContext.colId,
+      elId: projectContext.elId,
+      projectIndex: projectContext.projectIndex + 1,
+      projectId: duplicated.id,
+    });
+    setHasPendingChanges(true);
+  };
+
+  const handleDeleteProject = () => {
+    if (!projectContext || !currentPage) return;
+    if (!window.confirm(`Are you sure you want to delete "${projectContext.project.title}"?`)) return;
+
+    const updatedProjects = projectContext.allProjects.filter(
+      (_, idx) => idx !== projectContext.projectIndex
+    );
+    const newContent = {
+      ...projectContext.content,
+      projects: updatedProjects,
+    };
+
+    handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
+      content: { data: newContent },
+    });
+
+    if (updatedProjects.length > 0) {
+      const nextIdx = Math.min(projectContext.projectIndex, updatedProjects.length - 1);
+      setActiveEditingCard({
+        rowId: projectContext.rowId,
+        colId: projectContext.colId,
+        elId: projectContext.elId,
+        projectIndex: nextIdx,
+        projectId: updatedProjects[nextIdx].id || '',
+      });
+    } else {
+      setActiveEditingCard(null);
+    }
+    setHasPendingChanges(true);
+  };
+
+  const handleMoveProject = (direction: 'up' | 'down') => {
+    if (!projectContext || !currentPage) return;
+    const curIdx = projectContext.projectIndex;
+    const targetIdx = direction === 'up' ? curIdx - 1 : curIdx + 1;
+    if (targetIdx < 0 || targetIdx >= projectContext.allProjects.length) return;
+
+    const updatedProjects = [...projectContext.allProjects];
+    const [moved] = updatedProjects.splice(curIdx, 1);
+    updatedProjects.splice(targetIdx, 0, moved);
+
+    const newContent = {
+      ...projectContext.content,
+      projects: updatedProjects,
+    };
+
+    handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
+      content: { data: newContent },
+    });
+    setActiveEditingCard({
+      rowId: projectContext.rowId,
+      colId: projectContext.colId,
+      elId: projectContext.elId,
+      projectIndex: targetIdx,
+      projectId: moved.id || '',
+    });
+    setHasPendingChanges(true);
+  };
+
+  const handleSelectProjectCard = (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => {
+    setActiveEditingCard({
+      rowId,
+      colId,
+      elId,
+      projectIndex,
+      projectId: project.id,
+    });
+    // Ensure user sees the editor on the left!
+    if (viewMode === 'builder' || viewMode === 'preview') {
+      setViewMode('split');
+    }
+    showToast(`Selected "${project.title || 'Work Card'}" for editing on left panel.`);
+  };
+
+  const handleUpdateElementContent = (
+    rowId: string,
+    colId: string,
+    elId: string,
+    content: any
+  ) => {
+    handleUpdateElement(rowId, colId, elId, {
+      content: { data: content },
+    });
+  };
+
   const viewportWidthClass =
     deviceViewport === 'mobile'
       ? 'max-w-sm'
@@ -468,33 +715,25 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
             <div className="flex-1 flex min-h-0 overflow-hidden">
               {/* BUILDER FULL CANVAS */}
               {viewMode === 'builder' && (
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                  <WpBakeryBuilder
-                    page={currentPage}
-                    selectedItem={selectedItem}
-                    onSelectItem={setSelectedItem}
-                    onUpdatePage={(up) => {
-                      setCurrentPage(up);
-                      setHasPendingChanges(true);
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* SPLIT VIEW (Side-by-Side Builder & Live Viewport) */}
-              {viewMode === 'split' && (
-                <div className="flex-1 flex min-h-0 divide-x divide-[#BCD5E6]">
-                  {/* Left: Wireframe builder */}
-                  <div className="w-1/2 overflow-y-auto p-4 bg-[#F8FAFC]">
-                    <div className="mb-3 px-3 py-1 bg-white border border-[#BCD5E6] rounded-lg text-xs font-bold text-[#1E3A5F] flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <Edit3 className="w-3.5 h-3.5 text-[#0EA5E9]" />
-                        <span>WPBakery Block Structure (Edit Mode)</span>
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {currentPage.sections.length} Rows
-                      </span>
+                <div className="flex-1 flex min-h-0 overflow-hidden">
+                  {activeEditingCard && projectContext && (
+                    <div className="w-full sm:w-[460px] lg:w-[480px] bg-white border-r border-[#BCD5E6] flex flex-col h-full shadow-2xl z-30 shrink-0">
+                      <WorkCardLeftEditor
+                        project={projectContext.project}
+                        allProjects={projectContext.allProjects}
+                        projectIndex={projectContext.projectIndex}
+                        filters={projectContext.filters}
+                        onUpdateProject={handleUpdateActiveProject}
+                        onSelectProjectIndex={handleSelectProjectIndex}
+                        onAddProject={handleAddProject}
+                        onDuplicateProject={handleDuplicateProject}
+                        onDeleteProject={handleDeleteProject}
+                        onMoveProject={handleMoveProject}
+                        onBackToStructure={() => setActiveEditingCard(null)}
+                      />
                     </div>
+                  )}
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                     <WpBakeryBuilder
                       page={currentPage}
                       selectedItem={selectedItem}
@@ -503,7 +742,54 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                         setCurrentPage(up);
                         setHasPendingChanges(true);
                       }}
+                      onSelectProjectCard={handleSelectProjectCard}
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* SPLIT VIEW (Side-by-Side Builder/Left Card Editor & Live Viewport) */}
+              {viewMode === 'split' && (
+                <div className="flex-1 flex min-h-0 divide-x divide-[#BCD5E6]">
+                  {/* Left: Wireframe builder OR Work Card Left Editor */}
+                  <div className="w-1/2 overflow-y-auto bg-[#F8FAFC]">
+                    {activeEditingCard && projectContext ? (
+                      <WorkCardLeftEditor
+                        project={projectContext.project}
+                        allProjects={projectContext.allProjects}
+                        projectIndex={projectContext.projectIndex}
+                        filters={projectContext.filters}
+                        onUpdateProject={handleUpdateActiveProject}
+                        onSelectProjectIndex={handleSelectProjectIndex}
+                        onAddProject={handleAddProject}
+                        onDuplicateProject={handleDuplicateProject}
+                        onDeleteProject={handleDeleteProject}
+                        onMoveProject={handleMoveProject}
+                        onBackToStructure={() => setActiveEditingCard(null)}
+                      />
+                    ) : (
+                      <div className="p-4">
+                        <div className="mb-3 px-3 py-1 bg-white border border-[#BCD5E6] rounded-lg text-xs font-bold text-[#1E3A5F] flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <Edit3 className="w-3.5 h-3.5 text-[#0EA5E9]" />
+                            <span>WPBakery Block Structure (Edit Mode)</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {currentPage.sections.length} Rows
+                          </span>
+                        </div>
+                        <WpBakeryBuilder
+                          page={currentPage}
+                          selectedItem={selectedItem}
+                          onSelectItem={setSelectedItem}
+                          onUpdatePage={(up) => {
+                            setCurrentPage(up);
+                            setHasPendingChanges(true);
+                          }}
+                          onSelectProjectCard={handleSelectProjectCard}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Right: Live Viewport Output */}
@@ -511,10 +797,21 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                     <div
                       className={`bg-white rounded-2xl shadow-xl overflow-hidden border border-[#BCD5E6] transition-all my-2 ${viewportWidthClass} h-fit min-h-[500px]`}
                     >
-                      <div className="p-2 bg-slate-100 border-b border-slate-200 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        Live Viewport Output • {currentPage.title}
+                      <div className="p-2 bg-slate-100 border-b border-slate-200 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center justify-between px-4">
+                        <span>Live Viewport Output • {currentPage.title}</span>
+                        {activeEditingCard && (
+                          <span className="text-[9.5px] text-[#0EA5E9] font-bold flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-[#0EA5E9] animate-pulse" />
+                            <span>Editing Card on Left Panel</span>
+                          </span>
+                        )}
                       </div>
-                      <LivePageRenderer page={currentPage} />
+                      <LivePageRenderer
+                        page={currentPage}
+                        selectedProjectId={activeEditingCard?.projectId}
+                        onSelectProjectCard={handleSelectProjectCard}
+                        onUpdateElementContent={handleUpdateElementContent}
+                      />
                     </div>
                   </div>
                 </div>
@@ -522,11 +819,35 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
 
               {/* LIVE FULL OUTPUT VIEW */}
               {viewMode === 'preview' && (
-                <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-100/60 flex justify-center">
-                  <div
-                    className={`bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#BCD5E6] transition-all my-2 ${viewportWidthClass} h-fit min-h-screen`}
-                  >
-                    <LivePageRenderer page={currentPage} />
+                <div className="flex-1 flex min-h-0 overflow-hidden">
+                  {activeEditingCard && projectContext && (
+                    <div className="w-full sm:w-[460px] lg:w-[480px] bg-white border-r border-[#BCD5E6] flex flex-col h-full shadow-2xl z-30 shrink-0">
+                      <WorkCardLeftEditor
+                        project={projectContext.project}
+                        allProjects={projectContext.allProjects}
+                        projectIndex={projectContext.projectIndex}
+                        filters={projectContext.filters}
+                        onUpdateProject={handleUpdateActiveProject}
+                        onSelectProjectIndex={handleSelectProjectIndex}
+                        onAddProject={handleAddProject}
+                        onDuplicateProject={handleDuplicateProject}
+                        onDeleteProject={handleDeleteProject}
+                        onMoveProject={handleMoveProject}
+                        onBackToStructure={() => setActiveEditingCard(null)}
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-100/60 flex justify-center">
+                    <div
+                      className={`bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#BCD5E6] transition-all my-2 ${viewportWidthClass} h-fit min-h-screen`}
+                    >
+                      <LivePageRenderer
+                        page={currentPage}
+                        selectedProjectId={activeEditingCard?.projectId}
+                        onSelectProjectCard={handleSelectProjectCard}
+                        onUpdateElementContent={handleUpdateElementContent}
+                      />
+                    </div>
                   </div>
                 </div>
               )}

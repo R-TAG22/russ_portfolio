@@ -28,6 +28,13 @@ interface WpBakeryBuilderProps {
   selectedItem: SelectedItem | null;
   onSelectItem: (item: SelectedItem | null) => void;
   onUpdatePage: (updatedPage: PageDocument) => void;
+  onSelectProjectCard?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => void;
 }
 
 export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
@@ -35,6 +42,7 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
   selectedItem,
   onSelectItem,
   onUpdatePage,
+  onSelectProjectCard,
 }) => {
   // Modal states for adding elements or picking column layout
   const [targetColForElement, setTargetColForElement] = useState<{
@@ -375,92 +383,134 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
                             return (
                               <div
                                 key={el.id}
-                                onClick={() =>
-                                  onSelectItem({
-                                    type: 'element',
-                                    rowId: row.id,
-                                    colId: col.id,
-                                    element: el,
-                                  })
-                                }
-                                className={`p-2.5 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
+                                className={`rounded-lg border transition-all ${
                                   isElSelected
                                     ? 'bg-[#E0F2FE] border-[#0EA5E9] shadow-xs'
-                                    : 'bg-white border-[#BCD5E6] hover:border-[#0EA5E9] hover:bg-slate-50'
+                                    : 'bg-white border-[#BCD5E6] hover:border-[#0EA5E9]'
                                 }`}
                               >
-                                <div className="flex items-center gap-2 min-w-0 pr-2">
-                                  {entry ? (
-                                    <entry.icon className="w-4 h-4 text-[#0EA5E9] shrink-0" />
-                                  ) : (
-                                    <Layers className="w-4 h-4 text-slate-400 shrink-0" />
-                                  )}
-                                  <div className="min-w-0">
-                                    <span className="block text-xs font-bold text-[#1E3A5F] truncate">
-                                      {entry?.label || el.type}
-                                    </span>
-                                    <span className="block text-[10px] text-slate-500 truncate">
-                                      {el.type === 'heading' && (el.content as any).data?.text}
-                                      {el.type === 'ctaButton' && (el.content as any).data?.label}
-                                      {el.type === 'showcaseCard' &&
-                                        (el.content as any).data?.title}
-                                      {el.type === 'image' && (el.content as any).data?.altText}
-                                      {el.type === 'richText' && 'HTML Text Block'}
-                                      {el.type === 'gallery' && 'Multi-Image Grid'}
-                                      {el.type === 'customHtml' && 'Embed / Shortcode'}
-                                    </span>
+                                <div
+                                  onClick={() =>
+                                    onSelectItem({
+                                      type: 'element',
+                                      rowId: row.id,
+                                      colId: col.id,
+                                      element: el,
+                                    })
+                                  }
+                                  className="p-2.5 flex items-center justify-between cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                                    {entry ? (
+                                      <entry.icon className="w-4 h-4 text-[#0EA5E9] shrink-0" />
+                                    ) : (
+                                      <Layers className="w-4 h-4 text-slate-400 shrink-0" />
+                                    )}
+                                    <div className="min-w-0">
+                                      <span className="block text-xs font-bold text-[#1E3A5F] truncate">
+                                        {entry?.label || el.type}
+                                      </span>
+                                      <span className="block text-[10px] text-slate-500 truncate">
+                                        {el.type === 'heading' && (el.content as any).data?.text}
+                                        {el.type === 'ctaButton' && (el.content as any).data?.label}
+                                        {el.type === 'showcaseCard' &&
+                                          (el.content as any).data?.title}
+                                        {el.type === 'image' && (el.content as any).data?.altText}
+                                        {el.type === 'richText' && 'HTML Text Block'}
+                                        {el.type === 'gallery' && 'Multi-Image Grid'}
+                                        {el.type === 'customHtml' && 'Embed / Shortcode'}
+                                        {el.type === 'workShowcase' &&
+                                          `${((el.content as any).data?.projects || []).length} Project Cards (Willow Bath, etc.)`}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    className="flex items-center gap-1 shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleMoveElement(
+                                          row.id,
+                                          col.id,
+                                          elIndex,
+                                          'up'
+                                        )
+                                      }
+                                      disabled={elIndex === 0}
+                                      className="p-1 text-slate-400 hover:text-[#1E3A5F] disabled:opacity-20 cursor-pointer"
+                                    >
+                                      <MoveUp className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleMoveElement(
+                                          row.id,
+                                          col.id,
+                                          elIndex,
+                                          'down'
+                                        )
+                                      }
+                                      disabled={elIndex === col.elements.length - 1}
+                                      className="p-1 text-slate-400 hover:text-[#1E3A5F] disabled:opacity-20 cursor-pointer"
+                                    >
+                                      <MoveDown className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onSelectItem({
+                                          type: 'element',
+                                          rowId: row.id,
+                                          colId: col.id,
+                                          element: el,
+                                        })
+                                      }
+                                      className="p-1 text-[#0EA5E9] hover:bg-sky-100 rounded cursor-pointer"
+                                    >
+                                      <Settings className="w-3 h-3" />
+                                    </button>
                                   </div>
                                 </div>
 
-                                <div
-                                  className="flex items-center gap-1 shrink-0"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleMoveElement(
-                                        row.id,
-                                        col.id,
-                                        elIndex,
-                                        'up'
-                                      )
-                                    }
-                                    disabled={elIndex === 0}
-                                    className="p-1 text-slate-400 hover:text-[#1E3A5F] disabled:opacity-20 cursor-pointer"
+                                {/* Special Project Cards Quick-Access for workShowcase */}
+                                {el.type === 'workShowcase' && (
+                                  <div
+                                    className="px-3 pb-3 pt-1 border-t border-slate-100 space-y-1.5"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    <MoveUp className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleMoveElement(
-                                        row.id,
-                                        col.id,
-                                        elIndex,
-                                        'down'
-                                      )
-                                    }
-                                    disabled={elIndex === col.elements.length - 1}
-                                    className="p-1 text-slate-400 hover:text-[#1E3A5F] disabled:opacity-20 cursor-pointer"
-                                  >
-                                    <MoveDown className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      onSelectItem({
-                                        type: 'element',
-                                        rowId: row.id,
-                                        colId: col.id,
-                                        element: el,
-                                      })
-                                    }
-                                    className="p-1 text-[#0EA5E9] hover:bg-sky-100 rounded cursor-pointer"
-                                  >
-                                    <Settings className="w-3 h-3" />
-                                  </button>
-                                </div>
+                                    <div className="flex items-center justify-between text-[10.5px] font-bold">
+                                      <span className="flex items-center gap-1 text-[#0EA5E9]">
+                                        <Sparkles className="w-3 h-3 text-[#0EA5E9]" />
+                                        <span>Sample Work Cards ({((el.content as any).data?.projects || []).length})</span>
+                                      </span>
+                                      <span className="text-[9.5px] text-slate-400">Click to edit in left side 👈</span>
+                                    </div>
+                                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                                      {((el.content as any).data?.projects || []).map((proj: any, pIdx: number) => (
+                                        <div
+                                          key={proj.id || pIdx}
+                                          onClick={() => onSelectProjectCard?.(row.id, col.id, el.id, proj, pIdx)}
+                                          className="px-2 py-1.5 rounded-lg bg-slate-50 hover:bg-[#E0F2FE] hover:border-[#0EA5E9] border border-slate-200 flex items-center justify-between text-xs font-semibold text-[#1E3A5F] cursor-pointer transition-colors group/card"
+                                          title={`Click to edit ${proj.title} on Left Panel`}
+                                        >
+                                          <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9] shrink-0" />
+                                            <span className="truncate text-[11px] font-bold group-hover/card:text-[#0EA5E9]">
+                                              {proj.title}
+                                            </span>
+                                          </div>
+                                          <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-white text-slate-500 border border-slate-200 group-hover/card:border-[#0EA5E9] group-hover/card:text-[#0EA5E9] shrink-0 font-bold">
+                                            Edit Card 👈
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             );
                           })}

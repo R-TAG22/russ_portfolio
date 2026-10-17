@@ -14,6 +14,12 @@ import {
   Check,
   X,
   Copy,
+  ChevronDown,
+  ChevronUp,
+  Image as ImageIcon,
+  Link2,
+  Globe,
+  Upload,
 } from 'lucide-react';
 import { WorkShowcaseContent, WorkShowcaseProject } from '../types/schema';
 import { WorkProjectEditModal } from './WorkProjectEditModal';
@@ -36,8 +42,20 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
   const [editingFilterIndex, setEditingFilterIndex] = useState<number | null>(null);
   const [editingFilterText, setEditingFilterText] = useState('');
 
+  const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
+
   const projects = content.projects || [];
   const filters = content.filters || ['All', 'Catalog Architecture', 'Marketplace Ops', 'Automation'];
+
+  const handleInlineUpdateProject = (
+    index: number,
+    field: keyof WorkShowcaseProject,
+    value: any
+  ) => {
+    const updated = [...projects];
+    updated[index] = { ...updated[index], [field]: value };
+    onUpdateContent({ ...content, projects: updated });
+  };
 
   // --- Filter Category Management ---
   const handleAddCategory = () => {
@@ -371,22 +389,338 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
                 </div>
               </div>
 
-              {/* Title & Preview Strip */}
-              <div className="flex items-center gap-2.5">
-                {proj.imageUrl && (
-                  <div className="w-12 h-9 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
-                    <img
-                      src={proj.imageUrl}
-                      alt={proj.title}
-                      className="w-full h-full object-cover"
-                    />
+              {/* Title & Preview Strip (Click to toggle expansion) */}
+              <div
+                onClick={() => setExpandedCardIndex(expandedCardIndex === idx ? null : idx)}
+                className="flex items-center justify-between gap-2.5 p-1 rounded-xl hover:bg-slate-50 cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  {proj.imageUrl && (
+                    <div className="w-12 h-9 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                      <img
+                        src={proj.imageUrl}
+                        alt={proj.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-xs text-[#1E3A5F] truncate">{proj.title}</h4>
+                    <p className="text-[10px] text-slate-500 truncate">{proj.client || proj.subtitle}</p>
                   </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-bold text-xs text-[#1E3A5F] truncate">{proj.title}</h4>
-                  <p className="text-[10px] text-slate-500 truncate">{proj.client}</p>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0 text-slate-400">
+                  <span className="text-[10px] font-semibold text-[#0EA5E9]">
+                    {expandedCardIndex === idx ? 'Collapse' : 'Quick Edit'}
+                  </span>
+                  {expandedCardIndex === idx ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
                 </div>
               </div>
+
+              {/* Expandable Inline Editing Section */}
+              {expandedCardIndex === idx && (
+                <div className="p-3 mt-1 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 animate-fade-in text-[11px]">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Title</label>
+                    <input
+                      type="text"
+                      value={proj.title}
+                      onChange={(e) => handleInlineUpdateProject(idx, 'title', e.target.value)}
+                      className="w-full px-2.5 py-1 rounded-lg border border-slate-300 bg-white font-bold text-slate-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Subtitle / Tagline</label>
+                    <input
+                      type="text"
+                      value={proj.subtitle || ''}
+                      onChange={(e) => handleInlineUpdateProject(idx, 'subtitle', e.target.value)}
+                      className="w-full px-2.5 py-1 rounded-lg border border-slate-300 bg-white text-slate-800"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-0.5">Category</label>
+                      <select
+                        value={proj.category}
+                        onChange={(e) => handleInlineUpdateProject(idx, 'category', e.target.value)}
+                        className="w-full px-2 py-1 rounded-lg border border-slate-300 bg-white text-slate-800 text-[10.5px]"
+                      >
+                        {filters.map((f) => (
+                          <option key={f} value={f}>
+                            {f}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-0.5">Domain Pill</label>
+                      <input
+                        type="text"
+                        value={proj.domainUrl || ''}
+                        onChange={(e) => handleInlineUpdateProject(idx, 'domainUrl', e.target.value)}
+                        placeholder="goldandgrove.com"
+                        className="w-full px-2 py-1 rounded-lg border border-slate-300 bg-white font-mono text-[10px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Live Storefront URL</label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="url"
+                        value={proj.url || ''}
+                        onChange={(e) => handleInlineUpdateProject(idx, 'url', e.target.value)}
+                        placeholder="https://..."
+                        className="flex-1 px-2.5 py-1 rounded-lg border border-slate-300 bg-white font-mono text-[10px]"
+                      />
+                      {proj.url && (
+                        <a
+                          href={proj.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 rounded-lg bg-white border border-slate-300 text-slate-600 hover:text-slate-900"
+                          title="Open live link"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Primary Photo URL</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={proj.imageUrl}
+                        onChange={(e) => handleInlineUpdateProject(idx, 'imageUrl', e.target.value)}
+                        className="flex-1 px-2.5 py-1 rounded-lg border border-slate-300 bg-white font-mono text-[10px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-0.5">Metrics</label>
+                      <input
+                        type="text"
+                        value={proj.metrics}
+                        onChange={(e) => handleInlineUpdateProject(idx, 'metrics', e.target.value)}
+                        placeholder="+220% Retention"
+                        className="w-full px-2 py-1 rounded-lg border border-slate-300 bg-white text-emerald-700 font-semibold text-[10.5px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-0.5">Vitals Score</label>
+                      <input
+                        type="text"
+                        value={proj.vitalsScore || ''}
+                        onChange={(e) => handleInlineUpdateProject(idx, 'vitalsScore', e.target.value)}
+                        placeholder="99/100 Core Vitals"
+                        className="w-full px-2 py-1 rounded-lg border border-slate-300 bg-white font-mono text-[10px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Description & Scope</label>
+                    <textarea
+                      rows={3}
+                      value={proj.description}
+                      onChange={(e) => handleInlineUpdateProject(idx, 'description', e.target.value)}
+                      placeholder="e.g. Architected 25,000+ variant matrices with nested countertop cutouts..."
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-[10.5px] leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Platform & Tool Tags Editor */}
+                  <div className="space-y-1.5 pt-1 border-t border-slate-200">
+                    <label className="block font-bold text-slate-700 text-[10.5px]">
+                      Platform & Tool Tags ({proj.tags?.length || 0})
+                    </label>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {(proj.tags || []).map((t, tIdx) => (
+                        <span
+                          key={tIdx}
+                          className="px-2 py-0.5 rounded-md bg-white border border-slate-300 text-slate-700 text-[10px] font-semibold flex items-center gap-1 shadow-2xs"
+                        >
+                          <span>{t}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedTags = (proj.tags || []).filter((_, i) => i !== tIdx);
+                              handleInlineUpdateProject(idx, 'tags', updatedTags);
+                            }}
+                            className="text-slate-400 hover:text-red-500 cursor-pointer"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Quick Add Tag Bar */}
+                    <div className="flex gap-1 pt-1">
+                      <input
+                        type="text"
+                        placeholder="Add tag (e.g. Photoshop Batch)"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const val = (e.currentTarget.value || '').trim();
+                            if (val && !(proj.tags || []).includes(val)) {
+                              handleInlineUpdateProject(idx, 'tags', [...(proj.tags || []), val]);
+                              e.currentTarget.value = '';
+                            }
+                          }
+                        }}
+                        className="flex-1 px-2 py-0.5 rounded border border-slate-300 bg-white text-[10px]"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          const val = (input?.value || '').trim();
+                          if (val && !(proj.tags || []).includes(val)) {
+                            handleInlineUpdateProject(idx, 'tags', [...(proj.tags || []), val]);
+                            input.value = '';
+                          }
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#0EA5E9] text-white text-[10px] font-bold cursor-pointer"
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {/* Quick suggestion pills */}
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {['Shopify Plus', 'Home Depot US', 'Photoshop Batch', 'Metafields', 'FBT Logistics'].map((sug) => (
+                        <button
+                          key={sug}
+                          type="button"
+                          disabled={(proj.tags || []).includes(sug)}
+                          onClick={() => {
+                            if (!(proj.tags || []).includes(sug)) {
+                              handleInlineUpdateProject(idx, 'tags', [...(proj.tags || []), sug]);
+                            }
+                          }}
+                          className="px-1.5 py-0.2 rounded bg-slate-100 hover:bg-slate-200 text-slate-500 text-[9px] font-mono disabled:opacity-40 cursor-pointer"
+                        >
+                          + {sug}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Multi-Photo Proof of Work Gallery & File Upload */}
+                  <div className="space-y-2 pt-1 border-t border-slate-200">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-slate-700 text-[10.5px]">
+                        Proof of Work Gallery ({1 + (proj.galleryImages?.length || 0)} Photos)
+                      </label>
+                      <label className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer shadow-2xs">
+                        <Upload className="w-2.5 h-2.5" />
+                        <span>Upload Photos</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []) as File[];
+                            if (!files.length) return;
+                            files.forEach((file: File) => {
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                if (typeof reader.result === 'string') {
+                                  const newImg = {
+                                    id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                                    url: reader.result,
+                                    caption: file.name.replace(/\.[^/.]+$/, ''),
+                                    altText: proj.title,
+                                  };
+                                  const currentGallery = proj.galleryImages || [];
+                                  handleInlineUpdateProject(idx, 'galleryImages', [...currentGallery, newImg]);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            });
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Gallery Thumbnails List */}
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {/* Primary photo preview */}
+                      <div className="p-1.5 rounded-lg border border-slate-200 bg-white flex items-center gap-2">
+                        <div className="w-9 h-7 rounded overflow-hidden bg-slate-800 shrink-0 border border-slate-300">
+                          <img src={proj.imageUrl} alt="Primary" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[9.5px] font-bold text-slate-800 block truncate">Primary Cover Mockup</span>
+                          <span className="text-[8.5px] text-emerald-600 font-mono">Default Viewport</span>
+                        </div>
+                      </div>
+
+                      {/* Additional Gallery Photos */}
+                      {(proj.galleryImages || []).map((gImg, gIdx) => (
+                        <div
+                          key={gImg.id || gIdx}
+                          className="p-1.5 rounded-lg border border-slate-200 bg-white flex items-center gap-2"
+                        >
+                          <div className="w-9 h-7 rounded overflow-hidden bg-slate-800 shrink-0 border border-slate-300">
+                            <img src={gImg.url} alt={gImg.caption || 'Proof'} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <input
+                              type="text"
+                              value={gImg.caption || ''}
+                              placeholder="Caption (e.g. 25K SKU Matrix Sheet)"
+                              onChange={(e) => {
+                                const gallery = [...(proj.galleryImages || [])];
+                                gallery[gIdx] = { ...gallery[gIdx], caption: e.target.value };
+                                handleInlineUpdateProject(idx, 'galleryImages', gallery);
+                              }}
+                              className="w-full px-1.5 py-0.5 rounded border border-slate-200 text-[9.5px]"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const gallery = (proj.galleryImages || []).filter((_, i) => i !== gIdx);
+                              handleInlineUpdateProject(idx, 'galleryImages', gallery);
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                            title="Delete photo"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Button to Open Full Modal */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditProject(idx)}
+                    className="w-full py-2 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold text-[10.5px] flex items-center justify-center gap-1.5 cursor-pointer shadow-xs mt-2"
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-[#4ADE80]" />
+                    <span>Open Full 5-Tab Project Editor Modal</span>
+                  </button>
+                </div>
+              )}
 
               {/* Delete confirmation dialog inline */}
               {deleteConfirmIndex === idx && (

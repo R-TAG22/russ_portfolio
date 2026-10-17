@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   X,
   Plus,
@@ -12,8 +12,11 @@ import {
   Sparkles,
   Layers,
   FileText,
-  Eye,
   Link2,
+  Upload,
+  Globe,
+  Hexagon,
+  Eye,
 } from 'lucide-react';
 import { WorkShowcaseProject, WorkShowcaseGalleryImage } from '../types/schema';
 
@@ -35,14 +38,29 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
   const [formData, setFormData] = useState<WorkShowcaseProject>(() => ({
     ...project,
     id: project.id || `proj_${Date.now()}`,
+    title: project.title || '',
+    client: project.client || '',
+    subtitle: project.subtitle || project.client || '',
+    domainUrl: project.domainUrl || (project.url ? project.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'mystore.com'),
+    category: project.category || 'Catalog Architecture',
+    previewBadge: project.previewBadge || project.category || 'E-COMMERCE STORE',
+    metrics: project.metrics || '+150% Conversion Lift',
+    vitalsScore: project.vitalsScore || '99/100 Core Vitals',
+    description: project.description || '',
     highlights: project.highlights || [],
     galleryImages: project.galleryImages || [],
-    tags: project.tags || [],
+    tags: project.tags || ['Shopify Plus', 'Tailwind CSS'],
+    imageUrl: project.imageUrl || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=85',
+    url: project.url || '',
+    caseStudyUrl: project.caseStudyUrl || '',
+    actionLabel: project.actionLabel || 'CASE STUDY',
   }));
 
   const [newTagInput, setNewTagInput] = useState('');
   const [newBulletInput, setNewBulletInput] = useState('');
   const [activeTab, setActiveTab] = useState<'basic' | 'content' | 'gallery' | 'tags' | 'links'>('basic');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
@@ -51,6 +69,43 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
     value: WorkShowcaseProject[K]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handle local file upload for primary thumbnail
+  const handlePrimaryFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        handleFieldChange('imageUrl', reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle local file upload for gallery
+  const handleGalleryFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const newImg: WorkShowcaseGalleryImage = {
+          id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          url: reader.result,
+          caption: `${file.name.replace(/\.[^/.]+$/, '')} View`,
+          altText: formData.title || 'Project photo',
+        };
+        setFormData((prev) => ({
+          ...prev,
+          galleryImages: [...(prev.galleryImages || []), newImg],
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Bullet points handlers
@@ -76,11 +131,11 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
   };
 
   // Gallery handlers
-  const handleAddGalleryImage = () => {
+  const handleAddGalleryImage = (customUrl?: string) => {
     const newImage: WorkShowcaseGalleryImage = {
       id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
-      caption: '',
+      url: customUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+      caption: 'Storefront interface showcase',
       altText: formData.title || 'Project photo',
     };
     setFormData((prev) => ({
@@ -138,17 +193,29 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
 
   const tagSuggestions = [
     'Shopify Plus',
+    'Recharge API',
+    'Tailwind CSS',
     'Home Depot US',
     'TikTok Shop',
     'Photoshop Batch',
     'FBT Logistics',
     'Metafields',
     'WooCommerce',
+    'Modern React',
+    'Instant Search',
+    'Stripe Payments',
+    'Headless Shopify',
     'Variant Matrices',
-    'Inventory Automation',
-    'Premiere Pro',
-    'DaVinci Resolve',
-    'CSV Architecture',
+    'Klaviyo Flows',
+  ];
+
+  const photoPresets = [
+    { label: 'Skincare & Botanicals', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=85' },
+    { label: 'DTC Gadgets & Models', url: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=85' },
+    { label: 'Luxury Vanities & Interior', url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=85' },
+    { label: 'Apparel & Outerwear', url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=85' },
+    { label: 'Eco Goods & Refills', url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=85' },
+    { label: 'Clinical Health / Socks', url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85' },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -158,40 +225,40 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/70 backdrop-blur-xs animate-fade-in">
-      <div className="w-full max-w-4xl max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-[#BCD5E6] flex flex-col overflow-hidden text-[#1E3A5F]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/75 backdrop-blur-xs animate-fade-in">
+      <div className="w-full max-w-4xl max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden text-[#1E3A5F]">
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-[#F4F8FB] border-b border-[#BCD5E6] flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9]">
+            <div className="w-10 h-10 rounded-2xl bg-[#143020] flex items-center justify-center text-[#4ADE80] shadow-xs">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-urbanist font-extrabold text-lg sm:text-xl text-[#1E3A5F]">
-                {formData.title ? `Edit Project: ${formData.title}` : 'Add New Case Study'}
+              <h2 className="font-urbanist font-extrabold text-lg sm:text-xl text-slate-900">
+                {formData.title ? `Edit Card: ${formData.title}` : 'Add New Sample Work Card'}
               </h2>
               <p className="text-xs text-slate-500">
-                Detailed portfolio showcase, multi-photo gallery manager, and live storefront links.
+                Configure texts, live storefront links, browser frame domain, performance vitals, and photo gallery.
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-6 py-2 bg-slate-50 border-b border-[#BCD5E6]/60 flex items-center gap-2 overflow-x-auto text-xs font-bold">
+        <div className="px-6 py-2 bg-slate-100 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs font-bold">
           {[
-            { id: 'basic', label: '1. Basic Info & Metrics', icon: Layers },
+            { id: 'basic', label: '1. Titles & Browser Bar', icon: Layers },
             { id: 'content', label: '2. Description & Bullets', icon: FileText },
-            { id: 'gallery', label: `3. Gallery (${formData.galleryImages?.length || 0})`, icon: ImageIcon },
-            { id: 'tags', label: `4. Tech Tags (${formData.tags?.length || 0})`, icon: Tag },
-            { id: 'links', label: '5. External Links & CTA', icon: Link2 },
+            { id: 'gallery', label: `3. Photos & Uploads (${(formData.galleryImages?.length || 0) + 1})`, icon: ImageIcon },
+            { id: 'tags', label: `4. Platform Tags (${formData.tags?.length || 0})`, icon: Tag },
+            { id: 'links', label: '5. Storefront Links & CTA', icon: Link2 },
           ].map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -200,10 +267,10 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   active
-                    ? 'bg-[#1E3A5F] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-200/60'
+                    ? 'bg-[#143020] text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -218,108 +285,117 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
           {/* TAB 1: BASIC INFORMATION */}
           {activeTab === 'basic' && (
             <div className="space-y-4 animate-fade-in">
+              {/* Project Title & Subtitle */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-[#1E3A5F] mb-1">
-                    Project Title <span className="text-red-500">*</span>
+                  <label className="block font-bold text-slate-900 mb-1">
+                    Project Card Title (H3) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.title}
                     onChange={(e) => handleFieldChange('title', e.target.value)}
-                    placeholder="e.g. Willow Bath and Vanity Inc."
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] font-bold text-sm focus:border-[#0EA5E9] focus:outline-hidden"
+                    placeholder="e.g. GOLD & GROVE"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-sm focus:border-[#10B981] focus:outline-hidden"
                   />
+                  <span className="text-[10px] text-slate-400">Rendered in bold uppercase on the card.</span>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#1E3A5F] mb-1">
-                    Subtitle / Client / Niche
+                  <label className="block font-bold text-slate-900 mb-1">
+                    Card Subtitle / Line Tagline
                   </label>
                   <input
                     type="text"
-                    value={formData.client}
-                    onChange={(e) => handleFieldChange('client', e.target.value)}
-                    placeholder="e.g. Luxury Bathroom Vanities & Multi-Channel Ops"
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] focus:border-[#0EA5E9] focus:outline-hidden"
+                    value={formData.subtitle || ''}
+                    onChange={(e) => {
+                      handleFieldChange('subtitle', e.target.value);
+                      handleFieldChange('client', e.target.value);
+                    }}
+                    placeholder="e.g. INTERNAL BLEMISH BLEND & SKIN-CLEARING BOTANICAL SUPPLEMENTS."
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold focus:border-[#10B981] focus:outline-hidden"
                   />
+                  <span className="text-[10px] text-slate-400">Uppercase tagline right below the title.</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-[#1E3A5F] mb-1">
-                    Category / Filter Tag
-                  </label>
-                  <div className="flex gap-2">
-                    <select
-                      value={formData.category}
-                      onChange={(e) => handleFieldChange('category', e.target.value)}
-                      className="w-1/2 px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] font-medium focus:border-[#0EA5E9] focus:outline-hidden"
-                    >
-                      {availableCategories
-                        .filter((c) => c !== 'All')
-                        .map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                    </select>
+              {/* Browser Bar Frame Settings */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                  </div>
+                  <span className="font-extrabold text-xs text-slate-800">
+                    Browser Window Frame Customization
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Browser URL Bar Domain
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <Hexagon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <input
+                        type="text"
+                        value={formData.domainUrl || ''}
+                        onChange={(e) => handleFieldChange('domainUrl', e.target.value)}
+                        placeholder="e.g. goldandgrove.com"
+                        className="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Vitals / Lighthouse Score Badge
+                    </label>
                     <input
                       type="text"
-                      value={formData.category}
-                      onChange={(e) => handleFieldChange('category', e.target.value)}
-                      placeholder="Or enter custom category"
-                      className="w-1/2 px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] focus:border-[#0EA5E9] focus:outline-hidden"
+                      value={formData.vitalsScore || ''}
+                      onChange={(e) => handleFieldChange('vitalsScore', e.target.value)}
+                      placeholder="e.g. 99/100 Core Vitals or 98/100 Lighthouse"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800"
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Floating Badges */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">
+                    Category Tag (Top-Left Floating Badge)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.previewBadge || ''}
+                    onChange={(e) => {
+                      handleFieldChange('previewBadge', e.target.value);
+                      handleFieldChange('category', e.target.value);
+                    }}
+                    placeholder="e.g. SKIN NUTRITION & WELLNESS"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-extrabold text-xs"
+                  />
+                  <span className="text-[10px] text-slate-400">White pill shown on top-left of image preview.</span>
+                </div>
 
                 <div>
-                  <label className="block font-bold text-[#1E3A5F] mb-1">
-                    Highlight Metric Badge
+                  <label className="block font-bold text-slate-900 mb-1">
+                    Highlight Metric (Top-Right Floating Pill)
                   </label>
                   <input
                     type="text"
                     value={formData.metrics}
                     onChange={(e) => handleFieldChange('metrics', e.target.value)}
-                    placeholder="e.g. 25,000+ Active SKUs or 4.8★ SPS Score"
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] font-mono font-bold focus:border-[#0EA5E9] focus:outline-hidden"
+                    placeholder="e.g. +220% Subscription Retention or 25,000+ Active SKUs"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-[#15803D] font-mono font-bold text-xs"
                   />
-                </div>
-              </div>
-
-              {/* Primary Thumbnail Preview & URL */}
-              <div className="p-4 rounded-2xl bg-[#F4F8FB] border border-[#BCD5E6] space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="block font-bold text-[#1E3A5F]">
-                    Primary Thumbnail Image URL
-                  </label>
-                  <span className="text-[11px] text-slate-500">Card & Grid Hero Image</span>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                  <div className="w-32 h-20 rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 shadow-xs flex items-center justify-center">
-                    {formData.imageUrl ? (
-                      <img
-                        src={formData.imageUrl}
-                        alt={formData.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <ImageIcon className="w-6 h-6 text-slate-400" />
-                    )}
-                  </div>
-                  <input
-                    type="url"
-                    value={formData.imageUrl}
-                    onChange={(e) => handleFieldChange('imageUrl', e.target.value)}
-                    placeholder="https://images.unsplash.com/... or uploaded asset URL"
-                    className="flex-1 px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] text-xs focus:border-[#0EA5E9] focus:outline-hidden"
-                  />
+                  <span className="text-[10px] text-slate-400">Green pill shown on top-right of image preview.</span>
                 </div>
               </div>
             </div>
@@ -329,15 +405,15 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
           {activeTab === 'content' && (
             <div className="space-y-5 animate-fade-in">
               <div>
-                <label className="block font-bold text-[#1E3A5F] mb-1">
-                  Main Description & Operational Problem/Solution
+                <label className="block font-bold text-slate-900 mb-1">
+                  Card Main Description
                 </label>
                 <textarea
                   rows={4}
                   value={formData.description}
                   onChange={(e) => handleFieldChange('description', e.target.value)}
                   placeholder="Explain the store scale, catalog complexity, daily fulfillment processes, and technical systems engineered..."
-                  className="w-full p-3.5 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] leading-relaxed text-xs focus:border-[#0EA5E9] focus:outline-hidden"
+                  className="w-full p-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 leading-relaxed text-xs focus:border-[#10B981] focus:outline-hidden"
                 />
               </div>
 
@@ -345,12 +421,12 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-[#1E3A5F]">Key Achievements / Bullet Points</h3>
+                    <h3 className="font-bold text-slate-900">Key Deliverables & Bullets (Case Study)</h3>
                     <p className="text-[11px] text-slate-500">
                       Specific verified deliverables, variant counts, SLA records, and automation workflows.
                     </p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-sky-100 text-[#0EA5E9] font-mono text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#143020] font-mono text-[10px] font-bold">
                     {formData.highlights?.length || 0} bullets
                   </span>
                 </div>
@@ -367,13 +443,13 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                         handleAddBullet();
                       }
                     }}
-                    placeholder="e.g. Architected 25,000+ variant matrices with nested countertop, finish, and hardware logic..."
-                    className="flex-1 px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] focus:border-[#0EA5E9] focus:outline-hidden"
+                    placeholder="e.g. Re-engineered high-converting supplement subscription funnel..."
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-[#10B981] focus:outline-hidden"
                   />
                   <button
                     type="button"
                     onClick={handleAddBullet}
-                    className="px-4 py-2 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add Bullet</span>
@@ -385,14 +461,14 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                   {(formData.highlights || []).map((bullet, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-xl bg-[#F4F8FB] border border-[#BCD5E6] flex items-start gap-2.5 group"
+                      className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5 group"
                     >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
                       <input
                         type="text"
                         value={bullet}
                         onChange={(e) => handleUpdateBullet(idx, e.target.value)}
-                        className="flex-1 bg-transparent border-0 border-b border-transparent focus:border-[#0EA5E9] text-[#1E3A5F] font-medium text-xs focus:outline-hidden"
+                        className="flex-1 bg-transparent border-0 border-b border-transparent focus:border-[#10B981] text-slate-900 font-medium text-xs focus:outline-hidden"
                       />
                       <button
                         type="button"
@@ -404,149 +480,199 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                       </button>
                     </div>
                   ))}
-                  {(!formData.highlights || formData.highlights.length === 0) && (
-                    <div className="p-4 rounded-xl border border-dashed border-[#BCD5E6] text-center text-slate-400">
-                      No achievement bullet points added yet. Type a bullet point above and click "Add Bullet".
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 3: MULTI-PHOTO & MEDIA GALLERY MANAGER */}
+          {/* TAB 3: PHOTOS, UPLOADS & GALLERY */}
           {activeTab === 'gallery' && (
-            <div className="space-y-4 animate-fade-in">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
-                <div>
-                  <h3 className="font-bold text-[#1E3A5F]">Project Gallery Photos</h3>
-                  <p className="text-[11px] text-slate-500">
-                    Add multiple screenshots, catalog matrices, high-resolution product photography, and UI clips.
-                  </p>
+            <div className="space-y-6 animate-fade-in">
+              {/* Primary Card Thumbnail Image */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-900">Primary Card Mockup Photo</h3>
+                    <p className="text-[11px] text-slate-500">The main screenshot displayed inside the macOS browser frame.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handlePrimaryFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#10B981]" />
+                      <span>Upload from Device</span>
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddGalleryImage}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Add Photo URL</span>
-                </button>
+
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="w-44 aspect-[16/10] rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 shadow-xs flex items-center justify-center relative group">
+                    {formData.imageUrl ? (
+                      <img
+                        src={formData.imageUrl}
+                        alt={formData.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-slate-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2 w-full">
+                    <label className="block text-[11px] font-bold text-slate-600">
+                      Direct Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.imageUrl}
+                      onChange={(e) => handleFieldChange('imageUrl', e.target.value)}
+                      placeholder="https://images.unsplash.com/... or data:image/..."
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 text-xs focus:border-[#10B981] focus:outline-hidden"
+                    />
+
+                    {/* Quick photo presets */}
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        Quick Stock Storefront Presets
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {photoPresets.map((p, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => handleFieldChange('imageUrl', p.url)}
+                            className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] text-slate-600 hover:text-[#143020] hover:border-slate-400 cursor-pointer"
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Gallery Items Grid / List */}
-              <div className="space-y-3">
-                {(formData.galleryImages || []).map((img, idx) => (
-                  <div
-                    key={img.id || idx}
-                    className="p-3.5 rounded-2xl bg-[#F4F8FB] border border-[#BCD5E6] flex flex-col md:flex-row items-start md:items-center gap-3"
-                  >
-                    {/* Reorder Arrows */}
-                    <div className="flex md:flex-col items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        disabled={idx === 0}
-                        onClick={() => handleMoveGalleryImage(idx, 'up')}
-                        className="p-1 rounded-md text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-200 disabled:opacity-30 cursor-pointer"
-                        title="Move photo up"
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="text-[10px] font-mono font-bold text-slate-400 px-1">
-                        #{idx + 1}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={idx === (formData.galleryImages?.length || 0) - 1}
-                        onClick={() => handleMoveGalleryImage(idx, 'down')}
-                        className="p-1 rounded-md text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-200 disabled:opacity-30 cursor-pointer"
-                        title="Move photo down"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+              {/* Gallery Photos (Multiple Photos) */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200">
+                  <div>
+                    <h3 className="font-bold text-slate-900">Additional Case Study Gallery Photos</h3>
+                    <p className="text-[11px] text-slate-500">
+                      Add screenshots of PDPs, cart drawers, variant matrices, and UI clips.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={galleryFileInputRef}
+                      accept="image/*"
+                      onChange={handleGalleryFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => galleryFileInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#10B981]" />
+                      <span>Upload Photo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddGalleryImage()}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Add Image URL</span>
+                    </button>
+                  </div>
+                </div>
 
-                    {/* Image Preview Thumbnail */}
-                    <div className="w-24 h-16 rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 shadow-xs flex items-center justify-center">
-                      {img.url ? (
-                        <img
-                          src={img.url}
-                          alt={img.altText || 'Gallery item'}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <ImageIcon className="w-5 h-5 text-slate-400" />
-                      )}
-                    </div>
+                {/* Gallery List */}
+                <div className="space-y-3">
+                  {(formData.galleryImages || []).map((img, idx) => (
+                    <div
+                      key={img.id || idx}
+                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+                    >
+                      {/* Reordering */}
+                      <div className="flex sm:flex-col items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => handleMoveGalleryImage(idx, 'up')}
+                          className="p-1 rounded-md text-slate-400 hover:text-slate-800 disabled:opacity-30 cursor-pointer"
+                          title="Move up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-[10px] font-mono text-slate-400">#{idx + 1}</span>
+                        <button
+                          type="button"
+                          disabled={idx === (formData.galleryImages?.length || 0) - 1}
+                          onClick={() => handleMoveGalleryImage(idx, 'down')}
+                          className="p-1 rounded-md text-slate-400 hover:text-slate-800 disabled:opacity-30 cursor-pointer"
+                          title="Move down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
 
-                    {/* Image Fields: URL, Caption, Alt Text */}
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
-                      <div className="sm:col-span-3">
-                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                          Image URL
-                        </label>
+                      {/* Image Preview */}
+                      <div className="w-20 h-14 rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+                        {img.url ? (
+                          <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="w-4 h-4 text-slate-400 mx-auto mt-5" />
+                        )}
+                      </div>
+
+                      {/* Fields */}
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                         <input
                           type="url"
                           value={img.url}
                           onChange={(e) => handleUpdateGalleryImage(idx, 'url', e.target.value)}
-                          placeholder="https://..."
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F] font-mono text-xs focus:border-[#0EA5E9] focus:outline-hidden"
+                          placeholder="Image URL..."
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-slate-800"
                         />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                          Caption / Highlight Detail
-                        </label>
                         <input
                           type="text"
                           value={img.caption || ''}
                           onChange={(e) => handleUpdateGalleryImage(idx, 'caption', e.target.value)}
-                          placeholder="e.g. Countertop & basin matrix detail view"
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F] text-xs focus:border-[#0EA5E9] focus:outline-hidden"
+                          placeholder="Photo Caption..."
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-slate-800"
                         />
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                          Alt Text Tag
-                        </label>
-                        <input
-                          type="text"
-                          value={img.altText || ''}
-                          onChange={(e) => handleUpdateGalleryImage(idx, 'altText', e.target.value)}
-                          placeholder="e.g. Vanity Hardware"
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F] text-xs focus:border-[#0EA5E9] focus:outline-hidden"
-                        />
-                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGalleryImage(idx)}
+                        className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Delete photo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
+                  ))}
 
-                    {/* Delete Gallery Image */}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveGalleryImage(idx)}
-                      className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors self-end md:self-center cursor-pointer"
-                      title="Remove image"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-
-                {(!formData.galleryImages || formData.galleryImages.length === 0) && (
-                  <div className="p-8 rounded-2xl border-2 border-dashed border-[#BCD5E6] text-center space-y-2">
-                    <ImageIcon className="w-8 h-8 text-slate-300 mx-auto" />
-                    <p className="text-slate-500 font-medium">No additional gallery photos added yet.</p>
-                    <button
-                      type="button"
-                      onClick={handleAddGalleryImage}
-                      className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-[#BCD5E6] text-[#0EA5E9] font-bold text-xs cursor-pointer"
-                    >
-                      + Add First Gallery Photo
-                    </button>
-                  </div>
-                )}
+                  {(!formData.galleryImages || formData.galleryImages.length === 0) && (
+                    <div className="p-6 rounded-2xl border border-dashed border-slate-300 text-center text-slate-400">
+                      No additional gallery photos added yet. Click "+ Add Image URL" or "Upload Photo" above.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -555,9 +681,9 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
           {activeTab === 'tags' && (
             <div className="space-y-4 animate-fade-in">
               <div>
-                <h3 className="font-bold text-[#1E3A5F]">Platform & Tool Tags (Pills)</h3>
+                <h3 className="font-bold text-slate-900">Platform & Tool Tags (Pills)</h3>
                 <p className="text-[11px] text-slate-500">
-                  Tag the operational stack used for this project (e.g. Shopify Plus, Home Depot US, TikTok Shop, FBT Logistics).
+                  Tag the operational stack used for this project (e.g. Shopify Plus, Recharge API, Tailwind CSS, Home Depot, TikTok Shop).
                 </p>
               </div>
 
@@ -574,18 +700,18 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                     }
                   }}
                   placeholder="Type tag name and press Enter..."
-                  className="flex-1 px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] focus:border-[#0EA5E9] focus:outline-hidden"
+                  className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-[#10B981] focus:outline-hidden"
                 />
                 <button
                   type="button"
                   onClick={() => handleAddTag()}
-                  className="px-4 py-2 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold transition-colors cursor-pointer"
                 >
                   Add Tag
                 </button>
               </div>
 
-              {/* Active Tags Pills */}
+              {/* Active Tags */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Active Tags ({formData.tags?.length || 0})
@@ -594,7 +720,7 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                   {(formData.tags || []).map((t) => (
                     <span
                       key={t}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FB] border border-[#BCD5E6] text-[#1E3A5F] font-bold text-xs shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-bold text-xs"
                     >
                       <span>{t}</span>
                       <button
@@ -606,14 +732,11 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                       </button>
                     </span>
                   ))}
-                  {(!formData.tags || formData.tags.length === 0) && (
-                    <span className="text-slate-400 italic">No tags selected.</span>
-                  )}
                 </div>
               </div>
 
               {/* Suggested Quick Add Chips */}
-              <div className="pt-3 border-t border-slate-100">
+              <div className="pt-3 border-t border-slate-200">
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Quick Add Suggestions
                 </label>
@@ -629,7 +752,7 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                         className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
                           isAdded
                             ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                            : 'bg-white hover:bg-[#EFF6FB] text-slate-600 border-[#BCD5E6] hover:text-[#0EA5E9]'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 hover:text-[#143020]'
                         }`}
                       >
                         + {sug}
@@ -645,15 +768,15 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
           {activeTab === 'links' && (
             <div className="space-y-4 animate-fade-in">
               <div>
-                <h3 className="font-bold text-[#1E3A5F]">External Links & Action Button</h3>
+                <h3 className="font-bold text-slate-900">External Links & Action Buttons</h3>
                 <p className="text-[11px] text-slate-500">
-                  Configure live storefront destinations, architecture documentation links, and custom button labels.
+                  Configure live storefront links and action buttons shown on the card.
                 </p>
               </div>
 
               <div>
-                <label className="block font-bold text-[#1E3A5F] mb-1">
-                  Live Storefront URL
+                <label className="block font-bold text-slate-900 mb-1">
+                  Live Storefront Destination URL
                 </label>
                 <div className="flex items-center gap-2">
                   <ExternalLink className="w-4 h-4 text-slate-400" />
@@ -661,14 +784,38 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                     type="url"
                     value={formData.url || ''}
                     onChange={(e) => handleFieldChange('url', e.target.value)}
-                    placeholder="https://willowbathandvanity.com/"
-                    className="flex-1 px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] focus:border-[#0EA5E9] focus:outline-hidden"
+                    placeholder="https://goldandgrove.com/"
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-[#10B981] focus:outline-hidden"
                   />
+                  {formData.url && (
+                    <a
+                      href={formData.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1"
+                    >
+                      <span>Test Link</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-[#1E3A5F] mb-1">
+                <label className="block font-bold text-slate-900 mb-1">
+                  Primary Action Button Label
+                </label>
+                <input
+                  type="text"
+                  value={formData.actionLabel || ''}
+                  onChange={(e) => handleFieldChange('actionLabel', e.target.value)}
+                  placeholder="CASE STUDY"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold focus:border-[#10B981] focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">
                   Case Study / Documentation Link (Optional)
                 </label>
                 <div className="flex items-center gap-2">
@@ -677,45 +824,30 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                     type="url"
                     value={formData.caseStudyUrl || ''}
                     onChange={(e) => handleFieldChange('caseStudyUrl', e.target.value)}
-                    placeholder="https://notion.so/... or portfolio PDF link"
-                    className="flex-1 px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] focus:border-[#0EA5E9] focus:outline-hidden"
+                    placeholder="https://..."
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-[#10B981] focus:outline-hidden"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#1E3A5F] mb-1">
-                  Action Button Label
-                </label>
-                <input
-                  type="text"
-                  value={formData.actionLabel || ''}
-                  onChange={(e) => handleFieldChange('actionLabel', e.target.value)}
-                  placeholder="e.g. View Architecture → or Visit Storefront ↗"
-                  className="w-full px-3.5 py-2 rounded-xl border border-[#BCD5E6] bg-white text-[#1E3A5F] font-semibold focus:border-[#0EA5E9] focus:outline-hidden"
-                />
               </div>
             </div>
           )}
 
           {/* Modal Footer */}
-          <div className="pt-4 border-t border-[#BCD5E6] flex items-center justify-between">
+          <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-[#BCD5E6] hover:bg-slate-100 font-bold text-slate-600 transition-colors cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 font-bold text-slate-600 transition-colors cursor-pointer"
             >
               Cancel
             </button>
-            <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                className="px-6 py-2.5 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-extrabold shadow-md flex items-center gap-2 transition-all cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Save Project Changes</span>
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="px-6 py-2.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-extrabold shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <CheckCircle2 className="w-4 h-4 text-[#4ADE80]" />
+              <span>Save & Update Card</span>
+            </button>
           </div>
         </form>
       </div>
