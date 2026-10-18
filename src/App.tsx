@@ -4,16 +4,17 @@ import { HeroLeft } from './components/HeroLeft';
 import { CirclesVisualization } from './components/CirclesVisualization';
 import { AboutPage } from './components/AboutPage';
 import { WorkPage } from './components/WorkPage';
+import { BlogPage } from './components/BlogPage';
 import { LogoTicker } from './components/LogoTicker';
 import { ContactModal } from './components/ContactModal';
 import { AuthProvider } from './cms/auth/AuthContext';
 import { ProtectedAdminRoute } from './cms/auth/ProtectedAdminRoute';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'about' | 'work' | 'cms'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'about' | 'work' | 'blog' | 'cms'>('home');
   const [isHireOpen, setIsHireOpen] = useState(false);
 
-  // Sync tab with URL hash / search params (#admin, #/admin, #about, #work) and secret keyboard shortcut
+  // Sync tab with URL hash / search params (#admin, #about, #work, #blog) and secret keyboard shortcut
   useEffect(() => {
     const checkHashAndRoute = () => {
       const hash = window.location.hash.toLowerCase();
@@ -36,6 +37,14 @@ export default function App() {
         setActiveTab('about');
       } else if (hash === '#work') {
         setActiveTab('work');
+      } else if (
+        hash === '#blog' ||
+        hash === '#/blog' ||
+        hash.startsWith('#blog-') ||
+        path.includes('/blog') ||
+        search.includes('blog')
+      ) {
+        setActiveTab('blog');
       } else if (hash === '#home' || hash === '') {
         setActiveTab('home');
       }
@@ -63,7 +72,7 @@ export default function App() {
     };
   }, []);
 
-  const handleSelectTab = (tab: 'home' | 'about' | 'work' | 'cms') => {
+  const handleSelectTab = (tab: 'home' | 'about' | 'work' | 'blog' | 'cms') => {
     setActiveTab(tab);
     if (tab === 'home') {
       window.history.pushState(null, '', window.location.pathname);
@@ -96,7 +105,7 @@ export default function App() {
           backgroundColor: '#F4F8FB',
         }}
       >
-        {/* Top Header with R Monogram Logo (Only Home, About, Work visible to public) */}
+        {/* Top Header with R Monogram Logo (Only Home, About, Work, Blog visible to public) */}
         {activeTab !== 'cms' && (
           <Header
             activeTab={activeTab}
@@ -134,6 +143,13 @@ export default function App() {
 
           {activeTab === 'work' && (
             <WorkPage onOpenHire={() => setIsHireOpen(true)} />
+          )}
+
+          {activeTab === 'blog' && (
+            <BlogPage
+              onOpenHire={() => setIsHireOpen(true)}
+              onNavigateToWork={() => handleSelectTab('work')}
+            />
           )}
 
           {/* Gated Protected Admin CMS Route */}

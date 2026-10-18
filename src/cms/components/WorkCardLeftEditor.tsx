@@ -81,10 +81,10 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
 
   // Gallery multi-file upload
   const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || []) as File[];
     if (!files.length) return;
 
-    files.forEach((file) => {
+    files.forEach((file: File) => {
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === 'string') {
@@ -624,11 +624,11 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
                 onDrop={(e) => {
                   e.preventDefault();
                   setIsDragging(false);
-                  const files = Array.from(e.dataTransfer.files || []).filter((f) =>
+                  const files = (Array.from(e.dataTransfer.files || []) as File[]).filter((f: File) =>
                     f.type.startsWith('image/')
                   );
                   if (files.length) {
-                    files.forEach((file) => {
+                    files.forEach((file: File) => {
                       const reader = new FileReader();
                       reader.onload = () => {
                         if (typeof reader.result === 'string') {

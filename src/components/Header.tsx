@@ -3,8 +3,8 @@ import { Menu, X, Mail } from 'lucide-react';
 import { RussellLogo } from './RussellLogo';
 
 interface HeaderProps {
-  activeTab: 'home' | 'about' | 'work' | 'cms';
-  onSelectTab: (tab: 'home' | 'about' | 'work' | 'cms') => void;
+  activeTab: 'home' | 'about' | 'work' | 'blog' | 'cms';
+  onSelectTab: (tab: 'home' | 'about' | 'work' | 'blog' | 'cms') => void;
   onOpenHire: () => void;
 }
 
@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
 
-      {/* Center: Desktop Navigation Menus (Home, About, Work, CMS Studio) */}
+      {/* Center: Desktop Navigation Menus (Home, About, Work, Blog) */}
       <nav
         id="desktop-nav-center"
         className="hidden md:flex items-center gap-1.5 p-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#BCD5E6] shadow-xs"
@@ -84,6 +84,18 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           Work
+        </button>
+        <button
+          id="nav-link-blog"
+          type="button"
+          onClick={() => onSelectTab('blog')}
+          className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
+            activeTab === 'blog'
+              ? 'bg-[#1E3A5F] text-white shadow-xs'
+              : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
+          }`}
+        >
+          Blog
         </button>
       </nav>
 
@@ -156,6 +168,18 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Work
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              onSelectTab('blog');
+            }}
+            className={`text-left text-base font-bold transition-colors py-2.5 border-b border-white/10 ${
+              activeTab === 'blog' ? 'text-[#38BDF8]' : 'text-white'
+            }`}
+          >
+            Blog
           </button>
           <button
             type="button"

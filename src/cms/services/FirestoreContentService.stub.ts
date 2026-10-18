@@ -267,4 +267,24 @@ export class FirestoreContentService implements ContentRepository {
     */
     return globals as any;
   }
+
+  async getBlogs(): Promise<import('../types/schema').BlogPost[]> {
+    this.ensureInitialized();
+    return [];
+  }
+
+  async getBlogBySlug(slug: string): Promise<import('../types/schema').BlogPost | null> {
+    this.ensureInitialized();
+    return null;
+  }
+
+  async saveBlog(blog: import('../types/schema').BlogPost): Promise<import('../types/schema').BlogPost> {
+    this.ensureInitialized();
+    return blog;
+  }
+
+  async deleteBlog(id: string): Promise<boolean> {
+    this.ensureInitialized();
+    return true;
+  }
 }

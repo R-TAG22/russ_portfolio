@@ -239,6 +239,26 @@ export interface WorkShowcaseContent {
   projects: WorkShowcaseProject[];
 }
 
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle?: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  category: string;
+  tags: string[];
+  authorName: string;
+  authorRole?: string;
+  authorAvatar?: string;
+  publishedAt: string;
+  readTime: string;
+  featured?: boolean;
+  status: 'published' | 'draft';
+  viewsCount?: number;
+}
+
 export interface CustomHtmlContent {
   rawHtml: string;
   css?: string;

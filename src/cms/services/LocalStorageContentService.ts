@@ -1,10 +1,11 @@
 import { ContentRepository, PageFilter, PageSummary } from '../repositories/ContentRepository';
-import { PageDocument, MediaItem, GlobalConfigurations } from '../types/schema';
+import { PageDocument, MediaItem, GlobalConfigurations, BlogPost } from '../types/schema';
 
 const STORAGE_KEYS = {
   PAGES: 'wpbakery_cms_pages_v3',
   MEDIA: 'wpbakery_cms_media_v2',
   GLOBALS: 'wpbakery_cms_globals_v2',
+  BLOGS: 'wpbakery_cms_blogs_v2',
 };
 
 // Initial Seed Pages matching our 3 Core Pages: Homepage, About, Work
@@ -848,10 +849,158 @@ const INITIAL_MEDIA_LIBRARY: MediaItem[] = [
   },
 ];
 
+const INITIAL_DEMO_BLOGS: BlogPost[] = [
+  {
+    id: 'blog_1',
+    slug: 'architecting-25k-sku-variant-matrices',
+    title: 'Architecting 25,000+ SKU Variant Matrices on Shopify Plus & Home Depot US',
+    subtitle: 'Hierarchical Matrix Logic, Nested Countertop Cutouts, and Automated CSV Sync',
+    excerpt: 'How we engineered a 3-tier variant architecture across finishes, sizes, and countertop sink cutouts, eradicating SKU collision and multi-channel inventory desync.',
+    coverImage: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1600&q=85',
+    category: 'Catalog Architecture',
+    tags: ['Shopify Plus', 'Home Depot US', 'Variant Matrix', 'Metafields'],
+    authorName: 'Russell Taga-an',
+    authorRole: 'Lead E-Commerce Operations & Catalog Architect',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    publishedAt: '2026-03-24',
+    readTime: '8 min read',
+    featured: true,
+    status: 'published',
+    viewsCount: 1420,
+    content: `### The Challenge: Beyond the 100-Variant Limit
+
+When managing luxury bathroom vanity lines—such as Willow Bath and Vanity Inc.—a single vanity style often comes in:
+- 5 Widths (30", 36", 48", 60" Single, 72" Double)
+- 4 Base Finishes (Matte White, Midnight Navy, Natural Oak, Charcoal Gray)
+- 6 Countertop Stone Profiles (Calacatta Gold, Carrara White, Solid Quartz, Nero Marquina)
+- 3 Hardware Metals (Brushed Brass, Matte Black, Polished Chrome)
+- 2 Sink Cutout Types (Undermount Oval, Rectangular Vessel)
+
+Multiplying these parameters yields **720 discrete purchase combinations per vanity collection**, far surpassing Shopify’s native limit of 100 variants per product handle. Furthermore, Home Depot US EDI feeds demand strict flat-file hierarchy codes and exact dimension cutouts.
+
+### The Architectural Blueprint
+
+To solve this without sacrificing user experience or breaking wholesale EDI sync, we devised a decoupled variant architecture:
+
+1. **Parent-Child Product Partitioning**: Rather than bundling all permutations under one bloated handle, we split collections by primary Finish while binding them via custom namespace metafields (\`custom.collection_swatches\`).
+2. **Dynamic Cutout & Hardware Combiners**: Countertops and Hardware kits are mapped as linked child inventory lines that dynamically reserve and deduct real-time stock upon order placement.
+3. **Automated Flat-File Generators**: Daily cron scripts parse the Shopify master matrix and automatically emit Home Depot compliant XML/CSV sheets, validating UPCs, case weights, and freight classifications.
+
+> "A scalable catalog matrix isn't just about entering product descriptions; it is the financial and operational backbone connecting your warehouse logistics to retail marketplaces."
+
+### Key Metrics & Tangible Outcomes
+- **25,000+ Active SKUs** maintained with zero catalog drift over 18 months.
+- **-94% Catalog Drift**: Eradicated incorrect SKU drops and fulfillment mismatch errors.
+- **+180% Velocity Lift**: Customers configure their dream vanity with real-time stock confirmation in under 3 clicks.`,
+  },
+  {
+    id: 'blog_2',
+    slug: 'zero-latency-multi-channel-inventory',
+    title: 'Zero-Latency Multi-Channel Inventory Synchronization Across 3 Retail Marketplaces',
+    subtitle: 'Event-Driven Webhook Relays and Safety Buffer Thresholds',
+    excerpt: 'Preventing overselling and chargebacks during high-volume flash sales across Shopify Plus, Home Depot, and TikTok Shop with real-time stock allocation.',
+    coverImage: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1600&q=85',
+    category: 'Marketplace Operations',
+    tags: ['Inventory Sync', 'EDI Pipelines', 'Shopify Plus', 'FBT Logistics'],
+    authorName: 'Russell Taga-an',
+    authorRole: 'Lead E-Commerce Operations & Catalog Architect',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    publishedAt: '2026-02-18',
+    readTime: '6 min read',
+    featured: false,
+    status: 'published',
+    viewsCount: 980,
+    content: `### The Multi-Channel Stock Dilemma
+
+When products are listed concurrently across retail partners, a flash spike on TikTok Shop can exhaust inventory before the warehouse ERP propagates stock levels to Home Depot or Shopify. This leads to backorders, cancellation penalties, and suppressed merchant scorecards.
+
+### The Safety Buffer & Event Pipeline
+
+We engineered a resilient multi-tier inventory buffer model:
+
+- **Virtual Stock Buffers**: High-velocity SKUs maintain an automated 5-unit safety ceiling. When stock dips below 5 units, secondary channels are temporarily throttled while the primary direct-to-consumer store finishes clearing remaining units.
+- **Webhook-Triggered Micro-Updates**: Instead of batch polling every 60 minutes, order creation webhooks trigger instantaneous delta recalculations broadcast to all channel APIs within 800 milliseconds.
+- **Automated Restock Forecasts**: Lead-time calculations dynamically adjust marketplace backorder availability flags based on container transit manifests.
+
+### Results
+- Zero out-of-stock cancellation penalties across 24 consecutive months.
+- 99.8% on-time marketplace fulfillment rate.`,
+  },
+  {
+    id: 'blog_3',
+    slug: 'automating-photoshop-batch-product-schematics',
+    title: 'Automating 300 DPI Pure-White Product Schematics with Photoshop Batch Actions',
+    subtitle: 'Processing 14,000 Architectural Renders with Zero Manual Clipping',
+    excerpt: 'How we standardized batch actions, color-profile scripts, and dimension line overlays to generate pristine Home Depot compliant assets at massive scale.',
+    coverImage: 'https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=1600&q=85',
+    category: 'Asset Automation',
+    tags: ['Photoshop Batch', '300 DPI', 'Asset Pipeline', 'Retail Compliance'],
+    authorName: 'Russell Taga-an',
+    authorRole: 'Lead E-Commerce Operations & Catalog Architect',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    publishedAt: '2026-01-12',
+    readTime: '5 min read',
+    featured: false,
+    status: 'published',
+    viewsCount: 1250,
+    content: `### Retail Portal Compliance Standards
+
+Major enterprise retailers like Home Depot and Wayfair maintain non-negotiable asset standards:
+1. Pure #FFFFFF RGB background on primary angle images.
+2. Minimum 3000x3000px at 300 DPI resolution.
+3. Precise 85% frame fill ratio with consistent drop-shadow physics.
+4. Exact dimensional measurement schematics for plumbing cutouts.
+
+### Scripted Asset Pipeline
+
+Rather than having designers manually pen-tool thousands of bathroom vanity renders, we created automated Photoshop droplets and JavaScript ExtendScript workflows:
+- Automated contrast threshold detection and soft feathering.
+- Auto-centering and margin expansion adhering to 10% bounding borders.
+- Layered SVG dimension callout insertions driven directly from CSV measurement attributes.
+
+### Production Velocity
+- 14,000+ assets rendered and published in under 48 hours.
+- 100% first-pass acceptance rate through the Home Depot supplier portal.`,
+  },
+  {
+    id: 'blog_4',
+    slug: 'headless-hydrogen-vs-liquid-core-vitals',
+    title: 'Headless Hydrogen vs. Liquid: Achieving 99/100 Core Web Vitals on Heavy Catalogs',
+    subtitle: 'Decoupling Heavy App Scripts and Optimizing Mobile Conversion Velocity',
+    excerpt: 'A technical evaluation of moving enterprise storefronts to headless architectures to reduce Time-to-Interactive from 4.2s down to 0.7s.',
+    coverImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=85',
+    category: 'Storefront Tech',
+    tags: ['React', 'Headless Commerce', 'Next.js', 'Core Web Vitals'],
+    authorName: 'Russell Taga-an',
+    authorRole: 'Lead E-Commerce Operations & Catalog Architect',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    publishedAt: '2025-11-30',
+    readTime: '7 min read',
+    featured: false,
+    status: 'published',
+    viewsCount: 1680,
+    content: `### The Monolithic Liquid Bottleneck
+
+As stores scale, marketing teams install 20+ Shopify apps: reviews, upsells, wishlist popups, live chat, and currency converters. Each app injects render-blocking JavaScript, driving mobile Google PageSpeed scores down into the red (20-35/100).
+
+### The Modern Headless Architecture
+
+By adopting a headless approach with React and modern edge CDNs:
+- **Zero Third-Party Script Pollution**: Apps run through secure server-side GraphQL proxies instead of polluting the client DOM.
+- **Optimistic UI Cart Transitions**: Adding items to cart or switching variant swatches happens instantly with zero layout shifts (CLS 0.00).
+- **Static Edge Pre-rendering**: Product detail pages for top-converting collections are pre-rendered at the CDN edge with sub-100ms response times.
+
+### The Conversion Impact
+- Mobile PageSpeed lifted from 28 to **99/100**.
+- Conversion rate increased by +34% within the first 60 days post-launch.`,
+  },
+];
+
 export class LocalStorageContentService implements ContentRepository {
   private inMemoryPages: PageDocument[] = [];
   private inMemoryMedia: MediaItem[] = [];
   private inMemoryGlobals: GlobalConfigurations = INITIAL_GLOBALS;
+  private inMemoryBlogs: BlogPost[] = [];
 
   constructor() {
     this.initStorage();
@@ -903,10 +1052,24 @@ export class LocalStorageContentService implements ContentRepository {
       } else {
         this.inMemoryGlobals = JSON.parse(storedGlobals);
       }
+
+      const storedBlogs = localStorage.getItem(STORAGE_KEYS.BLOGS);
+      if (!storedBlogs) {
+        localStorage.setItem(STORAGE_KEYS.BLOGS, JSON.stringify(INITIAL_DEMO_BLOGS));
+        this.inMemoryBlogs = [...INITIAL_DEMO_BLOGS];
+      } else {
+        try {
+          const parsedBlogs = JSON.parse(storedBlogs);
+          this.inMemoryBlogs = Array.isArray(parsedBlogs) && parsedBlogs.length > 0 ? parsedBlogs : [...INITIAL_DEMO_BLOGS];
+        } catch {
+          this.inMemoryBlogs = [...INITIAL_DEMO_BLOGS];
+        }
+      }
     } catch {
       this.inMemoryPages = [...INITIAL_DEMO_PAGES];
       this.inMemoryMedia = [...INITIAL_MEDIA_LIBRARY];
       this.inMemoryGlobals = { ...INITIAL_GLOBALS };
+      this.inMemoryBlogs = [...INITIAL_DEMO_BLOGS];
     }
   }
 
@@ -936,6 +1099,16 @@ export class LocalStorageContentService implements ContentRepository {
         localStorage.setItem(STORAGE_KEYS.GLOBALS, JSON.stringify(this.inMemoryGlobals));
       } catch (err) {
         console.error('Failed to persist globals to localStorage', err);
+      }
+    }
+  }
+
+  private persistBlogs(): void {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEYS.BLOGS, JSON.stringify(this.inMemoryBlogs));
+      } catch (err) {
+        console.error('Failed to persist blogs to localStorage', err);
       }
     }
   }
@@ -1070,12 +1243,48 @@ export class LocalStorageContentService implements ContentRepository {
     return JSON.parse(JSON.stringify(this.inMemoryGlobals));
   }
 
+  async getBlogs(): Promise<BlogPost[]> {
+    return JSON.parse(JSON.stringify(this.inMemoryBlogs));
+  }
+
+  async getBlogBySlug(slug: string): Promise<BlogPost | null> {
+    const found = this.inMemoryBlogs.find((b) => b.slug === slug);
+    return found ? JSON.parse(JSON.stringify(found)) : null;
+  }
+
+  async saveBlog(blog: BlogPost): Promise<BlogPost> {
+    const updatedBlog: BlogPost = {
+      ...blog,
+      id: blog.id || `blog_${Date.now()}`,
+    };
+    const existingIndex = this.inMemoryBlogs.findIndex((b) => b.id === updatedBlog.id || b.slug === updatedBlog.slug);
+    if (existingIndex >= 0) {
+      this.inMemoryBlogs[existingIndex] = updatedBlog;
+    } else {
+      this.inMemoryBlogs.unshift(updatedBlog);
+    }
+    this.persistBlogs();
+    return JSON.parse(JSON.stringify(updatedBlog));
+  }
+
+  async deleteBlog(id: string): Promise<boolean> {
+    const initialLen = this.inMemoryBlogs.length;
+    this.inMemoryBlogs = this.inMemoryBlogs.filter((b) => b.id !== id);
+    if (this.inMemoryBlogs.length !== initialLen) {
+      this.persistBlogs();
+      return true;
+    }
+    return false;
+  }
+
   resetToDemo(): void {
     this.inMemoryPages = JSON.parse(JSON.stringify(INITIAL_DEMO_PAGES));
     this.inMemoryMedia = JSON.parse(JSON.stringify(INITIAL_MEDIA_LIBRARY));
     this.inMemoryGlobals = JSON.parse(JSON.stringify(INITIAL_GLOBALS));
+    this.inMemoryBlogs = JSON.parse(JSON.stringify(INITIAL_DEMO_BLOGS));
     this.persistPages();
     this.persistMedia();
     this.persistGlobals();
+    this.persistBlogs();
   }
 }

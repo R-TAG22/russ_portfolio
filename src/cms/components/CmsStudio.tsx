@@ -43,6 +43,7 @@ import { DashboardOverviewView } from './DashboardOverviewView';
 import { GlobalContentEditor, GlobalSectionKey } from './GlobalContentEditor';
 import { MediaLibraryView } from './MediaLibraryView';
 import { WorkCardLeftEditor } from './WorkCardLeftEditor';
+import { BlogManagementView } from './BlogManagementView';
 import { useAuth } from '../auth/AuthContext';
 
 type StudioViewMode = 'split' | 'builder' | 'preview';
@@ -63,6 +64,7 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
   const [currentPage, setCurrentPage] = useState<PageDocument | null>(null);
   const [globals, setGlobals] = useState<GlobalConfigurations | null>(null);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [blogCount, setBlogCount] = useState<number>(0);
 
   // Editor states
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
@@ -97,6 +99,9 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
 
     const mediaList = await contentService.getMediaLibrary();
     setMediaItems(mediaList);
+
+    const blogList = await contentService.getBlogs();
+    setBlogCount(blogList.length);
 
     // If a page slug was specified or if currently on a page, load it
     const targetSlug = preferredSlug || (activeSection.type === 'page' ? activeSection.slug : 'homepage');
@@ -538,6 +543,7 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
           if (onExitAdmin) onExitAdmin();
         }}
         pageCount={pages.length}
+        blogCount={blogCount}
       />
 
       {/* =========================================================================
@@ -876,6 +882,19 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                 onSaveGlobals={handleSaveGlobals}
               />
             </div>
+          )}
+
+          {/* VIEW: BLOG POSTS MANAGER */}
+          {activeSection.type === 'blogs' && (
+            <BlogManagementView
+              onReturnToHome={() => {
+                if (onExitAdmin) onExitAdmin();
+              }}
+              onPreviewBlog={(_slug) => {
+                window.location.hash = 'blog';
+                window.location.reload();
+              }}
+            />
           )}
 
           {/* VIEW 4: MEDIA LIBRARY */}

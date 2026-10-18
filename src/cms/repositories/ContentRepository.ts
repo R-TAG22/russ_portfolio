@@ -71,4 +71,24 @@ export interface ContentRepository {
    * Saves or updates global website configurations
    */
   saveGlobals(globals: Partial<import('../types/schema').GlobalConfigurations>): Promise<import('../types/schema').GlobalConfigurations>;
+
+  /**
+   * Retrieves all blog posts
+   */
+  getBlogs(): Promise<import('../types/schema').BlogPost[]>;
+
+  /**
+   * Retrieves a single blog post by its slug
+   */
+  getBlogBySlug(slug: string): Promise<import('../types/schema').BlogPost | null>;
+
+  /**
+   * Saves or creates a blog post
+   */
+  saveBlog(blog: import('../types/schema').BlogPost): Promise<import('../types/schema').BlogPost>;
+
+  /**
+   * Deletes a blog post
+   */
+  deleteBlog(id: string): Promise<boolean>;
 }

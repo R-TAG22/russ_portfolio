@@ -18,11 +18,13 @@ import {
   ChevronRight,
   ShieldCheck,
   CheckCircle2,
+  BookOpen,
 } from 'lucide-react';
 
 export type AdminActiveSection =
   | { type: 'dashboard' }
   | { type: 'page'; slug: string }
+  | { type: 'blogs' }
   | { type: 'global'; key: 'navigation' | 'header' | 'footer' | 'buttons' | 'contact' | 'settings' }
   | { type: 'media' }
   | { type: 'publishing' };
@@ -33,6 +35,7 @@ interface AdminSidebarProps {
   onLogout: () => void;
   onReturnToHome: () => void;
   pageCount: number;
+  blogCount?: number;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -41,6 +44,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onLogout,
   onReturnToHome,
   pageCount,
+  blogCount,
 }) => {
   const isPageActive = (slug: string) =>
     activeSection.type === 'page' && activeSection.slug === slug;
@@ -128,6 +132,33 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </button>
             );
           })}
+        </div>
+
+        {/* 2.5 BLOG POSTS MANAGER */}
+        <div className="space-y-1">
+          <div className="px-3 py-1 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+            <span>Blog & Insights</span>
+            {blogCount !== undefined && (
+              <span className="px-1.5 py-0.2 rounded-full bg-white/10 text-[9px] font-mono">
+                {blogCount}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => onSelectSection({ type: 'blogs' })}
+            className={`w-full px-3 py-2 rounded-xl font-medium flex items-center justify-between transition-all cursor-pointer ${
+              activeSection.type === 'blogs'
+                ? 'bg-[#0EA5E9] text-white font-bold shadow-md'
+                : 'hover:bg-white/10 text-slate-300 hover:text-white'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 truncate">
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Blog Posts</span>
+            </div>
+            {activeSection.type === 'blogs' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+          </button>
         </div>
 
         {/* 3. NAVIGATION */}

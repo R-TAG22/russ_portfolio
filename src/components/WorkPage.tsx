@@ -388,6 +388,21 @@ const BrowserWorkCard: React.FC<BrowserWorkCardProps> = ({
       ? project.gallery
       : [{ url: project.imageUrl, caption: project.title, tag: 'Proof Overview' }];
   const photoCount = allImages.length;
+  const isMultiple = photoCount > 1;
+
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const handlePrevSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveSlide((prev) => (prev - 1 + photoCount) % photoCount);
+  };
+
+  const handleNextSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveSlide((prev) => (prev + 1) % photoCount);
+  };
+
+  const currentImage = allImages[activeSlide] || allImages[0];
 
   return (
     <article className="rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
@@ -413,19 +428,20 @@ const BrowserWorkCard: React.FC<BrowserWorkCardProps> = ({
           </div>
         </div>
 
-        {/* Viewport / Mockup Preview Area */}
+        {/* Viewport / Mockup Preview Area with Slideshow */}
         <div
-          onClick={() => onOpenGallery(project, 0)}
-          className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 select-none cursor-pointer"
-          title="Click to view all proof of work images"
+          onClick={() => onOpenGallery(project, activeSlide)}
+          className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 select-none cursor-pointer group/slide"
+          title={isMultiple ? `Slide ${activeSlide + 1} of ${photoCount} • Click to open full gallery` : "Click to view proof photo"}
         >
           <img
-            src={project.imageUrl}
-            alt={project.title}
-            className="w-full h-full object-cover object-top group-hover:scale-104 transition-transform duration-500"
+            key={currentImage.url}
+            src={currentImage.url}
+            alt={currentImage.caption || project.title}
+            className="w-full h-full object-cover object-top transition-all duration-500 animate-fade-in group-hover/slide:scale-103"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 group-hover:from-black/60 transition-colors pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/25 pointer-events-none" />
 
           {/* Floating Category Pill (Top-Left) */}
           <div className="absolute top-3 left-3 pointer-events-auto">
@@ -441,20 +457,58 @@ const BrowserWorkCard: React.FC<BrowserWorkCardProps> = ({
             </span>
           </div>
 
-          {/* Proof of Work Photo Gallery Badge (Bottom-Right) */}
-          <div className="absolute bottom-3 right-3 pointer-events-auto">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenGallery(project, 0);
-              }}
-              className="px-2.5 py-1 rounded-full bg-black/75 hover:bg-black/90 backdrop-blur-xs text-white text-[10px] font-bold flex items-center gap-1.5 shadow-md border border-white/20 transition-all hover:scale-105 cursor-pointer"
-            >
-              <Camera className="w-3.5 h-3.5 text-[#38BDF8]" />
-              <span>{photoCount} Proof Photos</span>
-            </button>
-          </div>
+          {/* SLIDESHOW CONTROLS (Only when multiple photos exist) */}
+          {isMultiple && (
+            <>
+              {/* Prev Button */}
+              <button
+                type="button"
+                onClick={handlePrevSlide}
+                aria-label="Previous slide"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-80 sm:opacity-0 group-hover/slide:opacity-100 hover:scale-110 shadow-lg border border-white/20 z-10 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4 text-white" />
+              </button>
+
+              {/* Next Button */}
+              <button
+                type="button"
+                onClick={handleNextSlide}
+                aria-label="Next slide"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-80 sm:opacity-0 group-hover/slide:opacity-100 hover:scale-110 shadow-lg border border-white/20 z-10 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4 text-white" />
+              </button>
+
+              {/* Bottom Slideshow Navigation Strip */}
+              <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between gap-2 pointer-events-auto z-10">
+                {/* Dots indicator */}
+                <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/60 backdrop-blur-xs border border-white/10">
+                  {allImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSlide(idx);
+                      }}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        activeSlide === idx
+                          ? 'w-5 bg-[#38BDF8]'
+                          : 'w-1.5 bg-white/50 hover:bg-white/80'
+                      }`}
+                      title={`Jump to photo ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Counter Pill */}
+                <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-mono border border-white/15">
+                  {activeSlide + 1} / {photoCount}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Card Body Information */}
