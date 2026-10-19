@@ -497,13 +497,53 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-700 mb-0.5">Primary Photo URL</label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <label className="block font-bold text-slate-700">Primary Photo</label>
+                      <label className="text-[9.5px] font-bold text-[#0EA5E9] hover:underline flex items-center gap-1 cursor-pointer">
+                        <Upload className="w-2.5 h-2.5" />
+                        <span>Upload File</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              if (typeof reader.result === 'string') {
+                                handleInlineUpdateProject(idx, 'imageUrl', reader.result);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <div
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const file = (Array.from(e.dataTransfer.files || []) as File[]).find((f) =>
+                          f.type.startsWith('image/')
+                        );
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          if (typeof reader.result === 'string') {
+                            handleInlineUpdateProject(idx, 'imageUrl', reader.result);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                      className="flex items-center gap-2 p-1 rounded-lg border border-dashed border-slate-300 bg-white hover:border-[#0EA5E9]"
+                    >
                       <input
                         type="text"
                         value={proj.imageUrl}
                         onChange={(e) => handleInlineUpdateProject(idx, 'imageUrl', e.target.value)}
-                        className="flex-1 px-2.5 py-1 rounded-lg border border-slate-300 bg-white font-mono text-[10px]"
+                        placeholder="Drop image file or paste URL..."
+                        className="flex-1 px-2 py-0.5 border-0 bg-transparent font-mono text-[10px] focus:outline-hidden"
                       />
                     </div>
                   </div>
@@ -657,6 +697,42 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
                           }}
                         />
                       </label>
+                    </div>
+
+                    {/* Drag and Drop Zone */}
+                    <div
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const files = (Array.from(e.dataTransfer.files || []) as File[]).filter((f) =>
+                          f.type.startsWith('image/')
+                        );
+                        if (!files.length) return;
+                        files.forEach((file: File) => {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            if (typeof reader.result === 'string') {
+                              const newImg = {
+                                id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                                url: reader.result,
+                                caption: file.name.replace(/\.[^/.]+$/, ''),
+                                altText: proj.title,
+                              };
+                              const currentGallery = proj.galleryImages || [];
+                              handleInlineUpdateProject(idx, 'galleryImages', [...currentGallery, newImg]);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      }}
+                      className="p-3 rounded-xl border border-dashed border-slate-300 bg-white hover:border-[#0EA5E9] text-center cursor-pointer transition-colors"
+                    >
+                      <span className="text-[10px] font-bold text-slate-600 block">
+                        Drag & Drop Proof Photos Here
+                      </span>
+                      <span className="text-[9px] text-slate-400">
+                        Supports dropping multiple screenshots or photos
+                      </span>
                     </div>
 
                     {/* Gallery Thumbnails List */}

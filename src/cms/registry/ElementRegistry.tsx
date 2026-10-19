@@ -48,11 +48,14 @@ import {
   ExperienceTimelineItem,
   WorkShowcaseContent,
   WorkShowcaseProject,
+  RotatingSiteItem,
 } from '../types/schema';
 import defaultRussellPhoto from '../../assets/images/regenerated_image_1788105616348.png';
 import defaultAboutPhoto from '../../assets/images/regenerated_image_1788105382320.jpg';
 import { WorkShowcaseInspector } from '../components/WorkShowcaseInspector';
 import { WorkProjectEditModal } from '../components/WorkProjectEditModal';
+import { UniversalImageUploader } from '../components/UniversalImageUploader';
+import { RotatingSiteEditModal } from '../components/RotatingSiteEditModal';
 
 export interface ElementRegistryEntry {
   type: ElementType;
@@ -289,16 +292,13 @@ const ImageEditor: React.FC<{
 }> = ({ content, onUpdateContent }) => {
   return (
     <div className="space-y-3 text-xs">
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Image URL</label>
-        <input
-          type="text"
-          value={content.url}
-          onChange={(e) => onUpdateContent({ ...content, url: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="https://..."
-        />
-      </div>
+      <UniversalImageUploader
+        label="Image Asset"
+        helperText="Drag and drop an image file, upload from device, or choose from Media Gallery."
+        value={content.url}
+        onChange={(url) => onUpdateContent({ ...content, url })}
+        onRemove={() => onUpdateContent({ ...content, url: '' })}
+      />
       <div>
         <label className="block font-bold text-[#1E3A5F] mb-1">Alt Text (Accessibility / SEO)</label>
         <input
@@ -791,13 +791,57 @@ const ProfileOrbitRender: React.FC<{ content: ProfileOrbitContent; settings: Ele
   settings,
 }) => {
   const photo = content.imageUrl || defaultRussellPhoto;
-  const badges = content.badges && content.badges.length > 0 ? content.badges : [
-    { name: 'Shopify Plus' },
-    { name: 'TikTok Shop' },
-    { name: 'Home Depot US' },
-    { name: 'WooCommerce' },
-    { name: 'Zendrop & CJ' },
-    { name: 'Wayfair' },
+  const sites = content.rotatingSites && content.rotatingSites.length > 0 ? content.rotatingSites : [
+    {
+      id: 'store-diyative',
+      name: 'DIYATIVE',
+      sublabel: '3D Wooden Models & Kits • Visit ↗',
+      url: 'https://diyative.com/',
+      orbitIndex: 1,
+      fallbackInitials: 'DIY',
+      faviconDomain: 'diyative.com',
+      logoUrl: '',
+    },
+    {
+      id: 'store-skin-by-brownlee',
+      name: 'Skin by Brownlee & Co.',
+      sublabel: 'Clinical Skincare DTC • Visit ↗',
+      url: 'https://skinbybrownleeandco.com/',
+      orbitIndex: 1,
+      fallbackInitials: 'SB',
+      faviconDomain: 'skinbybrownleeandco.com',
+      logoUrl: '',
+    },
+    {
+      id: 'store-willow-bath',
+      name: 'Willow Bath & Vanity',
+      sublabel: 'Shopify & Home Depot • Visit ↗',
+      url: 'https://willowbathandvanity.com/',
+      orbitIndex: 2,
+      fallbackInitials: 'WB',
+      faviconDomain: 'willowbathandvanity.com',
+      logoUrl: '',
+    },
+    {
+      id: 'store-sultans-fabrics',
+      name: "Sultan's Fine Fabrics",
+      sublabel: 'Luxury Textiles • Visit ↗',
+      url: 'https://www.sultansfinefabrics.com/',
+      orbitIndex: 2,
+      fallbackInitials: 'SF',
+      faviconDomain: 'sultansfinefabrics.com',
+      logoUrl: '',
+    },
+    {
+      id: 'store-canton-roast',
+      name: 'Canton Roast',
+      sublabel: 'Online Ordering • Visit ↗',
+      url: 'https://cantonroast.com/',
+      orbitIndex: 2,
+      fallbackInitials: 'CR',
+      faviconDomain: 'cantonroast.com',
+      logoUrl: '',
+    },
   ];
 
   return (
@@ -818,8 +862,8 @@ const ProfileOrbitRender: React.FC<{ content: ProfileOrbitContent; settings: Ele
           />
         </div>
 
-        {/* Orbiting / Surrounding Badges */}
-        {badges.slice(0, 6).map((b, idx) => {
+        {/* Orbiting / Surrounding Badges from Rotating Sites */}
+        {sites.slice(0, 6).map((site, idx) => {
           const angles = [30, 90, 150, 210, 270, 330];
           const angle = angles[idx % angles.length];
           const rad = (angle * Math.PI) / 180;
@@ -829,16 +873,30 @@ const ProfileOrbitRender: React.FC<{ content: ProfileOrbitContent; settings: Ele
 
           return (
             <div
-              key={idx}
-              className="absolute hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-[#BCD5E6] shadow-md text-[10px] font-bold text-[#1E3A5F] hover:scale-105 transition-all z-10 select-none whitespace-nowrap"
+              key={site.id || idx}
+              className="absolute hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 border border-[#BCD5E6] shadow-md text-[10px] font-bold text-[#1E3A5F] hover:scale-105 transition-all z-10 select-none whitespace-nowrap"
               style={{
                 left: `${x}%`,
                 top: `${y}%`,
                 transform: 'translate(-50%, -50%)',
               }}
+              title={site.sublabel}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]" />
-              <span>{b.name}</span>
+              {site.logoUrl ? (
+                <img src={site.logoUrl} alt={site.name} className="w-3.5 h-3.5 object-contain rounded-full" />
+              ) : site.faviconDomain ? (
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${site.faviconDomain}&sz=64`}
+                  alt={site.name}
+                  className="w-3.5 h-3.5 object-contain rounded-full"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]" />
+              )}
+              <span>{site.name}</span>
             </div>
           );
         })}
@@ -846,9 +904,10 @@ const ProfileOrbitRender: React.FC<{ content: ProfileOrbitContent; settings: Ele
 
       {/* Badges row for small screens */}
       <div className="flex sm:hidden flex-wrap items-center justify-center gap-1.5 mt-3">
-        {badges.map((b, i) => (
-          <span key={i} className="px-2.5 py-0.5 rounded-full bg-white border border-[#BCD5E6] text-[10px] font-bold text-[#1E3A5F] shadow-xs">
-            {b.name}
+        {sites.map((site, i) => (
+          <span key={i} className="px-2.5 py-0.5 rounded-full bg-white border border-[#BCD5E6] text-[10px] font-bold text-[#1E3A5F] shadow-xs flex items-center gap-1">
+            {site.logoUrl && <img src={site.logoUrl} alt="" className="w-3 h-3 object-contain rounded-full" />}
+            {site.name}
           </span>
         ))}
       </div>
@@ -860,36 +919,232 @@ const ProfileOrbitEditor: React.FC<{
   content: ProfileOrbitContent;
   onUpdateContent: (c: ProfileOrbitContent) => void;
 }> = ({ content, onUpdateContent }) => {
+  const [editingSite, setEditingSite] = useState<RotatingSiteItem | null>(null);
+  const [isSiteModalOpen, setIsSiteModalOpen] = useState(false);
+  const [deleteConfirmSiteId, setDeleteConfirmSiteId] = useState<string | null>(null);
+
+  const rotatingSites: RotatingSiteItem[] =
+    content.rotatingSites && content.rotatingSites.length > 0
+      ? content.rotatingSites
+      : [
+          {
+            id: 'store-diyative',
+            name: 'DIYATIVE',
+            sublabel: '3D Wooden Models & Kits • Visit ↗',
+            url: 'https://diyative.com/',
+            orbitIndex: 1,
+            fallbackInitials: 'DIY',
+            faviconDomain: 'diyative.com',
+            logoUrl: '',
+          },
+          {
+            id: 'store-skin-by-brownlee',
+            name: 'Skin by Brownlee & Co.',
+            sublabel: 'Clinical Skincare DTC • Visit ↗',
+            url: 'https://skinbybrownleeandco.com/',
+            orbitIndex: 1,
+            fallbackInitials: 'SB',
+            faviconDomain: 'skinbybrownleeandco.com',
+            logoUrl: '',
+          },
+          {
+            id: 'store-willow-bath',
+            name: 'Willow Bath & Vanity',
+            sublabel: 'Shopify & Home Depot • Visit ↗',
+            url: 'https://willowbathandvanity.com/',
+            orbitIndex: 2,
+            fallbackInitials: 'WB',
+            faviconDomain: 'willowbathandvanity.com',
+            logoUrl: '',
+          },
+          {
+            id: 'store-sultans-fabrics',
+            name: "Sultan's Fine Fabrics",
+            sublabel: 'Luxury Textiles • Visit ↗',
+            url: 'https://www.sultansfinefabrics.com/',
+            orbitIndex: 2,
+            fallbackInitials: 'SF',
+            faviconDomain: 'sultansfinefabrics.com',
+            logoUrl: '',
+          },
+          {
+            id: 'store-canton-roast',
+            name: 'Canton Roast',
+            sublabel: 'Online Ordering • Visit ↗',
+            url: 'https://cantonroast.com/',
+            orbitIndex: 2,
+            fallbackInitials: 'CR',
+            faviconDomain: 'cantonroast.com',
+            logoUrl: '',
+          },
+        ];
+
+  const handleSaveSite = (savedSite: RotatingSiteItem) => {
+    const existingIdx = rotatingSites.findIndex((s) => s.id === savedSite.id);
+    let updated: RotatingSiteItem[];
+    if (existingIdx >= 0) {
+      updated = [...rotatingSites];
+      updated[existingIdx] = savedSite;
+    } else {
+      updated = [...rotatingSites, savedSite];
+    }
+    const newContent = { ...content, rotatingSites: updated };
+    onUpdateContent(newContent);
+    window.dispatchEvent(
+      new CustomEvent('rotating-sites-updated', { detail: { rotatingSites: updated } })
+    );
+    setIsSiteModalOpen(false);
+    setEditingSite(null);
+  };
+
+  const handleDeleteSite = (siteId: string) => {
+    const updated = rotatingSites.filter((s) => s.id !== siteId);
+    const newContent = { ...content, rotatingSites: updated };
+    onUpdateContent(newContent);
+    window.dispatchEvent(
+      new CustomEvent('rotating-sites-updated', { detail: { rotatingSites: updated } })
+    );
+    setDeleteConfirmSiteId(null);
+  };
+
   return (
-    <div className="space-y-3 text-xs">
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Portrait Image URL</label>
-        <input
-          type="text"
-          value={content.imageUrl || ''}
-          onChange={(e) => onUpdateContent({ ...content, imageUrl: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="https://..."
-        />
-        <p className="text-[10px] text-slate-400 mt-0.5">Leave blank to use Russell's default cutout photo.</p>
+    <div className="space-y-4 text-xs font-inter select-none">
+      {/* 1. Russell's Portrait Image Upload with UniversalImageUploader */}
+      <UniversalImageUploader
+        label="Center Portrait Photo"
+        helperText="Russell's hero morph portrait cutout. Drag & drop image, upload from device, or choose from Media Gallery."
+        value={content.imageUrl}
+        onChange={(url) => onUpdateContent({ ...content, imageUrl: url })}
+        onRemove={() => onUpdateContent({ ...content, imageUrl: '' })}
+        aspectRatio="square"
+      />
+
+      {/* 2. Rotating Client Sites / Storefronts Manager */}
+      <div className="pt-3 border-t border-[#BCD5E6]/60 space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-urbanist font-extrabold text-sm text-[#1E3A5F]">
+              Rotating Sites ({rotatingSites.length})
+            </h4>
+            <p className="text-[10px] text-slate-500">
+              Live client e-commerce stores orbiting in the hero circles
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEditingSite(null);
+              setIsSiteModalOpen(true);
+            }}
+            className="px-2.5 py-1 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Add Rotating Site</span>
+          </button>
+        </div>
+
+        {/* Sites List */}
+        <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+          {rotatingSites.map((site) => {
+            const isConfirming = deleteConfirmSiteId === site.id;
+            return (
+              <div
+                key={site.id}
+                className="p-2 rounded-xl bg-white border border-[#BCD5E6] hover:border-[#0EA5E9] flex items-center justify-between gap-2 shadow-2xs transition-all"
+              >
+                <div
+                  className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                  onClick={() => {
+                    setEditingSite(site);
+                    setIsSiteModalOpen(true);
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center overflow-hidden p-0.5">
+                    {site.logoUrl ? (
+                      <img src={site.logoUrl} alt="" className="w-full h-full object-contain rounded-full" />
+                    ) : site.faviconDomain ? (
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${site.faviconDomain}&sz=64`}
+                        alt=""
+                        className="w-full h-full object-contain rounded-full"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span className="text-[10px] font-bold text-[#1E3A5F]">{site.fallbackInitials}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-[#1E3A5F] text-[11.5px] truncate">{site.name}</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#EFF6FB] text-[#0284C7] font-semibold">
+                        {site.orbitIndex === 2 ? 'Outer Ring' : 'Inner Ring'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 truncate">{site.sublabel || site.url}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingSite(site);
+                      setIsSiteModalOpen(true);
+                    }}
+                    className="p-1 rounded-md text-slate-500 hover:text-[#0EA5E9] hover:bg-sky-50 transition-colors cursor-pointer"
+                    title="Edit rotating site details and logo"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+
+                  {isConfirming ? (
+                    <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSite(site.id)}
+                        className="px-1.5 py-0.5 rounded bg-red-600 text-white font-extrabold text-[9px] cursor-pointer"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmSiteId(null)}
+                        className="px-1 py-0.5 rounded bg-slate-200 text-slate-700 font-bold text-[9px] cursor-pointer"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmSiteId(site.id)}
+                      className="p-1 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Delete rotating site"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Orbiting Brand Badges (comma-separated)</label>
-        <textarea
-          rows={3}
-          value={(content.badges || []).map((b) => b.name).join(', ')}
-          onChange={(e) => {
-            const names = e.target.value.split(',').map((n) => n.trim()).filter(Boolean);
-            onUpdateContent({
-              ...content,
-              badges: names.map((name) => ({ name })),
-            });
-          }}
-          className="w-full p-2 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="Shopify, TikTok Shop, Home Depot, WooCommerce, Zendrop, CJ"
-        />
-      </div>
+      {/* Rotating Site Add/Edit Modal */}
+      <RotatingSiteEditModal
+        site={editingSite}
+        isOpen={isSiteModalOpen}
+        onClose={() => {
+          setIsSiteModalOpen(false);
+          setEditingSite(null);
+        }}
+        onSave={handleSaveSite}
+        onDelete={handleDeleteSite}
+      />
     </div>
   );
 };
@@ -1246,6 +1501,8 @@ const WorkShowcaseCardItem: React.FC<WorkShowcaseCardItemProps> = ({
   const photoCount = allImages.length;
   const isMultiple = photoCount > 1;
   const [activeSlide, setActiveSlide] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDraggingCanvasImage, setIsDraggingCanvasImage] = useState(false);
 
   const handlePrevSlide = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1325,17 +1582,48 @@ const WorkShowcaseCardItem: React.FC<WorkShowcaseCardItemProps> = ({
             <Copy className="w-3 h-3 text-slate-600" />
           </button>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteCard(proj.id);
-            }}
-            className="p-1 rounded-xl bg-white/90 hover:bg-red-50 text-slate-400 hover:text-red-600 shadow-md border border-slate-200 transition-all hover:scale-105 cursor-pointer"
-            title="Delete card"
-          >
-            <Trash2 className="w-3 h-3 text-red-500" />
-          </button>
+          {/* Delete Card with Confirmation */}
+          {confirmDelete ? (
+            <div
+              className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-xl shadow-lg animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="text-[10px] font-bold">Delete?</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmDelete(false);
+                  onDeleteCard(proj.id);
+                }}
+                className="px-1.5 py-0.5 rounded bg-white text-red-600 font-black text-[9.5px] cursor-pointer hover:bg-red-50"
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmDelete(false);
+                }}
+                className="px-1 py-0.5 rounded bg-red-800 text-white font-bold text-[9.5px] cursor-pointer hover:bg-red-900"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmDelete(true);
+              }}
+              className="p-1 rounded-xl bg-white/90 hover:bg-red-50 text-slate-400 hover:text-red-600 shadow-md border border-slate-200 transition-all hover:scale-105 cursor-pointer"
+              title="Delete card"
+            >
+              <Trash2 className="w-3 h-3 text-red-500" />
+            </button>
+          )}
         </div>
       )}
 
@@ -1358,8 +1646,35 @@ const WorkShowcaseCardItem: React.FC<WorkShowcaseCardItemProps> = ({
           </div>
         </div>
 
-        {/* Viewport Image Area with Interactive Slideshow */}
-        <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 select-none group/img">
+        {/* Viewport Image Area with Interactive Slideshow & Drag-Drop */}
+        <div
+          onDragOver={(e) => {
+            if (onUpdateContent) {
+              e.preventDefault();
+              setIsDraggingCanvasImage(true);
+            }
+          }}
+          onDragLeave={() => setIsDraggingCanvasImage(false)}
+          onDrop={(e) => {
+            if (onUpdateContent) {
+              e.preventDefault();
+              setIsDraggingCanvasImage(false);
+              const files = Array.from(e.dataTransfer.files || []) as File[];
+              if (files.length) {
+                onUploadPhotosForCard(proj.id, files);
+              }
+            }
+          }}
+          className={`relative aspect-[16/10] w-full overflow-hidden bg-slate-900 select-none group/img transition-all ${
+            isDraggingCanvasImage ? 'ring-4 ring-[#10B981] scale-102' : ''
+          }`}
+        >
+          {isDraggingCanvasImage && (
+            <div className="absolute inset-0 z-30 bg-[#10B981]/80 backdrop-blur-xs flex flex-col items-center justify-center text-white p-4 text-center animate-fade-in pointer-events-none">
+              <Upload className="w-8 h-8 mb-2 animate-bounce" />
+              <span className="font-bold text-xs">Drop Photo to Add to Card Gallery</span>
+            </div>
+          )}
           {currentImage ? (
             <img
               key={currentImage}
@@ -1617,10 +1932,8 @@ const WorkShowcaseRender: React.FC<{
 
   const handleDeleteCard = (projId: string) => {
     if (!onUpdateContent) return;
-    if (window.confirm('Are you sure you want to delete this sample work card?')) {
-      const updated = projects.filter((p) => p.id !== projId);
-      onUpdateContent({ ...content, projects: updated });
-    }
+    const updated = projects.filter((p) => p.id !== projId);
+    onUpdateContent({ ...content, projects: updated });
   };
 
   const handleUploadPhotosForCard = (projId: string, files: File[]) => {

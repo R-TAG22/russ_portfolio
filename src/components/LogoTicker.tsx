@@ -1,10 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ALL_TOOL_LOGOS } from '../data/toolsData';
+import { ConnectSocialBar } from './ConnectSocialBar';
+import { contentService } from '../cms/services/ContentServiceFactory';
+import { FooterConfig } from '../cms/types/schema';
 
 // Duplicate array twice for seamless marquee loop
 const ALL_LOGOS = [...ALL_TOOL_LOGOS, ...ALL_TOOL_LOGOS];
 
 export const LogoTicker: React.FC = () => {
+  const [footerConfig, setFooterConfig] = useState<FooterConfig | null>(null);
+
+  useEffect(() => {
+    const loadFooter = async () => {
+      try {
+        const globals = await contentService.getGlobals();
+        if (globals?.footer) {
+          setFooterConfig(globals.footer);
+        }
+      } catch (err) {
+        // Fallback to default
+      }
+    };
+
+    loadFooter();
+
+    const handleUpdate = () => {
+      loadFooter();
+    };
+
+    window.addEventListener('content_service_globals_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('content_service_globals_updated', handleUpdate);
+    };
+  }, []);
+
+  const copyright =
+    footerConfig?.copyrightText ||
+    '© 2026 Russell Taga-an • E-commerce Operations Manager & Catalog Systems Specialist';
+
   return (
     <footer
       id="app-footer"
@@ -41,13 +74,19 @@ export const LogoTicker: React.FC = () => {
         </div>
       </div>
 
+      {/* CONNECT Socials 1-Second Flipping Bar (Square rounded corners, above copyright) */}
+      <div className="mt-3">
+        <ConnectSocialBar config={footerConfig?.connectSocials} />
+      </div>
+
       {/* Copyright text directly below footer */}
       <div
         id="footer-copyright"
-        className="mt-1.5 pt-1 text-center text-[11px] font-semibold text-[#1E3A5F]/70 tracking-wide select-none"
+        className="mt-1 text-center text-[11px] font-semibold text-[#1E3A5F]/70 tracking-wide select-none"
       >
-        © 2026 Russell Taga-an • E-commerce Operations Manager & Catalog Systems Specialist
+        {copyright}
       </div>
     </footer>
   );
 };
+

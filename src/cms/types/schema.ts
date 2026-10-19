@@ -160,6 +160,20 @@ export interface StatusBadgeContent {
   subtle?: boolean;
 }
 
+export interface RotatingSiteItem {
+  id: string;
+  name: string;
+  sublabel: string;
+  url: string;
+  logoUrl?: string;
+  faviconDomain?: string;
+  fallbackInitials?: string;
+  orbitIndex?: number; // 1 for inner (spins CCW), 2 for outer (spins CW)
+  angle?: number;
+  radius?: number;
+  size?: number;
+}
+
 export interface ProfileOrbitBadge {
   name: string;
   sublabel?: string;
@@ -171,7 +185,8 @@ export interface ProfileOrbitContent {
   imageUrl: string;
   altText?: string;
   glowColor?: string;
-  badges: ProfileOrbitBadge[];
+  badges?: ProfileOrbitBadge[];
+  rotatingSites?: RotatingSiteItem[];
 }
 
 export interface ClientMarqueeLogo {
@@ -354,11 +369,30 @@ export interface HeaderConfig {
   sticky: boolean;
 }
 
+export interface ConnectSocialItem {
+  id: string;
+  letter: string;
+  platform: string;
+  label: string;
+  url: string;
+  color?: string;
+  bgColor?: string;
+  enabled?: boolean;
+  customIconUrl?: string;
+}
+
+export interface ConnectSocialsConfig {
+  enabled: boolean;
+  flipIntervalSec: number;
+  items: ConnectSocialItem[];
+}
+
 export interface FooterConfig {
   copyrightText: string;
   subtext: string;
   showSocials: boolean;
   socialLinks: { platform: string; url: string }[];
+  connectSocials?: ConnectSocialsConfig;
 }
 
 export interface ContactConfig {

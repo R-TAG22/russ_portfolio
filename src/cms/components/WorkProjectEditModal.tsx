@@ -17,8 +17,9 @@ import {
   Globe,
   Hexagon,
   Eye,
-} from 'lucide-react';
 import { WorkShowcaseProject, WorkShowcaseGalleryImage } from '../types/schema';
+import { UniversalImageUploader } from './UniversalImageUploader';
+import { MediaPickerModal } from './MediaPickerModal';
 
 interface WorkProjectEditModalProps {
   project: WorkShowcaseProject;
@@ -26,6 +27,7 @@ interface WorkProjectEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedProject: WorkShowcaseProject) => void;
+  onDelete?: (project: WorkShowcaseProject) => void;
 }
 
 export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
@@ -34,6 +36,7 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
 }) => {
   const [formData, setFormData] = useState<WorkShowcaseProject>(() => ({
     ...project,
@@ -59,8 +62,12 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
   const [newTagInput, setNewTagInput] = useState('');
   const [newBulletInput, setNewBulletInput] = useState('');
   const [activeTab, setActiveTab] = useState<'basic' | 'content' | 'gallery' | 'tags' | 'links'>('basic');
+  const [isDraggingPrimary, setIsDraggingPrimary] = useState(false);
+  const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
+  const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
+  const [isGalleryMediaModalOpen, setIsGalleryMediaModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -85,27 +92,74 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Handle local file upload for gallery
-  const handleGalleryFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handlePrimaryDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPrimary(false);
+    const file = (Array.from(e.dataTransfer.files || []) as File[]).find((f) =>
+      f.type.startsWith('image/')
+    );
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        const newImg: WorkShowcaseGalleryImage = {
-          id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          url: reader.result,
-          caption: `${file.name.replace(/\.[^/.]+$/, '')} View`,
-          altText: formData.title || 'Project photo',
-        };
-        setFormData((prev) => ({
-          ...prev,
-          galleryImages: [...(prev.galleryImages || []), newImg],
-        }));
+        handleFieldChange('imageUrl', reader.result);
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  // Handle local file upload for gallery
+  const handleGalleryFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []) as File[];
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          const newImg: WorkShowcaseGalleryImage = {
+            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            url: reader.result,
+            caption: `${file.name.replace(/\.[^/.]+$/, '')} View`,
+            altText: formData.title || 'Project photo',
+          };
+          setFormData((prev) => ({
+            ...prev,
+            galleryImages: [...(prev.galleryImages || []), newImg],
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleGalleryDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingGallery(false);
+    const files = (Array.from(e.dataTransfer.files || []) as File[]).filter((f) =>
+      f.type.startsWith('image/')
+    );
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          const newImg: WorkShowcaseGalleryImage = {
+            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            url: reader.result,
+            caption: `${file.name.replace(/\.[^/.]+$/, '')} View`,
+            altText: formData.title || 'Project photo',
+          };
+          setFormData((prev) => ({
+            ...prev,
+            galleryImages: [...(prev.galleryImages || []), newImg],
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   // Bullet points handlers
@@ -489,79 +543,41 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
           {activeTab === 'gallery' && (
             <div className="space-y-6 animate-fade-in">
               {/* Primary Card Thumbnail Image */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-slate-900">Primary Card Mockup Photo</h3>
-                    <p className="text-[11px] text-slate-500">The main screenshot displayed inside the macOS browser frame.</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      onChange={handlePrimaryFileUpload}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                    >
-                      <Upload className="w-3.5 h-3.5 text-[#10B981]" />
-                      <span>Upload from Device</span>
-                    </button>
-                  </div>
-                </div>
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+                <UniversalImageUploader
+                  label="Primary Card Mockup Photo"
+                  helperText="The main screenshot displayed inside the macOS browser frame. Supports Drag & Drop, device upload, or popout selection from Media Gallery."
+                  value={formData.imageUrl}
+                  onChange={(url) => handleFieldChange('imageUrl', url)}
+                  onRemove={() => handleFieldChange('imageUrl', '')}
+                  aspectRatio="video"
+                />
 
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                  <div className="w-44 aspect-[16/10] rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 shadow-xs flex items-center justify-center relative group">
-                    {formData.imageUrl ? (
-                      <img
-                        src={formData.imageUrl}
-                        alt={formData.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <ImageIcon className="w-6 h-6 text-slate-400" />
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-2 w-full">
-                    <label className="block text-[11px] font-bold text-slate-600">
-                      Direct Image URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.imageUrl}
-                      onChange={(e) => handleFieldChange('imageUrl', e.target.value)}
-                      placeholder="https://images.unsplash.com/... or data:image/..."
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 text-xs focus:border-[#10B981] focus:outline-hidden"
-                    />
-
-                    {/* Quick photo presets */}
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Quick Stock Storefront Presets
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {photoPresets.map((p, pIdx) => (
-                          <button
-                            key={pIdx}
-                            type="button"
-                            onClick={() => handleFieldChange('imageUrl', p.url)}
-                            className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] text-slate-600 hover:text-[#143020] hover:border-slate-400 cursor-pointer"
-                          >
-                            {p.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                {/* Quick photo presets */}
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    Quick Stock Storefront Presets
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {photoPresets.map((p, pIdx) => (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={() => handleFieldChange('imageUrl', p.url)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                          formData.imageUrl === p.url
+                            ? 'bg-[#143020] text-white border-[#143020]'
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-[#10B981]'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
+
+
 
               {/* Gallery Photos (Multiple Photos) */}
               <div className="space-y-4">
@@ -590,12 +606,48 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                     </button>
                     <button
                       type="button"
+                      onClick={() => setIsGalleryMediaModalOpen(true)}
+                      className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-[#0284C7] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-[#0EA5E9]" />
+                      <span>Choose from Media Gallery</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleAddGalleryImage()}
                       className="px-3.5 py-1.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>+ Add Image URL</span>
                     </button>
+                  </div>
+                </div>
+
+                {/* Drag & Drop Multi-photo Dropzone */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingGallery(true);
+                  }}
+                  onDragLeave={() => setIsDraggingGallery(false)}
+                  onDrop={handleGalleryDrop}
+                  onClick={() => galleryFileInputRef.current?.click()}
+                  className={`p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-2 ${
+                    isDraggingGallery
+                      ? 'border-[#10B981] bg-emerald-50 ring-4 ring-[#10B981]/20 scale-101'
+                      : 'border-slate-300 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-400'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 shadow-xs">
+                    <Upload className="w-5 h-5 text-[#10B981]" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-xs text-slate-800 block">
+                      Drag & Drop Proof of Work Photos Here
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      or click to browse multiple image files from your computer (PNG, JPG, WebP)
+                    </span>
                   </div>
                 </div>
 
@@ -834,23 +886,81 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
 
           {/* Modal Footer */}
           <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 font-bold text-slate-600 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-extrabold shadow-md flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <CheckCircle2 className="w-4 h-4 text-[#4ADE80]" />
-              <span>Save & Update Card</span>
-            </button>
+            {onDelete ? (
+              confirmDeleteProject ? (
+                <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 px-2.5 py-1.5 rounded-xl animate-fade-in">
+                  <span className="text-xs font-bold text-red-700">Delete this sample work card?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDelete(formData);
+                      onClose();
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs cursor-pointer shadow-xs"
+                  >
+                    Yes, Delete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteProject(false)}
+                    className="px-2 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteProject(true)}
+                  className="px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Sample Card</span>
+                </button>
+              )
+            ) : (
+              <div />
+            )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 font-bold text-slate-600 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-extrabold shadow-md flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-[#4ADE80]" />
+                <span>Save & Update Card</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>
+
+      {/* Popout Media Gallery for Gallery Photos */}
+      <MediaPickerModal
+        isOpen={isGalleryMediaModalOpen}
+        onClose={() => setIsGalleryMediaModalOpen(false)}
+        onSelectImage={(url) => {
+          const newImg: WorkShowcaseGalleryImage = {
+            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            url,
+            caption: '',
+            altText: formData.title,
+          };
+          setFormData((prev) => ({
+            ...prev,
+            galleryImages: [...(prev.galleryImages || []), newImg],
+          }));
+          setIsGalleryMediaModalOpen(false);
+        }}
+        title={`Select Proof of Work Photo • ${formData.title || 'Work Card'}`}
+      />
     </div>
   );
 };

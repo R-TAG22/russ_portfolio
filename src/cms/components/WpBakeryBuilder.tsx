@@ -10,6 +10,7 @@ import {
   Maximize2,
   Layers,
   Sparkles,
+  Radio,
   X,
 } from 'lucide-react';
 import {
@@ -19,9 +20,11 @@ import {
   ElementBlock,
   ColumnWidth,
   ElementType,
+  RotatingSiteItem,
 } from '../types/schema';
 import { ELEMENT_REGISTRY } from '../registry/ElementRegistry';
 import { SelectedItem } from './PropertyInspector';
+import { RotatingSiteEditModal } from './RotatingSiteEditModal';
 
 interface WpBakeryBuilderProps {
   page: PageDocument;
@@ -35,6 +38,14 @@ interface WpBakeryBuilderProps {
     project: any,
     projectIndex: number
   ) => void;
+  onDeleteProjectCard?: (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => void;
+  onAddProjectCard?: (rowId: string, colId: string, elId: string) => void;
 }
 
 export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
@@ -43,7 +54,95 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
   onSelectItem,
   onUpdatePage,
   onSelectProjectCard,
+  onDeleteProjectCard,
+  onAddProjectCard,
 }) => {
+  const [deleteConfirmProjectKey, setDeleteConfirmProjectKey] = useState<string | null>(null);
+  const [editingRotatingSite, setEditingRotatingSite] = useState<{
+    rowId: string;
+    colId: string;
+    elId: string;
+    site: RotatingSiteItem | null;
+  } | null>(null);
+  const [deleteConfirmSiteKey, setDeleteConfirmSiteKey] = useState<string | null>(null);
+
+  const handleSaveRotatingSite = (savedSite: RotatingSiteItem) => {
+    if (!editingRotatingSite) return;
+    const { rowId, colId, elId } = editingRotatingSite;
+    const updatedSections = page.sections.map((r) => {
+      if (r.id !== rowId) return r;
+      return {
+        ...r,
+        columns: r.columns.map((c) => {
+          if (c.id !== colId) return c;
+          return {
+            ...c,
+            elements: c.elements.map((e) => {
+              if (e.id !== elId || e.type !== 'profileOrbit') return e;
+              const content = (e.content as any)?.data || {};
+              const currentSites = (content.rotatingSites || []) as RotatingSiteItem[];
+              const existingIdx = currentSites.findIndex((s) => s.id === savedSite.id);
+              let updatedSites: RotatingSiteItem[];
+              if (existingIdx >= 0) {
+                updatedSites = [...currentSites];
+                updatedSites[existingIdx] = savedSite;
+              } else {
+                updatedSites = [...currentSites, savedSite];
+              }
+              const newContent = {
+                ...e.content,
+                data: {
+                  ...content,
+                  rotatingSites: updatedSites,
+                },
+              };
+              window.dispatchEvent(
+                new CustomEvent('rotating-sites-updated', { detail: { rotatingSites: updatedSites } })
+              );
+              return { ...e, content: newContent };
+            }),
+          };
+        }),
+      };
+    });
+    onUpdatePage({ ...page, sections: updatedSections });
+    setEditingRotatingSite(null);
+  };
+
+  const handleDeleteRotatingSite = (rowId: string, colId: string, elId: string, siteId: string) => {
+    const updatedSections = page.sections.map((r) => {
+      if (r.id !== rowId) return r;
+      return {
+        ...r,
+        columns: r.columns.map((c) => {
+          if (c.id !== colId) return c;
+          return {
+            ...c,
+            elements: c.elements.map((e) => {
+              if (e.id !== elId || e.type !== 'profileOrbit') return e;
+              const content = (e.content as any)?.data || {};
+              const currentSites = (content.rotatingSites || []) as RotatingSiteItem[];
+              const updatedSites = currentSites.filter((s) => s.id !== siteId);
+              const newContent = {
+                ...e.content,
+                data: {
+                  ...content,
+                  rotatingSites: updatedSites,
+                },
+              };
+              window.dispatchEvent(
+                new CustomEvent('rotating-sites-updated', { detail: { rotatingSites: updatedSites } })
+              );
+              return { ...e, content: newContent };
+            }),
+          };
+        }),
+      };
+    });
+    onUpdatePage({ ...page, sections: updatedSections });
+    setDeleteConfirmSiteKey(null);
+  };
+
   // Modal states for adding elements or picking column layout
   const [targetColForElement, setTargetColForElement] = useState<{
     rowId: string;
@@ -487,27 +586,263 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
                                         <Sparkles className="w-3 h-3 text-[#0EA5E9]" />
                                         <span>Sample Work Cards ({((el.content as any).data?.projects || []).length})</span>
                                       </span>
-                                      <span className="text-[9.5px] text-slate-400">Click to edit in left side 👈</span>
+                                      <div className="flex items-center gap-1.5">
+                                        {onAddProjectCard && (
+                                          <button
+                                            type="button"
+                                            onClick={() => onAddProjectCard(row.id, col.id, el.id)}
+                                            className="px-2 py-0.5 rounded bg-[#143020] hover:bg-[#1E442D] text-white text-[9.5px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                                            title="Add a new work card"
+                                          >
+                                            <Plus className="w-2.5 h-2.5 text-[#4ADE80]" />
+                                            <span>Add Card</span>
+                                          </button>
+                                        )}
+                                        <span className="text-[9.5px] text-slate-400">Click to edit 👈</span>
+                                      </div>
                                     </div>
-                                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-                                      {((el.content as any).data?.projects || []).map((proj: any, pIdx: number) => (
-                                        <div
-                                          key={proj.id || pIdx}
-                                          onClick={() => onSelectProjectCard?.(row.id, col.id, el.id, proj, pIdx)}
-                                          className="px-2 py-1.5 rounded-lg bg-slate-50 hover:bg-[#E0F2FE] hover:border-[#0EA5E9] border border-slate-200 flex items-center justify-between text-xs font-semibold text-[#1E3A5F] cursor-pointer transition-colors group/card"
-                                          title={`Click to edit ${proj.title} on Left Panel`}
-                                        >
-                                          <div className="flex items-center gap-1.5 min-w-0">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9] shrink-0" />
-                                            <span className="truncate text-[11px] font-bold group-hover/card:text-[#0EA5E9]">
-                                              {proj.title}
-                                            </span>
+                                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                      {((el.content as any).data?.projects || []).map((proj: any, pIdx: number) => {
+                                        const cardKey = `${el.id}_${proj.id || pIdx}`;
+                                        const isConfirmingDelete = deleteConfirmProjectKey === cardKey;
+
+                                        return (
+                                          <div
+                                            key={proj.id || pIdx}
+                                            className="p-1.5 rounded-lg bg-slate-50 hover:bg-[#E0F2FE]/50 border border-slate-200 flex items-center justify-between gap-2 text-xs font-semibold text-[#1E3A5F] transition-colors group/card"
+                                          >
+                                            <div
+                                              onClick={() => onSelectProjectCard?.(row.id, col.id, el.id, proj, pIdx)}
+                                              className="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer"
+                                              title={`Click to edit ${proj.title} on Left Panel`}
+                                            >
+                                              <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9] shrink-0" />
+                                              <span className="truncate text-[11px] font-bold group-hover/card:text-[#0EA5E9]">
+                                                {proj.title}
+                                              </span>
+                                            </div>
+
+                                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                              <button
+                                                type="button"
+                                                onClick={() => onSelectProjectCard?.(row.id, col.id, el.id, proj, pIdx)}
+                                                className="text-[9.5px] px-2 py-0.5 rounded bg-white text-slate-600 hover:text-[#0EA5E9] border border-slate-200 group-hover/card:border-[#0EA5E9] cursor-pointer font-bold"
+                                                title="Edit card details"
+                                              >
+                                                Edit 👈
+                                              </button>
+
+                                              {/* Delete Button with Confirmation */}
+                                              {isConfirmingDelete ? (
+                                                <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded animate-fade-in">
+                                                  <span className="text-[9px] font-bold text-red-700">Delete?</span>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setDeleteConfirmProjectKey(null);
+                                                      onDeleteProjectCard?.(row.id, col.id, el.id, proj, pIdx);
+                                                    }}
+                                                    className="px-1.5 py-0.5 rounded bg-red-600 hover:bg-red-700 text-white font-extrabold text-[9px] cursor-pointer shadow-2xs"
+                                                  >
+                                                    Yes
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setDeleteConfirmProjectKey(null)}
+                                                    className="px-1 py-0.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[9px] cursor-pointer"
+                                                  >
+                                                    No
+                                                  </button>
+                                                </div>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setDeleteConfirmProjectKey(cardKey)}
+                                                  className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                                  title={`Delete "${proj.title}"`}
+                                                >
+                                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                                </button>
+                                              )}
+                                            </div>
                                           </div>
-                                          <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-white text-slate-500 border border-slate-200 group-hover/card:border-[#0EA5E9] group-hover/card:text-[#0EA5E9] shrink-0 font-bold">
-                                            Edit Card 👈
-                                          </span>
+                                        );
+                                      })}
+                                      {((el.content as any).data?.projects || []).length === 0 && (
+                                        <div className="p-3 text-center text-[10px] text-slate-400 border border-dashed border-slate-200 rounded-lg">
+                                          No cards in this showcase yet.
                                         </div>
-                                      ))}
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Special Rotating Client Sites Quick-Access for profileOrbit */}
+                                {el.type === 'profileOrbit' && (
+                                  <div
+                                    className="px-3 pb-3 pt-1 border-t border-slate-100 space-y-1.5"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="flex items-center justify-between text-[10.5px] font-bold">
+                                      <span className="flex items-center gap-1 text-[#0EA5E9]">
+                                        <Radio className="w-3 h-3 text-[#0EA5E9]" />
+                                        <span>
+                                          Rotating Client Sites (
+                                          {((el.content as any).data?.rotatingSites || []).length}
+                                          )
+                                        </span>
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setEditingRotatingSite({
+                                            rowId: row.id,
+                                            colId: col.id,
+                                            elId: el.id,
+                                            site: null,
+                                          })
+                                        }
+                                        className="px-2 py-0.5 rounded bg-[#143020] hover:bg-[#1E442D] text-white text-[9.5px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                                        title="Add a new rotating site"
+                                      >
+                                        <Plus className="w-2.5 h-2.5 text-[#4ADE80]" />
+                                        <span>Add Rotating Site</span>
+                                      </button>
+                                    </div>
+
+                                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                      {((el.content as any).data?.rotatingSites || []).map(
+                                        (site: any, sIdx: number) => {
+                                          const siteKey = `${el.id}_${site.id || sIdx}`;
+                                          const isConfirming = deleteConfirmSiteKey === siteKey;
+
+                                          return (
+                                            <div
+                                              key={site.id || sIdx}
+                                              className="p-1.5 rounded-lg bg-slate-50 hover:bg-[#E0F2FE]/50 border border-slate-200 flex items-center justify-between gap-2 text-xs font-semibold text-[#1E3A5F] transition-colors group/site"
+                                            >
+                                              <div
+                                                onClick={() =>
+                                                  setEditingRotatingSite({
+                                                    rowId: row.id,
+                                                    colId: col.id,
+                                                    elId: el.id,
+                                                    site,
+                                                  })
+                                                }
+                                                className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                                                title={`Click to edit ${site.name}`}
+                                              >
+                                                <div className="w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                                                  {site.logoUrl ? (
+                                                    <img
+                                                      src={site.logoUrl}
+                                                      alt=""
+                                                      className="w-full h-full object-contain rounded-full"
+                                                    />
+                                                  ) : site.faviconDomain ? (
+                                                    <img
+                                                      src={`https://www.google.com/s2/favicons?domain=${site.faviconDomain}&sz=64`}
+                                                      alt=""
+                                                      className="w-full h-full object-contain rounded-full"
+                                                      onError={(e) => {
+                                                        (e.target as HTMLElement).style.display =
+                                                          'none';
+                                                      }}
+                                                    />
+                                                  ) : (
+                                                    <span className="text-[9px] font-bold text-[#1E3A5F]">
+                                                      {site.fallbackInitials || 'ST'}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                  <div className="flex items-center gap-1">
+                                                    <span className="truncate text-[11px] font-bold group-hover/site:text-[#0EA5E9]">
+                                                      {site.name}
+                                                    </span>
+                                                    <span className="text-[8.5px] px-1 py-0.2 rounded-full bg-slate-200/80 text-slate-700 font-semibold">
+                                                      {site.orbitIndex === 2 ? 'Outer' : 'Inner'}
+                                                    </span>
+                                                  </div>
+                                                  <span className="text-[9.5px] text-slate-400 truncate block">
+                                                    {site.sublabel || site.url}
+                                                  </span>
+                                                </div>
+                                              </div>
+
+                                              <div
+                                                className="flex items-center gap-1 shrink-0"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    setEditingRotatingSite({
+                                                      rowId: row.id,
+                                                      colId: col.id,
+                                                      elId: el.id,
+                                                      site,
+                                                    })
+                                                  }
+                                                  className="text-[9.5px] px-2 py-0.5 rounded bg-white text-slate-600 hover:text-[#0EA5E9] border border-slate-200 group-hover/site:border-[#0EA5E9] cursor-pointer font-bold"
+                                                  title="Edit rotating site"
+                                                >
+                                                  Edit 👈
+                                                </button>
+
+                                                {/* Delete Button with Confirmation */}
+                                                {isConfirming ? (
+                                                  <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded animate-fade-in">
+                                                    <span className="text-[9px] font-bold text-red-700">
+                                                      Delete?
+                                                    </span>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        handleDeleteRotatingSite(
+                                                          row.id,
+                                                          col.id,
+                                                          el.id,
+                                                          site.id
+                                                        )
+                                                      }
+                                                      className="px-1.5 py-0.5 rounded bg-red-600 hover:bg-red-700 text-white font-extrabold text-[9px] cursor-pointer shadow-2xs"
+                                                    >
+                                                      Yes
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => setDeleteConfirmSiteKey(null)}
+                                                      className="px-1 py-0.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[9px] cursor-pointer"
+                                                    >
+                                                      No
+                                                    </button>
+                                                  </div>
+                                                ) : (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      setDeleteConfirmSiteKey(siteKey)
+                                                    }
+                                                    className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                                    title={`Delete "${site.name}"`}
+                                                  >
+                                                    <Trash2 className="w-3 h-3 text-red-500" />
+                                                  </button>
+                                                )}
+                                              </div>
+                                            </div>
+                                          );
+                                        }
+                                      )}
+                                      {((el.content as any).data?.rotatingSites || []).length ===
+                                        0 && (
+                                        <div className="p-3 text-center text-[10px] text-slate-400 border border-dashed border-slate-200 rounded-lg">
+                                          No rotating sites configured yet. Click "Add Rotating Site"
+                                          above.
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 )}
@@ -662,6 +997,22 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
             </div>
           </div>
         </div>
+      {/* Rotating Site Add/Edit Modal */}
+      {editingRotatingSite && (
+        <RotatingSiteEditModal
+          site={editingRotatingSite.site}
+          isOpen={true}
+          onClose={() => setEditingRotatingSite(null)}
+          onSave={handleSaveRotatingSite}
+          onDelete={(siteId) => {
+            handleDeleteRotatingSite(
+              editingRotatingSite.rowId,
+              editingRotatingSite.colId,
+              editingRotatingSite.elId,
+              siteId
+            );
+          }}
+        />
       )}
     </div>
   );

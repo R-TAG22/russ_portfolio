@@ -187,7 +187,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </div>
           {[
             { key: 'header' as const, label: 'Header', icon: PanelTop },
-            { key: 'footer' as const, label: 'Footer', icon: PanelBottom },
+            { key: 'footer' as const, label: 'Footer & CONNECT Socials', icon: PanelBottom },
             { key: 'buttons' as const, label: 'Buttons / CTAs', icon: MousePointerClick },
             { key: 'contact' as const, label: 'Contact Information', icon: PhoneCall },
           ].map((item) => {

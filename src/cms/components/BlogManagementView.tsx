@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { BlogPost } from '../types/schema';
 import { contentService } from '../services/ContentServiceFactory';
+import { UniversalImageUploader } from './UniversalImageUploader';
 
 interface BlogManagementViewProps {
   onReturnToHome: () => void;
@@ -71,6 +72,7 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
   // Form State for modal
   const [formData, setFormData] = useState<Partial<BlogPost>>({});
   const [tagInput, setTagInput] = useState('');
+  const [isDraggingCover, setIsDraggingCover] = useState(false);
 
   useEffect(() => {
     loadBlogs();
@@ -607,30 +609,14 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
               </div>
 
               {/* Cover Image URL + Upload */}
-              <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-700 flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Cover Image</span>
-                  </label>
-                  <label className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-2xs">
-                    <Upload className="w-3 h-3" />
-                    <span>Upload Image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleCoverUpload(e.target.files)}
-                    />
-                  </label>
-                </div>
-
-                <input
-                  type="text"
-                  value={formData.coverImage || ''}
-                  onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:border-[#0EA5E9] focus:outline-hidden bg-white"
+              <div className="space-y-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <UniversalImageUploader
+                  label="Article Cover Image"
+                  helperText="Drag & drop image file, upload from device, or choose from Media Gallery."
+                  value={formData.coverImage}
+                  onChange={(url) => setFormData((prev) => ({ ...prev, coverImage: url }))}
+                  onRemove={() => setFormData((prev) => ({ ...prev, coverImage: '' }))}
+                  aspectRatio="video"
                 />
 
                 {/* Preset suggestions */}
@@ -648,8 +634,8 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
                   ))}
                 </div>
 
-                {formData.coverImage && (
-                  <div className="mt-2 w-full h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 relative">
+                {formData.coverImage ? (
+                  <div className="mt-2 w-full h-36 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 relative group">
                     <img
                       src={formData.coverImage}
                       alt="Cover Preview"
@@ -658,10 +644,30 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, coverImage: '' })}
-                      className="absolute top-2 right-2 px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold shadow-xs cursor-pointer"
+                      className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[10.5px] font-bold shadow-md cursor-pointer transition-all"
                     >
-                      Remove
+                      Remove Cover
                     </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => {
+                      const input = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+                      input?.click();
+                    }}
+                    className={`mt-2 w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
+                      isDraggingCover
+                        ? 'border-[#0EA5E9] bg-sky-100/70'
+                        : 'border-slate-300 bg-white/70 hover:border-slate-400 hover:bg-white'
+                    }`}
+                  >
+                    <Upload className="w-5 h-5 text-slate-400 mb-1" />
+                    <span className="text-[11px] font-bold text-slate-600">
+                      Drag and drop cover photo here
+                    </span>
+                    <span className="text-[9.5px] text-slate-400">
+                      or click to select an image from your device
+                    </span>
                   </div>
                 )}
               </div>

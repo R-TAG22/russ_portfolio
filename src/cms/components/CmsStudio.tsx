@@ -236,11 +236,14 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     const updatedPage = { ...currentPage, sections };
     setCurrentPage(updatedPage);
     setHasPendingChanges(true);
+    contentService.savePage(updatedPage).catch(console.error);
     const foundEl = sections
       .find((r) => r.id === rowId)
       ?.columns.find((c) => c.id === colId)
       ?.elements.find((e) => e.id === elId);
-    if (foundEl) setSelectedItem({ type: 'element', rowId, colId, element: foundEl });
+    if (foundEl && selectedItem?.type === 'element' && selectedItem.element.id === elId) {
+      setSelectedItem({ type: 'element', rowId, colId, element: foundEl });
+    }
   };
 
   const handleDeleteElement = (rowId: string, colId: string, elId: string) => {
@@ -335,7 +338,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     };
 
     handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
-      content: { data: newContent },
+      content: {
+        type: 'workShowcase',
+        data: newContent,
+      },
     });
     setHasPendingChanges(true);
   };
@@ -387,7 +393,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     };
 
     handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
-      content: { data: newContent },
+      content: {
+        type: 'workShowcase',
+        data: newContent,
+      },
     });
     setActiveEditingCard({
       rowId: projectContext.rowId,
@@ -397,6 +406,7 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
       projectId: newProject.id,
     });
     setHasPendingChanges(true);
+    showToast('Created new sample work card.');
   };
 
   const handleDuplicateProject = () => {
@@ -417,7 +427,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     };
 
     handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
-      content: { data: newContent },
+      content: {
+        type: 'workShowcase',
+        data: newContent,
+      },
     });
     setActiveEditingCard({
       rowId: projectContext.rowId,
@@ -427,11 +440,12 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
       projectId: duplicated.id,
     });
     setHasPendingChanges(true);
+    showToast(`Duplicated "${target.title}".`);
   };
 
   const handleDeleteProject = () => {
     if (!projectContext || !currentPage) return;
-    if (!window.confirm(`Are you sure you want to delete "${projectContext.project.title}"?`)) return;
+    const deletedTitle = projectContext.project.title || 'Work Card';
 
     const updatedProjects = projectContext.allProjects.filter(
       (_, idx) => idx !== projectContext.projectIndex
@@ -442,7 +456,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     };
 
     handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
-      content: { data: newContent },
+      content: {
+        type: 'workShowcase',
+        data: newContent,
+      },
     });
 
     if (updatedProjects.length > 0) {
@@ -458,6 +475,7 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
       setActiveEditingCard(null);
     }
     setHasPendingChanges(true);
+    showToast(`Deleted "${deletedTitle}".`);
   };
 
   const handleMoveProject = (direction: 'up' | 'down') => {
@@ -476,7 +494,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     };
 
     handleUpdateElement(projectContext.rowId, projectContext.colId, projectContext.elId, {
-      content: { data: newContent },
+      content: {
+        type: 'workShowcase',
+        data: newContent,
+      },
     });
     setActiveEditingCard({
       rowId: projectContext.rowId,
@@ -509,6 +530,119 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     showToast(`Selected "${project.title || 'Work Card'}" for editing on left panel.`);
   };
 
+  const handleDeleteProjectCardDirect = (
+    rowId: string,
+    colId: string,
+    elId: string,
+    project: any,
+    projectIndex: number
+  ) => {
+    if (!currentPage) return;
+    const el = currentPage.sections
+      ?.find((r) => r.id === rowId)
+      ?.columns.find((c) => c.id === colId)
+      ?.elements.find((e) => e.id === elId);
+    if (!el || el.type !== 'workShowcase') return;
+
+    const content = (el.content as any)?.data as WorkShowcaseContent | undefined;
+    if (!content || !Array.isArray(content.projects)) return;
+
+    const deletedTitle = project?.title || content.projects[projectIndex]?.title || 'Work Card';
+    const updatedProjects = content.projects.filter((p, i) =>
+      project?.id ? p.id !== project.id : i !== projectIndex
+    );
+
+    const newContent = {
+      ...content,
+      projects: updatedProjects,
+    };
+
+    handleUpdateElement(rowId, colId, elId, {
+      content: {
+        type: 'workShowcase',
+        data: newContent,
+      },
+    });
+
+    if (activeEditingCard && activeEditingCard.elId === elId) {
+      if (updatedProjects.length > 0) {
+        const nextIdx = Math.min(projectIndex, updatedProjects.length - 1);
+        setActiveEditingCard({
+          rowId,
+          colId,
+          elId,
+          projectIndex: nextIdx,
+          projectId: updatedProjects[nextIdx].id || '',
+        });
+      } else {
+        setActiveEditingCard(null);
+      }
+    }
+    setHasPendingChanges(true);
+    showToast(`Deleted "${deletedTitle}".`);
+  };
+
+  const handleAddProjectCardDirect = (rowId: string, colId: string, elId: string) => {
+    if (!currentPage) return;
+    const el = currentPage.sections
+      ?.find((r) => r.id === rowId)
+      ?.columns.find((c) => c.id === colId)
+      ?.elements.find((e) => e.id === elId);
+    if (!el || el.type !== 'workShowcase') return;
+
+    const content = (el.content as any)?.data as WorkShowcaseContent | undefined;
+    const existingProjects = content?.projects || [];
+    const filters = content?.filters || ['All', 'Catalog Architecture', 'Marketplace Ops', 'Automation'];
+
+    const newProject: WorkShowcaseProject = {
+      id: `proj_${Date.now()}`,
+      title: 'New Sample Work Storefront',
+      client: 'Brand Partner Inc.',
+      subtitle: 'Luxury E-Commerce Catalog & Store Operations',
+      domainUrl: 'mystore.com',
+      url: 'https://mystore.com/',
+      category: filters[1] || 'Catalog Architecture',
+      previewBadge: 'CASE STUDY',
+      metrics: '+180% Velocity Lift',
+      vitalsScore: '99/100 Core Vitals',
+      description:
+        'Architected 25,000+ variant matrices with nested countertop cutouts, finishes, and custom hardware logic across Shopify and Home Depot with automated inventory flat-files.',
+      highlights: [
+        'Configured scalable variant matrix architecture and automated SKU synchronization',
+        'Built high-converting checkout flows and optimized mobile ergonomics',
+      ],
+      tags: ['Shopify Plus', 'Home Depot US', 'Photoshop Batch', 'Metafields', 'FBT Logistics'],
+      imageUrl:
+        'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=85',
+      galleryImages: [],
+      actionLabel: 'CASE STUDY',
+    };
+
+    const updatedProjects = [newProject, ...existingProjects];
+    const newContent = {
+      ...content,
+      projects: updatedProjects,
+    };
+
+    handleUpdateElement(rowId, colId, elId, {
+      content: {
+        type: 'workShowcase',
+        data: newContent,
+      },
+    });
+
+    setActiveEditingCard({
+      rowId,
+      colId,
+      elId,
+      projectIndex: 0,
+      projectId: newProject.id,
+    });
+    if (viewMode === 'builder') setViewMode('split');
+    setHasPendingChanges(true);
+    showToast('Added new sample work card.');
+  };
+
   const handleUpdateElementContent = (
     rowId: string,
     colId: string,
@@ -516,7 +650,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     content: any
   ) => {
     handleUpdateElement(rowId, colId, elId, {
-      content: { data: content },
+      content: {
+        type: 'workShowcase',
+        data: content,
+      },
     });
   };
 
@@ -749,6 +886,8 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                         setHasPendingChanges(true);
                       }}
                       onSelectProjectCard={handleSelectProjectCard}
+                      onDeleteProjectCard={handleDeleteProjectCardDirect}
+                      onAddProjectCard={handleAddProjectCardDirect}
                     />
                   </div>
                 </div>
@@ -793,6 +932,8 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                             setHasPendingChanges(true);
                           }}
                           onSelectProjectCard={handleSelectProjectCard}
+                          onDeleteProjectCard={handleDeleteProjectCardDirect}
+                          onAddProjectCard={handleAddProjectCardDirect}
                         />
                       </div>
                     )}

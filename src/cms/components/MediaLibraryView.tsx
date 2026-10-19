@@ -26,6 +26,8 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const filteredItems = mediaItems.filter(
     (m) =>
@@ -40,12 +42,32 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
   };
 
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []) as File[];
+    if (!files.length) return;
 
     setIsUploading(true);
     try {
-      await onUploadMedia(file);
+      for (const file of files) {
+        await onUploadMedia(file);
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = (Array.from(e.dataTransfer.files || []) as File[]).filter((f) =>
+      f.type.startsWith('image/')
+    );
+    if (!files.length) return;
+
+    setIsUploading(true);
+    try {
+      for (const file of files) {
+        await onUploadMedia(file);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -76,12 +98,52 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
           <span>{isUploading ? 'Uploading...' : 'Upload Media Asset'}</span>
           <input
             type="file"
+            ref={fileInputRef}
+            multiple
             accept="image/*"
             onChange={handleFileInput}
             className="hidden"
             disabled={isUploading}
           />
         </label>
+      </div>
+
+      {/* Drag & Drop Upload Zone */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`p-6 sm:p-8 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-2.5 ${
+          isDragging
+            ? 'border-[#0EA5E9] bg-sky-50 ring-4 ring-[#0EA5E9]/20 scale-[1.01]'
+            : 'border-[#BCD5E6] bg-white hover:border-[#0EA5E9] hover:bg-[#F8FAFC]'
+        }`}
+      >
+        <div className="w-12 h-12 rounded-2xl bg-[#E0F2FE] flex items-center justify-center text-[#0284C7] shadow-xs">
+          <Upload
+            className={`w-6 h-6 transition-transform ${
+              isDragging ? 'scale-110 -translate-y-1' : ''
+            }`}
+          />
+        </div>
+        <div>
+          <h4 className="font-urbanist font-extrabold text-sm text-[#1E3A5F]">
+            {isDragging ? 'Drop images here to upload immediately' : 'Drag & drop image files here'}
+          </h4>
+          <p className="text-xs text-slate-500 mt-0.5">
+            or <span className="text-[#0EA5E9] font-bold underline">click to browse</span> from your device • Supports PNG, JPG, SVG, WebP, GIF
+          </p>
+        </div>
+        {isUploading && (
+          <div className="flex items-center gap-2 text-xs font-bold text-[#0EA5E9] mt-1">
+            <span className="w-2 h-2 rounded-full bg-[#0EA5E9] animate-ping" />
+            <span>Processing and saving uploads...</span>
+          </div>
+        )}
       </div>
 
       {/* Search Bar */}

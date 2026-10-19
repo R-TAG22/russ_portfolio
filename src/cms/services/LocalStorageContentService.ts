@@ -174,6 +174,78 @@ const INITIAL_DEMO_PAGES: PageDocument[] = [
                       { name: 'Zendrop' },
                       { name: 'CJ Dropshipping' },
                     ],
+                    rotatingSites: [
+                      {
+                        id: 'store-diyative',
+                        name: 'DIYATIVE',
+                        sublabel: '3D Wooden Models & Kits • Visit ↗',
+                        url: 'https://diyative.com/',
+                        angle: 45,
+                        radius: 295,
+                        size: 72,
+                        orbitIndex: 1,
+                        flyInDelay: 0.4,
+                        fallbackInitials: 'DIY',
+                        faviconDomain: 'diyative.com',
+                        logoUrl: '',
+                      },
+                      {
+                        id: 'store-skin-by-brownlee',
+                        name: 'Skin by Brownlee & Co.',
+                        sublabel: 'Clinical Skincare DTC • Visit ↗',
+                        url: 'https://skinbybrownleeandco.com/',
+                        angle: 225,
+                        radius: 295,
+                        size: 72,
+                        orbitIndex: 1,
+                        flyInDelay: 0.6,
+                        fallbackInitials: 'SB',
+                        faviconDomain: 'skinbybrownleeandco.com',
+                        logoUrl: '',
+                      },
+                      {
+                        id: 'store-willow-bath',
+                        name: 'Willow Bath & Vanity',
+                        sublabel: 'Shopify & Home Depot • Visit ↗',
+                        url: 'https://willowbathandvanity.com/',
+                        angle: 30,
+                        radius: 390,
+                        size: 70,
+                        orbitIndex: 2,
+                        flyInDelay: 0.8,
+                        fallbackInitials: 'WB',
+                        faviconDomain: 'willowbathandvanity.com',
+                        logoUrl: '',
+                      },
+                      {
+                        id: 'store-sultans-fabrics',
+                        name: "Sultan's Fine Fabrics",
+                        sublabel: 'Luxury Textiles • Visit ↗',
+                        url: 'https://www.sultansfinefabrics.com/',
+                        angle: 150,
+                        radius: 390,
+                        size: 70,
+                        orbitIndex: 2,
+                        flyInDelay: 1.0,
+                        fallbackInitials: 'SF',
+                        faviconDomain: 'sultansfinefabrics.com',
+                        logoUrl: '',
+                      },
+                      {
+                        id: 'store-canton-roast',
+                        name: 'Canton Roast',
+                        sublabel: 'Online Ordering • Visit ↗',
+                        url: 'https://cantonroast.com/',
+                        angle: 270,
+                        radius: 390,
+                        size: 70,
+                        orbitIndex: 2,
+                        flyInDelay: 1.2,
+                        fallbackInitials: 'CR',
+                        faviconDomain: 'cantonroast.com',
+                        logoUrl: '',
+                      },
+                    ],
                   },
                 },
               },
@@ -783,6 +855,82 @@ const INITIAL_GLOBALS: GlobalConfigurations = {
       { platform: 'Upwork', url: 'https://www.upwork.com/freelancers/~017d47884cc6a6c3ac' },
       { platform: 'GitHub', url: 'https://github.com/R-TAG22' },
     ],
+    connectSocials: {
+      enabled: true,
+      flipIntervalSec: 1.0,
+      items: [
+        {
+          id: 'c_gmail',
+          letter: 'C',
+          platform: 'gmail',
+          label: 'Gmail',
+          url: 'mailto:tagaan01@gmail.com',
+          color: '#EA4335',
+          bgColor: '#FEF2F2',
+          enabled: true,
+        },
+        {
+          id: 'o_fb',
+          letter: 'O',
+          platform: 'facebook',
+          label: 'Facebook',
+          url: 'https://facebook.com/russell.tagaan',
+          color: '#1877F2',
+          bgColor: '#EFF6FF',
+          enabled: true,
+        },
+        {
+          id: 'n_insta',
+          letter: 'N',
+          platform: 'instagram',
+          label: 'Instagram',
+          url: 'https://instagram.com/russ_tag',
+          color: '#E4405F',
+          bgColor: '#FDF2F8',
+          enabled: true,
+        },
+        {
+          id: 'n_linkedin',
+          letter: 'N',
+          platform: 'linkedin',
+          label: 'LinkedIn',
+          url: 'https://www.linkedin.com/in/russell-tagaan',
+          color: '#0A66C2',
+          bgColor: '#F0F9FF',
+          enabled: true,
+        },
+        {
+          id: 'e_whatsapp',
+          letter: 'E',
+          platform: 'whatsapp',
+          label: 'WhatsApp',
+          url: 'https://wa.me/639296937829',
+          color: '#25D366',
+          bgColor: '#F0FDF4',
+          enabled: true,
+        },
+        {
+          id: 'c_threads',
+          letter: 'C',
+          platform: 'threads',
+          label: 'Threads',
+          url: 'https://threads.net/@russell.tagaan',
+          color: '#000000',
+          bgColor: '#F8FAFC',
+          enabled: true,
+        },
+        {
+          id: 't_github',
+          letter: 'T',
+          platform: 'github',
+          label: 'GitHub',
+          url: 'https://github.com/R-TAG22',
+          color: '#24292F',
+          bgColor: '#F1F5F9',
+          enabled: true,
+        },
+      ],
+    },
   },
   contact: {
     email: 'tagaan01@gmail.com',
@@ -1050,7 +1198,19 @@ export class LocalStorageContentService implements ContentRepository {
         localStorage.setItem(STORAGE_KEYS.GLOBALS, JSON.stringify(INITIAL_GLOBALS));
         this.inMemoryGlobals = { ...INITIAL_GLOBALS };
       } else {
-        this.inMemoryGlobals = JSON.parse(storedGlobals);
+        try {
+          const parsedGlobals = JSON.parse(storedGlobals);
+          if (!parsedGlobals.footer?.connectSocials || !Array.isArray(parsedGlobals.footer.connectSocials.items)) {
+            parsedGlobals.footer = {
+              ...parsedGlobals.footer,
+              connectSocials: INITIAL_GLOBALS.footer.connectSocials,
+            };
+            localStorage.setItem(STORAGE_KEYS.GLOBALS, JSON.stringify(parsedGlobals));
+          }
+          this.inMemoryGlobals = parsedGlobals;
+        } catch {
+          this.inMemoryGlobals = { ...INITIAL_GLOBALS };
+        }
       }
 
       const storedBlogs = localStorage.getItem(STORAGE_KEYS.BLOGS);
@@ -1097,6 +1257,7 @@ export class LocalStorageContentService implements ContentRepository {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEYS.GLOBALS, JSON.stringify(this.inMemoryGlobals));
+        window.dispatchEvent(new CustomEvent('content_service_globals_updated', { detail: this.inMemoryGlobals }));
       } catch (err) {
         console.error('Failed to persist globals to localStorage', err);
       }
