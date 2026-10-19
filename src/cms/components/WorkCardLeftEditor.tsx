@@ -17,9 +17,9 @@ import {
   ChevronDown,
   Layers,
   FileText,
+  Link2,
+} from 'lucide-react';
 import { WorkShowcaseProject, WorkShowcaseGalleryImage } from '../types/schema';
-import { UniversalImageUploader } from './UniversalImageUploader';
-import { MediaPickerModal } from './MediaPickerModal';
 
 interface WorkCardLeftEditorProps {
   project: WorkShowcaseProject;
@@ -56,7 +56,6 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const primaryFileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
-  const [isGalleryMediaModalOpen, setIsGalleryMediaModalOpen] = useState(false);
 
   // Field change helper
   const handleFieldChange = <K extends keyof WorkShowcaseProject>(
@@ -610,16 +609,91 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
         {/* ================================================================= */}
         {activeTab === 'gallery' && (
           <div className="space-y-4 animate-fade-in">
-            {/* Primary Thumbnail Image with UniversalImageUploader */}
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200 space-y-2">
-              <UniversalImageUploader
-                label="Primary Card Mockup Photo"
-                helperText="Main screenshot displayed inside the card frame. Drag & drop image, upload from device, or choose from Media Gallery."
-                value={project.imageUrl}
-                onChange={(url) => handleFieldChange('imageUrl', url)}
-                onRemove={() => handleFieldChange('imageUrl', '')}
-                aspectRatio="video"
-              />
+            {/* Primary Thumbnail Image with Drag and Drop */}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingPrimary(true);
+              }}
+              onDragLeave={() => setIsDraggingPrimary(false)}
+              onDrop={handlePrimaryDrop}
+              className={`p-3.5 rounded-2xl bg-white border-2 transition-all space-y-2.5 ${
+                isDraggingPrimary
+                  ? 'border-[#0EA5E9] bg-sky-50/70 ring-2 ring-[#0EA5E9]/30'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-[#0EA5E9]" />
+                    <span>Primary Card Mockup Photo</span>
+                  </h4>
+                  <p className="text-[10px] text-slate-400">Drag & drop photo here or upload/browse.</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <label className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer shadow-2xs transition-colors">
+                    <Upload className="w-3 h-3" />
+                    <span>Upload Image</span>
+                    <input
+                      type="file"
+                      ref={primaryFileInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePrimaryUpload}
+                    />
+                  </label>
+                  {project.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => handleFieldChange('imageUrl', '')}
+                      className="px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Delete Primary Photo"
+                    >
+                      <Trash2 className="w-3 h-3 text-red-500" />
+                      <span>Delete</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div
+                  onClick={() => primaryFileInputRef.current?.click()}
+                  className={`w-28 h-20 rounded-xl overflow-hidden border-2 border-dashed shrink-0 flex items-center justify-center cursor-pointer transition-all ${
+                    isDraggingPrimary
+                      ? 'border-[#0EA5E9] bg-sky-100/70 scale-102'
+                      : 'border-slate-300 bg-slate-50 hover:border-[#0EA5E9] hover:bg-slate-100'
+                  }`}
+                  title="Click or drag image file here"
+                >
+                  {project.imageUrl ? (
+                    <img
+                      src={project.imageUrl}
+                      alt={project.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-2 text-center text-slate-400">
+                      <Upload className="w-5 h-5 mb-0.5 text-slate-400" />
+                      <span className="text-[9px] font-bold">Drop Image</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 block">Direct Image URL</span>
+                  <input
+                    type="url"
+                    value={project.imageUrl}
+                    onChange={(e) => handleFieldChange('imageUrl', e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-[10.5px] text-slate-800 focus:border-[#0EA5E9]"
+                  />
+                  <span className="text-[9.5px] text-slate-400 block">
+                    Tip: Drag & drop any image file directly onto the box.
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Proof of Work Gallery (Multiple Photos) */}
@@ -646,14 +720,6 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
                       onChange={handleGalleryUpload}
                     />
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setIsGalleryMediaModalOpen(true)}
-                    className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-200 text-[#0284C7] font-bold text-[10.5px] flex items-center gap-1 cursor-pointer shadow-2xs"
-                  >
-                    <ImageIcon className="w-3 h-3 text-[#0EA5E9]" />
-                    <span>Choose from Media Gallery</span>
-                  </button>
                   <button
                     type="button"
                     onClick={handleAddGalleryImageUrl}

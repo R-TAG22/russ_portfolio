@@ -160,20 +160,6 @@ export interface StatusBadgeContent {
   subtle?: boolean;
 }
 
-export interface RotatingSiteItem {
-  id: string;
-  name: string;
-  sublabel: string;
-  url: string;
-  logoUrl?: string;
-  faviconDomain?: string;
-  fallbackInitials?: string;
-  orbitIndex?: number; // 1 for inner (spins CCW), 2 for outer (spins CW)
-  angle?: number;
-  radius?: number;
-  size?: number;
-}
-
 export interface ProfileOrbitBadge {
   name: string;
   sublabel?: string;
@@ -185,8 +171,7 @@ export interface ProfileOrbitContent {
   imageUrl: string;
   altText?: string;
   glowColor?: string;
-  badges?: ProfileOrbitBadge[];
-  rotatingSites?: RotatingSiteItem[];
+  badges: ProfileOrbitBadge[];
 }
 
 export interface ClientMarqueeLogo {

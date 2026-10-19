@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { BlogPost } from '../types/schema';
 import { contentService } from '../services/ContentServiceFactory';
-import { UniversalImageUploader } from './UniversalImageUploader';
 
 interface BlogManagementViewProps {
   onReturnToHome: () => void;
@@ -609,15 +608,80 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
               </div>
 
               {/* Cover Image URL + Upload */}
-              <div className="space-y-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <UniversalImageUploader
-                  label="Article Cover Image"
-                  helperText="Drag & drop image file, upload from device, or choose from Media Gallery."
-                  value={formData.coverImage}
-                  onChange={(url) => setFormData((prev) => ({ ...prev, coverImage: url }))}
-                  onRemove={() => setFormData((prev) => ({ ...prev, coverImage: '' }))}
-                  aspectRatio="video"
-                />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingCover(true);
+                }}
+                onDragLeave={() => setIsDraggingCover(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingCover(false);
+                  const file = (Array.from(e.dataTransfer.files || []) as File[]).find((f) =>
+                    f.type.startsWith('image/')
+                  );
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      if (ev.target?.result) {
+                        setFormData((prev) => ({ ...prev, coverImage: ev.target?.result as string }));
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className={`space-y-2 p-4 rounded-2xl border-2 transition-all ${
+                  isDraggingCover
+                    ? 'border-[#0EA5E9] bg-sky-50 ring-4 ring-[#0EA5E9]/20'
+                    : 'bg-slate-50 border-slate-200'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Cover Image</span>
+                      {isDraggingCover && (
+                        <span className="text-[10px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full animate-pulse">
+                          Drop image to upload!
+                        </span>
+                      )}
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      Drag & drop image file or upload from your device.
+                    </span>
+                  </div>
+                  <label className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-2xs">
+                    <Upload className="w-3 h-3" />
+                    <span>Upload Image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleCoverUpload(e.target.files)}
+                    />
+                  </label>
+                </div>
+
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={formData.coverImage || ''}
+                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                    placeholder="Drop image here or paste https://..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:border-[#0EA5E9] focus:outline-hidden bg-white"
+                  />
+                  {formData.coverImage && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, coverImage: '' })}
+                      className="px-2.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs cursor-pointer shrink-0 transition-colors"
+                      title="Clear image"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
 
                 {/* Preset suggestions */}
                 <div className="flex items-center gap-2 pt-1 flex-wrap">

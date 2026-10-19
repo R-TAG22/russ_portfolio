@@ -2,140 +2,94 @@ import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { RussellPortrait } from './RussellPortrait';
 
-export interface StoreOrbitItem {
+interface StoreOrbitItem {
   id: string;
   name: string;
   sublabel: string;
   url: string;
-  angle?: number;
-  radius?: number;
-  size?: number;
+  angle: number;
+  radius: number;
+  size: number;
   orbitIndex: number;
-  flyInDelay?: number;
+  flyInDelay: number;
   fallbackInitials: string;
   faviconDomain: string;
-  logoUrl?: string;
 }
 
-const DEFAULT_ORBIT_ITEMS: StoreOrbitItem[] = [
-  // --- Layer 1 (Inner Orbit - Radius 295px, spins CCW 36s) ---
-  {
-    id: 'store-diyative',
-    name: 'DIYATIVE',
-    sublabel: '3D Wooden Models & Kits • Visit ↗',
-    url: 'https://diyative.com/',
-    angle: 45,
-    radius: 295,
-    size: 72,
-    orbitIndex: 1,
-    flyInDelay: 0.4,
-    fallbackInitials: 'DIY',
-    faviconDomain: 'diyative.com',
-  },
-  {
-    id: 'store-skin-by-brownlee',
-    name: 'Skin by Brownlee & Co.',
-    sublabel: 'Clinical Skincare DTC • Visit ↗',
-    url: 'https://skinbybrownleeandco.com/',
-    angle: 225,
-    radius: 295,
-    size: 72,
-    orbitIndex: 1,
-    flyInDelay: 0.6,
-    fallbackInitials: 'SB',
-    faviconDomain: 'skinbybrownleeandco.com',
-  },
-
-  // --- Layer 2 (Outer Orbit - Radius 390px, spins CW 48s) ---
-  {
-    id: 'store-willow-bath',
-    name: 'Willow Bath & Vanity',
-    sublabel: 'Shopify & Home Depot • Visit ↗',
-    url: 'https://willowbathandvanity.com/',
-    angle: 30,
-    radius: 390,
-    size: 70,
-    orbitIndex: 2,
-    flyInDelay: 0.8,
-    fallbackInitials: 'WB',
-    faviconDomain: 'willowbathandvanity.com',
-  },
-  {
-    id: 'store-sultans-fabrics',
-    name: "Sultan's Fine Fabrics",
-    sublabel: 'Luxury Textiles • Visit ↗',
-    url: 'https://www.sultansfinefabrics.com/',
-    angle: 150,
-    radius: 390,
-    size: 70,
-    orbitIndex: 2,
-    flyInDelay: 1.0,
-    fallbackInitials: 'SF',
-    faviconDomain: 'sultansfinefabrics.com',
-  },
-  {
-    id: 'store-canton-roast',
-    name: 'Canton Roast',
-    sublabel: 'Online Ordering • Visit ↗',
-    url: 'https://cantonroast.com/',
-    angle: 270,
-    radius: 390,
-    size: 70,
-    orbitIndex: 2,
-    flyInDelay: 1.2,
-    fallbackInitials: 'CR',
-    faviconDomain: 'cantonroast.com',
-  },
-];
-
 export const CirclesVisualization: React.FC = () => {
-  const [orbitItems, setOrbitItems] = React.useState<StoreOrbitItem[]>(() => {
-    // Attempt to load from localStorage CMS pages
-    try {
-      const stored = localStorage.getItem('wpbakery_cms_pages_v3');
-      if (stored) {
-        const pages = JSON.parse(stored);
-        const home = pages.find((p: any) => p.slug === 'homepage');
-        const orbitEl = home?.sections?.[0]?.columns?.[1]?.elements?.find(
-          (e: any) => e.type === 'profileOrbit'
-        );
-        if (orbitEl?.content?.data?.rotatingSites?.length) {
-          return orbitEl.content.data.rotatingSites;
-        }
-      }
-    } catch (e) {
-      console.warn('Could not load initial rotating sites from CMS cache', e);
-    }
-    return DEFAULT_ORBIT_ITEMS;
-  });
+  // 5 Active Client E-Commerce Stores across 2 concentric orbit rings
+  // Inner Orbit: DIYATIVE & Skin by Brownlee & Co. (180° apart)
+  // Outer Orbit: Willow Bath & Vanity, Sultan's Fine Fabrics & Canton Roast (120° apart)
+  const orbitItems: StoreOrbitItem[] = [
+    // --- Layer 1 (Inner Orbit - Radius 295px, spins CCW 36s) ---
+    {
+      id: 'store-diyative',
+      name: 'DIYATIVE',
+      sublabel: '3D Wooden Models & Kits • Visit ↗',
+      url: 'https://diyative.com/',
+      angle: 45,
+      radius: 295,
+      size: 72,
+      orbitIndex: 1,
+      flyInDelay: 0.4,
+      fallbackInitials: 'DIY',
+      faviconDomain: 'diyative.com',
+    },
+    {
+      id: 'store-skin-by-brownlee',
+      name: 'Skin by Brownlee & Co.',
+      sublabel: 'Clinical Skincare DTC • Visit ↗',
+      url: 'https://skinbybrownleeandco.com/',
+      angle: 225,
+      radius: 295,
+      size: 72,
+      orbitIndex: 1,
+      flyInDelay: 0.6,
+      fallbackInitials: 'SB',
+      faviconDomain: 'skinbybrownleeandco.com',
+    },
 
-  React.useEffect(() => {
-    const handleUpdate = (e: any) => {
-      if (e.detail?.rotatingSites) {
-        setOrbitItems(e.detail.rotatingSites);
-      } else {
-        // Reload from localStorage
-        try {
-          const stored = localStorage.getItem('wpbakery_cms_pages_v3');
-          if (stored) {
-            const pages = JSON.parse(stored);
-            const home = pages.find((p: any) => p.slug === 'homepage');
-            const orbitEl = home?.sections?.[0]?.columns?.[1]?.elements?.find(
-              (e: any) => e.type === 'profileOrbit'
-            );
-            if (orbitEl?.content?.data?.rotatingSites?.length) {
-              setOrbitItems(orbitEl.content.data.rotatingSites);
-            }
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    };
-
-    window.addEventListener('rotating-sites-updated', handleUpdate);
-    return () => window.removeEventListener('rotating-sites-updated', handleUpdate);
-  }, []);
+    // --- Layer 2 (Outer Orbit - Radius 390px, spins CW 48s) ---
+    {
+      id: 'store-willow-bath',
+      name: 'Willow Bath & Vanity',
+      sublabel: 'Shopify & Home Depot • Visit ↗',
+      url: 'https://willowbathandvanity.com/',
+      angle: 30,
+      radius: 390,
+      size: 70,
+      orbitIndex: 2,
+      flyInDelay: 0.8,
+      fallbackInitials: 'WB',
+      faviconDomain: 'willowbathandvanity.com',
+    },
+    {
+      id: 'store-sultans-fabrics',
+      name: "Sultan's Fine Fabrics",
+      sublabel: 'Luxury Textiles • Visit ↗',
+      url: 'https://www.sultansfinefabrics.com/',
+      angle: 150,
+      radius: 390,
+      size: 70,
+      orbitIndex: 2,
+      flyInDelay: 1.0,
+      fallbackInitials: 'SF',
+      faviconDomain: 'sultansfinefabrics.com',
+    },
+    {
+      id: 'store-canton-roast',
+      name: 'Canton Roast',
+      sublabel: 'Online Ordering • Visit ↗',
+      url: 'https://cantonroast.com/',
+      angle: 270,
+      radius: 390,
+      size: 70,
+      orbitIndex: 2,
+      flyInDelay: 1.2,
+      fallbackInitials: 'CR',
+      faviconDomain: 'cantonroast.com',
+    },
+  ];
 
   const handlePlanetClick = (item: StoreOrbitItem) => {
     if (item.url) {
@@ -144,30 +98,17 @@ export const CirclesVisualization: React.FC = () => {
   };
 
   const renderOrbitLayer = (orbitNumber: number, spinDir: 'cw' | 'ccw', durationSec: number) => {
-    const itemsInOrbit = orbitItems.filter((it) => (it.orbitIndex || 1) === orbitNumber);
+    const itemsInOrbit = orbitItems.filter((it) => it.orbitIndex === orbitNumber);
     const counterSpinClass = spinDir === 'ccw' ? 'spin-cw-inline' : 'spin-ccw-inline';
-    const totalInOrbit = itemsInOrbit.length;
-    const defaultRadius = orbitNumber === 1 ? 295 : 390;
 
-    return itemsInOrbit.map((item, idx) => {
-      // Calculate even spacing angle if not fixed
-      const computedAngle =
-        item.angle !== undefined
-          ? item.angle
-          : totalInOrbit > 0
-          ? (idx * (360 / totalInOrbit)) + (orbitNumber === 1 ? 45 : 30)
-          : 0;
-
-      const currentRadius = item.radius || defaultRadius;
-      const rad = (computedAngle * Math.PI) / 180;
-      const x = Math.round(currentRadius * Math.cos(rad));
-      const y = Math.round(currentRadius * Math.sin(rad));
-      const size = item.size || (orbitNumber === 1 ? 72 : 70);
-      const flyInDelay = item.flyInDelay !== undefined ? item.flyInDelay : 0.4 + idx * 0.2;
+    return itemsInOrbit.map((item) => {
+      const rad = (item.angle * Math.PI) / 180;
+      const x = Math.round(item.radius * Math.cos(rad));
+      const y = Math.round(item.radius * Math.sin(rad));
 
       return (
         <div
-          key={item.id || idx}
+          key={item.id}
           id={item.id}
           className="absolute top-1/2 left-1/2 pointer-events-auto group z-20"
           style={{
@@ -176,7 +117,7 @@ export const CirclesVisualization: React.FC = () => {
         >
           <div
             style={{
-              animation: `avatar-fly-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${flyInDelay}s both`,
+              animation: `avatar-fly-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${item.flyInDelay}s both`,
             }}
           >
             <div
@@ -191,19 +132,13 @@ export const CirclesVisualization: React.FC = () => {
                 onClick={() => handlePlanetClick(item)}
                 className="relative rounded-full bg-white border-2 border-[#1E3A5F] flex items-center justify-center transition-all duration-300 group-hover:scale-115 shadow-[0_6px_20px_rgba(30,58,95,0.22)] group-hover:shadow-[0_8px_25px_rgba(56,189,248,0.45)] group-hover:border-[#0EA5E9] cursor-pointer overflow-hidden p-1.5 bg-white/95"
                 style={{
-                  width: `${size}px`,
-                  height: `${size}px`,
+                  width: `${item.size}px`,
+                  height: `${item.size}px`,
                 }}
                 title={`Open ${item.name} (${item.sublabel})`}
               >
-                {/* Custom Uploaded Logo OR Favicon */}
-                {item.logoUrl ? (
-                  <img
-                    src={item.logoUrl}
-                    alt={item.name}
-                    className="w-full h-full object-contain rounded-full select-none p-0.5 transition-transform duration-300 group-hover:scale-110"
-                  />
-                ) : item.faviconDomain ? (
+                {/* Official Store Favicon */}
+                {item.faviconDomain && (
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${item.faviconDomain}&sz=128`}
                     alt={item.name}
@@ -212,7 +147,7 @@ export const CirclesVisualization: React.FC = () => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
-                ) : null}
+                )}
 
                 {/* Fallback Monogram with branding styling */}
                 <div className="font-urbanist font-extrabold text-xs text-[#1E3A5F] select-none absolute inset-0 -z-10 flex flex-col items-center justify-center bg-gradient-to-br from-[#EFF6FB] to-[#DBEAFE]">
