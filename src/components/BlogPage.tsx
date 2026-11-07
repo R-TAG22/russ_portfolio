@@ -35,6 +35,9 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onOpenHire, onNavigateToWork
   // Load blog posts from storage
   useEffect(() => {
     loadBlogs();
+    const handleUpdate = () => loadBlogs();
+    window.addEventListener('content_service_blogs_updated', handleUpdate);
+    return () => window.removeEventListener('content_service_blogs_updated', handleUpdate);
   }, []);
 
   const loadBlogs = async () => {

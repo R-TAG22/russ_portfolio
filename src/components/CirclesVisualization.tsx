@@ -1,114 +1,180 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { RussellPortrait } from './RussellPortrait';
+import { StoreOrbitItem } from '../cms/types/schema';
+import { contentService } from '../cms/services/ContentServiceFactory';
 
-interface StoreOrbitItem {
-  id: string;
-  name: string;
-  sublabel: string;
-  url: string;
-  angle: number;
-  radius: number;
-  size: number;
-  orbitIndex: number;
-  flyInDelay: number;
-  fallbackInitials: string;
-  faviconDomain: string;
+export const DEFAULT_ORBIT_ITEMS: StoreOrbitItem[] = [
+  // --- Layer 1 (Inner Orbit - Radius 295px, spins CCW 36s) ---
+  {
+    id: 'store-diyative',
+    name: 'DIYATIVE',
+    sublabel: '3D Wooden Models & Kits • Visit ↗',
+    url: 'https://diyative.com/',
+    angle: 45,
+    radius: 295,
+    size: 72,
+    orbitIndex: 1,
+    flyInDelay: 0.4,
+    fallbackInitials: 'DIY',
+    faviconDomain: 'diyative.com',
+  },
+  {
+    id: 'store-skin-by-brownlee',
+    name: 'Skin by Brownlee & Co.',
+    sublabel: 'Clinical Skincare DTC • Visit ↗',
+    url: 'https://skinbybrownleeandco.com/',
+    angle: 225,
+    radius: 295,
+    size: 72,
+    orbitIndex: 1,
+    flyInDelay: 0.6,
+    fallbackInitials: 'SB',
+    faviconDomain: 'skinbybrownleeandco.com',
+  },
+
+  // --- Layer 2 (Outer Orbit - Radius 390px, spins CW 48s) ---
+  {
+    id: 'store-willow-bath',
+    name: 'Willow Bath & Vanity',
+    sublabel: 'Shopify & Home Depot • Visit ↗',
+    url: 'https://willowbathandvanity.com/',
+    angle: 30,
+    radius: 390,
+    size: 70,
+    orbitIndex: 2,
+    flyInDelay: 0.8,
+    fallbackInitials: 'WB',
+    faviconDomain: 'willowbathandvanity.com',
+  },
+  {
+    id: 'store-sultans-fabrics',
+    name: "Sultan's Fine Fabrics",
+    sublabel: 'Luxury Textiles • Visit ↗',
+    url: 'https://www.sultansfinefabrics.com/',
+    angle: 150,
+    radius: 390,
+    size: 70,
+    orbitIndex: 2,
+    flyInDelay: 1.0,
+    fallbackInitials: 'SF',
+    faviconDomain: 'sultansfinefabrics.com',
+  },
+  {
+    id: 'store-canton-roast',
+    name: 'Canton Roast',
+    sublabel: 'Online Ordering • Visit ↗',
+    url: 'https://cantonroast.com/',
+    angle: 270,
+    radius: 390,
+    size: 70,
+    orbitIndex: 2,
+    flyInDelay: 1.2,
+    fallbackInitials: 'CR',
+    faviconDomain: 'cantonroast.com',
+  },
+];
+
+interface CirclesVisualizationProps {
+  customItems?: StoreOrbitItem[];
+  customCenterPhoto?: string;
+  onManageRotatingSites?: () => void;
+  isEditableInCanvas?: boolean;
 }
 
-export const CirclesVisualization: React.FC = () => {
-  // 5 Active Client E-Commerce Stores across 2 concentric orbit rings
-  // Inner Orbit: DIYATIVE & Skin by Brownlee & Co. (180° apart)
-  // Outer Orbit: Willow Bath & Vanity, Sultan's Fine Fabrics & Canton Roast (120° apart)
-  const orbitItems: StoreOrbitItem[] = [
-    // --- Layer 1 (Inner Orbit - Radius 295px, spins CCW 36s) ---
-    {
-      id: 'store-diyative',
-      name: 'DIYATIVE',
-      sublabel: '3D Wooden Models & Kits • Visit ↗',
-      url: 'https://diyative.com/',
-      angle: 45,
-      radius: 295,
-      size: 72,
-      orbitIndex: 1,
-      flyInDelay: 0.4,
-      fallbackInitials: 'DIY',
-      faviconDomain: 'diyative.com',
-    },
-    {
-      id: 'store-skin-by-brownlee',
-      name: 'Skin by Brownlee & Co.',
-      sublabel: 'Clinical Skincare DTC • Visit ↗',
-      url: 'https://skinbybrownleeandco.com/',
-      angle: 225,
-      radius: 295,
-      size: 72,
-      orbitIndex: 1,
-      flyInDelay: 0.6,
-      fallbackInitials: 'SB',
-      faviconDomain: 'skinbybrownleeandco.com',
-    },
+export const CirclesVisualization: React.FC<CirclesVisualizationProps> = ({
+  customItems,
+  customCenterPhoto,
+  onManageRotatingSites,
+  isEditableInCanvas = false,
+}) => {
+  const [loadedSites, setLoadedSites] = useState<StoreOrbitItem[]>(DEFAULT_ORBIT_ITEMS);
+  const [loadedCenterPhoto, setLoadedCenterPhoto] = useState<string>('');
 
-    // --- Layer 2 (Outer Orbit - Radius 390px, spins CW 48s) ---
-    {
-      id: 'store-willow-bath',
-      name: 'Willow Bath & Vanity',
-      sublabel: 'Shopify & Home Depot • Visit ↗',
-      url: 'https://willowbathandvanity.com/',
-      angle: 30,
-      radius: 390,
-      size: 70,
-      orbitIndex: 2,
-      flyInDelay: 0.8,
-      fallbackInitials: 'WB',
-      faviconDomain: 'willowbathandvanity.com',
-    },
-    {
-      id: 'store-sultans-fabrics',
-      name: "Sultan's Fine Fabrics",
-      sublabel: 'Luxury Textiles • Visit ↗',
-      url: 'https://www.sultansfinefabrics.com/',
-      angle: 150,
-      radius: 390,
-      size: 70,
-      orbitIndex: 2,
-      flyInDelay: 1.0,
-      fallbackInitials: 'SF',
-      faviconDomain: 'sultansfinefabrics.com',
-    },
-    {
-      id: 'store-canton-roast',
-      name: 'Canton Roast',
-      sublabel: 'Online Ordering • Visit ↗',
-      url: 'https://cantonroast.com/',
-      angle: 270,
-      radius: 390,
-      size: 70,
-      orbitIndex: 2,
-      flyInDelay: 1.2,
-      fallbackInitials: 'CR',
-      faviconDomain: 'cantonroast.com',
-    },
-  ];
+  useEffect(() => {
+    // If custom items are directly passed as props, prioritize them
+    if (customItems && customItems.length > 0) {
+      setLoadedSites(customItems);
+      return;
+    }
+
+    const loadData = async () => {
+      try {
+        const page = await contentService.getPageBySlug('homepage');
+        const orbitEl = page?.sections
+          ?.flatMap((s) => s.columns)
+          ?.flatMap((c) => c.elements)
+          ?.find((e) => e.type === 'profileOrbit');
+
+        const orbitContent = (orbitEl?.content as any)?.data;
+        if (orbitContent?.rotatingSites && orbitContent.rotatingSites.length > 0) {
+          setLoadedSites(orbitContent.rotatingSites);
+        } else {
+          const globals = await contentService.getGlobals();
+          if (globals?.rotatingSites && globals.rotatingSites.length > 0) {
+            setLoadedSites(globals.rotatingSites);
+          } else {
+            setLoadedSites(DEFAULT_ORBIT_ITEMS);
+          }
+        }
+
+        if (orbitContent?.imageUrl) {
+          setLoadedCenterPhoto(orbitContent.imageUrl);
+        }
+      } catch {
+        setLoadedSites(DEFAULT_ORBIT_ITEMS);
+      }
+    };
+
+    loadData();
+
+    const handleUpdate = () => {
+      loadData();
+    };
+
+    window.addEventListener('content_service_rotating_sites_updated', handleUpdate);
+    window.addEventListener('content_service_pages_updated', handleUpdate);
+    window.addEventListener('content_service_page_updated', handleUpdate);
+    window.addEventListener('content_service_globals_updated', handleUpdate);
+
+    return () => {
+      window.removeEventListener('content_service_rotating_sites_updated', handleUpdate);
+      window.removeEventListener('content_service_pages_updated', handleUpdate);
+      window.removeEventListener('content_service_page_updated', handleUpdate);
+      window.removeEventListener('content_service_globals_updated', handleUpdate);
+    };
+  }, [customItems]);
+
+  const activeSites = customItems && customItems.length > 0 ? customItems : loadedSites;
+  const activeCenterPhoto = customCenterPhoto || loadedCenterPhoto;
 
   const handlePlanetClick = (item: StoreOrbitItem) => {
+    if (isEditableInCanvas && onManageRotatingSites) {
+      onManageRotatingSites();
+      return;
+    }
     if (item.url) {
       window.open(item.url, '_blank', 'noopener,noreferrer');
     }
   };
 
   const renderOrbitLayer = (orbitNumber: number, spinDir: 'cw' | 'ccw', durationSec: number) => {
-    const itemsInOrbit = orbitItems.filter((it) => it.orbitIndex === orbitNumber);
+    const itemsInOrbit = activeSites.filter((it) => it.orbitIndex === orbitNumber);
     const counterSpinClass = spinDir === 'ccw' ? 'spin-cw-inline' : 'spin-ccw-inline';
+    const count = Math.max(1, itemsInOrbit.length);
 
-    return itemsInOrbit.map((item) => {
-      const rad = (item.angle * Math.PI) / 180;
-      const x = Math.round(item.radius * Math.cos(rad));
-      const y = Math.round(item.radius * Math.sin(rad));
+    return itemsInOrbit.map((item, idx) => {
+      const angle = item.angle !== undefined ? item.angle : Math.round(idx * (360 / count));
+      const rad = (angle * Math.PI) / 180;
+      const defaultRadius = orbitNumber === 1 ? 295 : 390;
+      const radius = item.radius || defaultRadius;
+      const x = Math.round(radius * Math.cos(rad));
+      const y = Math.round(radius * Math.sin(rad));
+      const size = item.size || (orbitNumber === 1 ? 72 : 70);
 
       return (
         <div
-          key={item.id}
+          key={item.id || `orbit-${orbitNumber}-${idx}`}
           id={item.id}
           className="absolute top-1/2 left-1/2 pointer-events-auto group z-20"
           style={{
@@ -117,7 +183,9 @@ export const CirclesVisualization: React.FC = () => {
         >
           <div
             style={{
-              animation: `avatar-fly-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${item.flyInDelay}s both`,
+              animation: `avatar-fly-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${
+                item.flyInDelay || 0.4 + idx * 0.2
+              }s both`,
             }}
           >
             <div
@@ -132,13 +200,27 @@ export const CirclesVisualization: React.FC = () => {
                 onClick={() => handlePlanetClick(item)}
                 className="relative rounded-full bg-white border-2 border-[#1E3A5F] flex items-center justify-center transition-all duration-300 group-hover:scale-115 shadow-[0_6px_20px_rgba(30,58,95,0.22)] group-hover:shadow-[0_8px_25px_rgba(56,189,248,0.45)] group-hover:border-[#0EA5E9] cursor-pointer overflow-hidden p-1.5 bg-white/95"
                 style={{
-                  width: `${item.size}px`,
-                  height: `${item.size}px`,
+                  width: `${size}px`,
+                  height: `${size}px`,
                 }}
-                title={`Open ${item.name} (${item.sublabel})`}
+                title={
+                  isEditableInCanvas
+                    ? `Click to edit rotating sites: ${item.name}`
+                    : `Open ${item.name} (${item.sublabel})`
+                }
               >
-                {/* Official Store Favicon */}
-                {item.faviconDomain && (
+                {/* 1. Custom Uploaded Logo Image */}
+                {item.logoUrl ? (
+                  <img
+                    src={item.logoUrl}
+                    alt={item.name}
+                    className="w-full h-full object-contain rounded-full select-none p-1 transition-transform duration-300 group-hover:scale-110"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : item.faviconDomain ? (
+                  /* 2. Official Store Favicon */
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${item.faviconDomain}&sz=128`}
                     alt={item.name}
@@ -147,12 +229,14 @@ export const CirclesVisualization: React.FC = () => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
+                ) : (
+                  /* 3. Fallback Monogram */
+                  <div className="font-urbanist font-extrabold text-xs text-[#1E3A5F] select-none absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#EFF6FB] to-[#DBEAFE]">
+                    <span className="text-xs font-bold text-[#1E3A5F]">
+                      {item.fallbackInitials || 'ST'}
+                    </span>
+                  </div>
                 )}
-
-                {/* Fallback Monogram with branding styling */}
-                <div className="font-urbanist font-extrabold text-xs text-[#1E3A5F] select-none absolute inset-0 -z-10 flex flex-col items-center justify-center bg-gradient-to-br from-[#EFF6FB] to-[#DBEAFE]">
-                  <span className="text-xs font-bold text-[#1E3A5F]">{item.fallbackInitials}</span>
-                </div>
 
                 {/* Corner Store External Link Indicator Badge */}
                 <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#1E3A5F] group-hover:bg-[#0EA5E9] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-xs">
@@ -210,11 +294,11 @@ export const CirclesVisualization: React.FC = () => {
         id="center-curve-hub"
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] flex items-center justify-center z-10 select-none group"
       >
-        {/* Main Russell Portrait with Continuous Random Shape Changing Animation */}
         <RussellPortrait
           className="w-[480px] h-[480px]"
           blobVariant="white"
           enableRandomShapeInteraction={true}
+          customPhotoUrl={activeCenterPhoto}
         />
       </div>
     </div>

@@ -5,14 +5,16 @@ interface RussellPortraitProps {
   className?: string;
   blobVariant?: 'green' | 'blue' | 'steel' | 'white';
   enableRandomShapeInteraction?: boolean;
+  customPhotoUrl?: string;
 }
 
 export const RussellPortrait: React.FC<RussellPortraitProps> = ({
   className = 'w-full h-full',
   blobVariant = 'white',
   enableRandomShapeInteraction = true,
+  customPhotoUrl,
 }) => {
-  const activePhoto = defaultRussellPhoto;
+  const activePhoto = customPhotoUrl || defaultRussellPhoto;
 
   return (
     <div

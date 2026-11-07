@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   ChevronRight,
   Menu,
+  Plus,
+  RotateCw,
 } from 'lucide-react';
 import { PageSummary } from '../repositories/ContentRepository';
 
@@ -22,6 +24,8 @@ interface DashboardOverviewViewProps {
   onSelectPage: (slug: string) => void;
   onSelectNavMenu: () => void;
   onOpenPublicSite: () => void;
+  onOpenAddRotatingSite?: () => void;
+  onOpenManageRotatingSites?: () => void;
 }
 
 export const DashboardOverviewView: React.FC<DashboardOverviewViewProps> = ({
@@ -31,8 +35,20 @@ export const DashboardOverviewView: React.FC<DashboardOverviewViewProps> = ({
   onSelectPage,
   onSelectNavMenu,
   onOpenPublicSite,
+  onOpenAddRotatingSite,
+  onOpenManageRotatingSites,
 }) => {
   const quickCards = [
+    {
+      id: 'rotating-sites',
+      slug: 'homepage',
+      title: 'Rotating Orbit Sites',
+      category: 'Homepage Feature',
+      description: 'Concentric orbiting store planets around Russell portrait with logo upload (drag & drop or Media Gallery) and live store links.',
+      badge: 'Hero Orbit',
+      icon: RotateCw,
+      isOrbitAction: true,
+    },
     {
       id: 'work',
       slug: 'work',
@@ -226,10 +242,31 @@ export const DashboardOverviewView: React.FC<DashboardOverviewViewProps> = ({
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0EA5E9]">
-                  <span>Open WPBakery Editor</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
+                {card.isOrbitAction ? (
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => onOpenAddRotatingSite ? onOpenAddRotatingSite() : onSelectPage('homepage')}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] shadow-2xs flex items-center gap-1 cursor-pointer transition-all hover:scale-102"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+ Add Site</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOpenManageRotatingSites ? onOpenManageRotatingSites() : onSelectPage('homepage')}
+                      className="px-2.5 py-1 rounded-lg bg-[#1E3A5F] hover:bg-[#2D5D86] text-white font-bold text-[11px] shadow-2xs flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Sparkles className="w-3 h-3 text-[#7DD3FC]" />
+                      <span>Manage</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0EA5E9]">
+                    <span>Open WPBakery Editor</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                )}
               </div>
             );
           })}

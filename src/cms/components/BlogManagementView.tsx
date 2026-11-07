@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { BlogPost } from '../types/schema';
 import { contentService } from '../services/ContentServiceFactory';
+import { UniversalImageUploader } from './UniversalImageUploader';
 
 interface BlogManagementViewProps {
   onReturnToHome: () => void;
@@ -607,133 +608,18 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
                 </div>
               </div>
 
-              {/* Cover Image URL + Upload */}
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDraggingCover(true);
-                }}
-                onDragLeave={() => setIsDraggingCover(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDraggingCover(false);
-                  const file = (Array.from(e.dataTransfer.files || []) as File[]).find((f) =>
-                    f.type.startsWith('image/')
-                  );
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                      if (ev.target?.result) {
-                        setFormData((prev) => ({ ...prev, coverImage: ev.target?.result as string }));
-                      }
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className={`space-y-2 p-4 rounded-2xl border-2 transition-all ${
-                  isDraggingCover
-                    ? 'border-[#0EA5E9] bg-sky-50 ring-4 ring-[#0EA5E9]/20'
-                    : 'bg-slate-50 border-slate-200'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="font-bold text-slate-700 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Cover Image</span>
-                      {isDraggingCover && (
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full animate-pulse">
-                          Drop image to upload!
-                        </span>
-                      )}
-                    </label>
-                    <span className="text-[10px] text-slate-400">
-                      Drag & drop image file or upload from your device.
-                    </span>
-                  </div>
-                  <label className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-2xs">
-                    <Upload className="w-3 h-3" />
-                    <span>Upload Image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleCoverUpload(e.target.files)}
-                    />
-                  </label>
-                </div>
-
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="text"
-                    value={formData.coverImage || ''}
-                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                    placeholder="Drop image here or paste https://..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:border-[#0EA5E9] focus:outline-hidden bg-white"
-                  />
-                  {formData.coverImage && (
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, coverImage: '' })}
-                      className="px-2.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs cursor-pointer shrink-0 transition-colors"
-                      title="Clear image"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                {/* Preset suggestions */}
-                <div className="flex items-center gap-2 pt-1 flex-wrap">
-                  <span className="text-[10.5px] text-slate-400 font-semibold">Presets:</span>
-                  {SAMPLE_COVER_IMAGES.map((preset, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, coverImage: preset.url })}
-                      className="px-2 py-0.5 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-[10px] font-medium text-slate-600 transition-all cursor-pointer"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-
-                {formData.coverImage ? (
-                  <div className="mt-2 w-full h-36 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 relative group">
-                    <img
-                      src={formData.coverImage}
-                      alt="Cover Preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, coverImage: '' })}
-                      className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[10.5px] font-bold shadow-md cursor-pointer transition-all"
-                    >
-                      Remove Cover
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => {
-                      const input = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
-                      input?.click();
-                    }}
-                    className={`mt-2 w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
-                      isDraggingCover
-                        ? 'border-[#0EA5E9] bg-sky-100/70'
-                        : 'border-slate-300 bg-white/70 hover:border-slate-400 hover:bg-white'
-                    }`}
-                  >
-                    <Upload className="w-5 h-5 text-slate-400 mb-1" />
-                    <span className="text-[11px] font-bold text-slate-600">
-                      Drag and drop cover photo here
-                    </span>
-                    <span className="text-[9.5px] text-slate-400">
-                      or click to select an image from your device
-                    </span>
-                  </div>
-                )}
+              {/* Cover Image with UniversalImageUploader (Drag & Drop + Device Upload + Media Gallery Popout!) */}
+              <div>
+                <UniversalImageUploader
+                  label="Cover Image"
+                  helperText="Drag & drop cover photo, browse device, choose from Media Gallery, or select a preset."
+                  value={formData.coverImage || ''}
+                  onChange={(url) => setFormData({ ...formData, coverImage: url })}
+                  aspectRatio="16/9"
+                  presets={SAMPLE_COVER_IMAGES}
+                  galleryTitle="Choose Article Cover Image from Media Gallery"
+                  placeholder="https://images.unsplash.com/... or upload image"
+                />
               </div>
 
               {/* Excerpt / Summary */}

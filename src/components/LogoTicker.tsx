@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { ALL_TOOL_LOGOS } from '../data/toolsData';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ALL_TOOL_LOGOS, DEFAULT_FOOTER_MARQUEE_ITEMS } from '../data/toolsData';
 import { ConnectSocialBar } from './ConnectSocialBar';
 import { contentService } from '../cms/services/ContentServiceFactory';
-import { FooterConfig } from '../cms/types/schema';
-
-// Duplicate array twice for seamless marquee loop
-const ALL_LOGOS = [...ALL_TOOL_LOGOS, ...ALL_TOOL_LOGOS];
+import { FooterConfig, FooterLogoMarqueeItem } from '../cms/types/schema';
 
 export const LogoTicker: React.FC = () => {
   const [footerConfig, setFooterConfig] = useState<FooterConfig | null>(null);
@@ -38,6 +35,22 @@ export const LogoTicker: React.FC = () => {
     footerConfig?.copyrightText ||
     '© 2026 Russell Taga-an • E-commerce Operations Manager & Catalog Systems Specialist';
 
+  // Build active logos list based on footerConfig.logoMarquee
+  const isMarqueeEnabled = footerConfig?.logoMarquee?.enabled !== false;
+
+  const activeMarqueeItems: FooterLogoMarqueeItem[] = useMemo(() => {
+    if (footerConfig?.logoMarquee?.items && footerConfig.logoMarquee.items.length > 0) {
+      return footerConfig.logoMarquee.items.filter((item) => item.enabled !== false);
+    }
+    return DEFAULT_FOOTER_MARQUEE_ITEMS;
+  }, [footerConfig]);
+
+  // Double array for continuous seamless marquee loop
+  const displayItems = useMemo(() => {
+    if (activeMarqueeItems.length === 0) return [];
+    return [...activeMarqueeItems, ...activeMarqueeItems];
+  }, [activeMarqueeItems]);
+
   return (
     <footer
       id="app-footer"
@@ -50,32 +63,79 @@ export const LogoTicker: React.FC = () => {
       }}
     >
       {/* Unified Steel Blue Tint Marquee Container */}
-      <div
-        id="ticker-wrapper"
-        className="w-full bg-white/95 border-2 border-[#BCD5E6] rounded-2xl shadow-xs overflow-hidden ticker-mask select-none py-2 px-3 backdrop-blur-xs"
-      >
+      {isMarqueeEnabled && displayItems.length > 0 && (
         <div
-          id="ticker-track"
-          className="animate-ticker flex items-center gap-4 sm:gap-6 w-max hover:[animation-play-state:paused]"
+          id="ticker-wrapper"
+          className="w-full bg-white/95 border-2 border-[#BCD5E6] rounded-2xl shadow-xs overflow-hidden ticker-mask select-none py-2 px-3 backdrop-blur-xs mb-2"
         >
-          {ALL_LOGOS.map((item, idx) => (
-            <div
-              key={`tool-logo-${item.id}-${idx}`}
-              id={`ticker-tool-logo-${item.id}-${idx}`}
-              className="flex-none flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#EFF6FB]/90 hover:bg-white border border-[#BCD5E6] hover:border-[#1E3A5F] shadow-2xs hover:shadow-sm transition-all duration-200 cursor-pointer group"
-              title={`${item.name} • ${item.category}`}
-            >
-              {/* Individual Logo/Icon Component */}
-              <div className="flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-                {item.icon}
-              </div>
-            </div>
-          ))}
+          <div
+            id="ticker-track"
+            className="animate-ticker flex items-center gap-4 sm:gap-6 w-max hover:[animation-play-state:paused]"
+          >
+            {displayItems.map((item, idx) => {
+              // Match built-in logo SVG if item has standard ID and no custom logoUrl
+              const builtInTool = ALL_TOOL_LOGOS.find(
+                (t) => t.id === item.id || t.name.toLowerCase() === item.name.toLowerCase()
+              );
+
+              const content = (
+                <div
+                  className="flex-none flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#EFF6FB]/90 hover:bg-white border border-[#BCD5E6] hover:border-[#1E3A5F] shadow-2xs hover:shadow-sm transition-all duration-200 cursor-pointer group"
+                  title={`${item.name} • ${item.category || item.type || 'Tech'}`}
+                >
+                  {/* Custom uploaded image logo */}
+                  {item.logoUrl ? (
+                    <div className="flex items-center gap-1.5 px-1 py-0.5">
+                      <img
+                        src={item.logoUrl}
+                        alt={item.name}
+                        className="h-6 max-w-[90px] object-contain drop-shadow-2xs transition-transform duration-200 group-hover:scale-105"
+                      />
+                      <span className="font-urbanist font-black text-[13px] text-[#1E3A5F] tracking-tight">
+                        {item.name}
+                      </span>
+                    </div>
+                  ) : builtInTool ? (
+                    /* Built-in high fidelity vector SVG */
+                    <div className="flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+                      {builtInTool.icon}
+                    </div>
+                  ) : (
+                    /* Clean fallback badge */
+                    <div className="flex items-center gap-1.5 px-1 py-0.5">
+                      <div className="w-5 h-5 rounded-md bg-[#1E3A5F] text-[#38BDF8] font-bold text-xs flex items-center justify-center font-urbanist shadow-2xs">
+                        {item.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <span className="font-urbanist font-black text-[13px] text-[#1E3A5F] tracking-tight">
+                        {item.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+
+              if (item.linkUrl) {
+                return (
+                  <a
+                    key={`marquee-${item.id}-${idx}`}
+                    href={item.linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
+                    {content}
+                  </a>
+                );
+              }
+
+              return <React.Fragment key={`marquee-${item.id}-${idx}`}>{content}</React.Fragment>;
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* CONNECT Socials 1-Second Flipping Bar (Square rounded corners, above copyright) */}
-      <div className="mt-3">
+      <div className="mt-2">
         <ConnectSocialBar config={footerConfig?.connectSocials} />
       </div>
 
@@ -89,4 +149,3 @@ export const LogoTicker: React.FC = () => {
     </footer>
   );
 };
-

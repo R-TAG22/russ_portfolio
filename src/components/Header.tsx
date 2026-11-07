@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X, Mail } from 'lucide-react';
 import { RussellLogo } from './RussellLogo';
+import { contentService } from '../cms/services/ContentServiceFactory';
 
 interface HeaderProps {
   activeTab: 'home' | 'about' | 'work' | 'blog' | 'cms';
@@ -14,13 +15,32 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenHire,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [customLogoUrl, setCustomLogoUrl] = useState<string>('');
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const globals = await contentService.getGlobals();
+        if (globals?.header?.logoUrl) {
+          setCustomLogoUrl(globals.header.logoUrl);
+        }
+      } catch {
+        // Fallback
+      }
+    };
+    loadLogo();
+
+    const handleUpdate = () => loadLogo();
+    window.addEventListener('content_service_globals_updated', handleUpdate);
+    return () => window.removeEventListener('content_service_globals_updated', handleUpdate);
+  }, []);
 
   return (
     <header
       id="main-header"
       className="w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-3 sm:py-4 flex items-center justify-between relative z-30 font-inter"
     >
-      {/* Left: Russell Brand Monogram Logo (3x Bigger, Zero random shape borders) + Wordmark */}
+      {/* Left: Russell Brand Monogram Logo or Custom Logo + Wordmark */}
       <div id="header-left" className="flex items-center">
         <button
           id="brand-logo-btn"
@@ -29,9 +49,17 @@ export const Header: React.FC<HeaderProps> = ({
           className="group select-none cursor-pointer bg-transparent border-0 p-0 text-left flex items-center gap-3 sm:gap-4"
           title="Russell Taga-an Portfolio Home"
         >
-          {/* Crisp 3x Bigger R monogram logo with translucent cyan & steel blue facets - NO random shape borders */}
+          {/* Crisp 3x Bigger R monogram logo with translucent cyan & steel blue facets or custom logo */}
           <div className="w-[108px] h-[108px] sm:w-[120px] sm:h-[120px] flex-none flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-            <RussellLogo className="w-full h-full drop-shadow-[0_4px_16px_rgba(56,189,248,0.45)]" />
+            {customLogoUrl ? (
+              <img
+                src={customLogoUrl}
+                alt="Brand Logo"
+                className="w-full h-full object-contain drop-shadow-[0_4px_16px_rgba(56,189,248,0.45)]"
+              />
+            ) : (
+              <RussellLogo className="w-full h-full drop-shadow-[0_4px_16px_rgba(56,189,248,0.45)]" />
+            )}
           </div>
           <div className="flex flex-col justify-center">
             <span className="font-urbanist font-extrabold text-2xl sm:text-3xl tracking-tight text-[#1E3A5F] transition-colors leading-tight">

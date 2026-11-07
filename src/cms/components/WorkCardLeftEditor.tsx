@@ -18,8 +18,10 @@ import {
   Layers,
   FileText,
   Link2,
+  FolderOpen,
 } from 'lucide-react';
 import { WorkShowcaseProject, WorkShowcaseGalleryImage } from '../types/schema';
+import { MediaGalleryModal } from './MediaGalleryModal';
 
 interface WorkCardLeftEditorProps {
   project: WorkShowcaseProject;
@@ -54,6 +56,8 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isDraggingPrimary, setIsDraggingPrimary] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isPrimaryMediaModalOpen, setIsPrimaryMediaModalOpen] = useState(false);
+  const [isGalleryMediaModalOpen, setIsGalleryMediaModalOpen] = useState(false);
   const primaryFileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -643,6 +647,14 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
                       onChange={handlePrimaryUpload}
                     />
                   </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsPrimaryMediaModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg bg-[#1E3A5F] hover:bg-[#2D5D86] text-white font-bold text-xs flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
+                  >
+                    <FolderOpen className="w-3 h-3 text-[#7DD3FC]" />
+                    <span>Media Gallery</span>
+                  </button>
                   {project.imageUrl && (
                     <button
                       type="button"
@@ -722,8 +734,16 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
                   </label>
                   <button
                     type="button"
+                    onClick={() => setIsGalleryMediaModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg bg-[#1E3A5F] hover:bg-[#2D5D86] text-white font-bold text-[10.5px] flex items-center gap-1 cursor-pointer shadow-2xs"
+                  >
+                    <FolderOpen className="w-3 h-3 text-[#7DD3FC]" />
+                    <span>Media Gallery</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleAddGalleryImageUrl}
-                    className="px-2.5 py-1 rounded-lg bg-[#143020] hover:bg-[#1E442D] text-white font-bold text-[10.5px] flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[10.5px] flex items-center gap-1 cursor-pointer border border-slate-300"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Add URL</span>
@@ -993,6 +1013,34 @@ export const WorkCardLeftEditor: React.FC<WorkCardLeftEditorProps> = ({
           Done Editing
         </button>
       </div>
+
+      {/* Primary Photo Media Gallery Modal */}
+      <MediaGalleryModal
+        isOpen={isPrimaryMediaModalOpen}
+        onClose={() => setIsPrimaryMediaModalOpen(false)}
+        onSelectImage={(url) => handleFieldChange('imageUrl', url)}
+        selectedUrl={project.imageUrl}
+        title="Select Primary Mockup Photo from Media Gallery"
+      />
+
+      {/* Proof Gallery Photo Media Gallery Modal */}
+      <MediaGalleryModal
+        isOpen={isGalleryMediaModalOpen}
+        onClose={() => setIsGalleryMediaModalOpen(false)}
+        onSelectImage={(url, item) => {
+          const newImg: WorkShowcaseGalleryImage = {
+            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            url,
+            caption: item?.fileName?.replace(/\.[^/.]+$/, '') || `${project.title} View`,
+            altText: item?.altText || project.title,
+          };
+          onUpdateProject({
+            ...project,
+            galleryImages: [...(project.galleryImages || []), newImg],
+          });
+        }}
+        title="Add Proof Photo from Media Gallery"
+      />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { FooterLogoMarqueeItem } from '../cms/types/schema';
 
 export interface ToolLogoItem {
   id: string;
@@ -531,3 +532,11 @@ export const ALL_TOOL_LOGOS: ToolLogoItem[] = [
     ),
   },
 ];
+
+export const DEFAULT_FOOTER_MARQUEE_ITEMS: FooterLogoMarqueeItem[] = ALL_TOOL_LOGOS.map((tool) => ({
+  id: tool.id,
+  name: tool.name,
+  category: tool.category,
+  type: tool.type,
+  enabled: true,
+}));

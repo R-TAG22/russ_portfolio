@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Sliders, Trash2, Copy, Layers, Eye } from 'lucide-react';
 import { RowBlock, ColumnBlock, ElementBlock } from '../types/schema';
 import { ELEMENT_REGISTRY } from '../registry/ElementRegistry';
+import { UniversalImageUploader } from './UniversalImageUploader';
 
 export type SelectedItem =
   | { type: 'row'; row: RowBlock }
@@ -193,16 +194,14 @@ const RowInspectorContent: React.FC<{
       )}
 
       {settings.bgType === 'image' && (
-        <div>
-          <label className="block font-bold text-[#1E3A5F] mb-1">Background Image URL</label>
-          <input
-            type="text"
-            value={settings.bgImageUrl || ''}
-            onChange={(e) => onUpdate({ bgImageUrl: e.target.value })}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-            placeholder="https://..."
-          />
-        </div>
+        <UniversalImageUploader
+          label="Row Background Image"
+          value={settings.bgImageUrl || ''}
+          onChange={(url) => onUpdate({ bgImageUrl: url })}
+          compact={true}
+          galleryTitle="Choose Row Background Image from Media Gallery"
+          placeholder="Drop background image or paste URL..."
+        />
       )}
 
       <div className="pt-2 border-t border-[#BCD5E6]/60">

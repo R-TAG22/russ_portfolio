@@ -28,6 +28,7 @@ import {
   Sliders,
   Copy,
   Camera,
+  FolderOpen,
 } from 'lucide-react';
 import {
   ElementType,
@@ -53,6 +54,12 @@ import defaultRussellPhoto from '../../assets/images/regenerated_image_178810561
 import defaultAboutPhoto from '../../assets/images/regenerated_image_1788105382320.jpg';
 import { WorkShowcaseInspector } from '../components/WorkShowcaseInspector';
 import { WorkProjectEditModal } from '../components/WorkProjectEditModal';
+import { CirclesVisualization, DEFAULT_ORBIT_ITEMS } from '../../components/CirclesVisualization';
+import { UniversalImageUploader } from '../components/UniversalImageUploader';
+import { RotatingSitesManagerModal } from '../components/RotatingSitesManagerModal';
+import { RotatingSiteEditModal } from '../components/RotatingSiteEditModal';
+import { MediaGalleryModal } from '../components/MediaGalleryModal';
+import { contentService } from '../services/ContentServiceFactory';
 
 export interface ElementRegistryEntry {
   type: ElementType;
@@ -289,16 +296,14 @@ const ImageEditor: React.FC<{
 }> = ({ content, onUpdateContent }) => {
   return (
     <div className="space-y-3 text-xs">
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Image URL</label>
-        <input
-          type="text"
-          value={content.url}
-          onChange={(e) => onUpdateContent({ ...content, url: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="https://..."
-        />
-      </div>
+      <UniversalImageUploader
+        label="Image Asset"
+        value={content.url || ''}
+        onChange={(url) => onUpdateContent({ ...content, url })}
+        aspectRatio={content.aspectRatio as any}
+        placeholder="https://... or upload image"
+        galleryTitle="Choose Image from Media Gallery"
+      />
       <div>
         <label className="block font-bold text-[#1E3A5F] mb-1">Alt Text (Accessibility / SEO)</label>
         <input
@@ -563,15 +568,14 @@ const ShowcaseCardEditor: React.FC<{
           />
         </div>
       </div>
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Image URL</label>
-        <input
-          type="text"
-          value={content.imageUrl}
-          onChange={(e) => onUpdateContent({ ...content, imageUrl: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-        />
-      </div>
+      <UniversalImageUploader
+        label="Card Showcase Image"
+        value={content.imageUrl || ''}
+        onChange={(url) => onUpdateContent({ ...content, imageUrl: url })}
+        compact={true}
+        galleryTitle="Choose Showcase Card Image from Media Gallery"
+        placeholder="Drop image file or paste URL..."
+      />
       <div>
         <label className="block font-bold text-[#1E3A5F] mb-1">Description</label>
         <textarea
@@ -690,6 +694,8 @@ const GalleryEditor: React.FC<{
   content: GalleryContent;
   onUpdateContent: (c: GalleryContent) => void;
 }> = ({ content, onUpdateContent }) => {
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+
   return (
     <div className="space-y-3 text-xs">
       <div>
@@ -704,12 +710,98 @@ const GalleryEditor: React.FC<{
           <option value={4}>4 Columns</option>
         </select>
       </div>
+      {/* Multi-Photo Drag & Drop Dropzone */}
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const files = (Array.from(e.dataTransfer.files || []) as File[]).filter((f) =>
+            f.type.startsWith('image/')
+          );
+          if (files.length) {
+            files.forEach((file) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                if (typeof reader.result === 'string') {
+                  const currentItems = content.items || [];
+                  const newItem = {
+                    id: `gal_item_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                    url: reader.result as string,
+                    altText: file.name.replace(/\.[^/.]+$/, ''),
+                  };
+                  onUpdateContent({ ...content, items: [...currentItems, newItem] });
+                }
+              };
+              reader.readAsDataURL(file);
+            });
+          }
+        }}
+        className="p-3.5 rounded-xl border-2 border-dashed border-[#BCD5E6] hover:border-[#0EA5E9] bg-sky-50/40 text-center transition-all space-y-1.5"
+      >
+        <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#1E3A5F]">
+          <Upload className="w-4 h-4 text-[#0EA5E9]" />
+          <span>Drag & Drop Images Here</span>
+        </div>
+        <p className="text-[10px] text-slate-500">
+          Drop image files directly or use device picker / Media Gallery below.
+        </p>
+        <div className="flex items-center justify-center gap-2 pt-1">
+          <label className="px-2.5 py-1 rounded-lg bg-white border border-[#BCD5E6] hover:border-[#0EA5E9] text-xs font-bold text-[#1E3A5F] cursor-pointer shadow-2xs flex items-center gap-1">
+            <Upload className="w-3 h-3 text-[#0EA5E9]" />
+            <span>Upload Device Files</span>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const files = (Array.from(e.target.files || []) as File[]);
+                files.forEach((file) => {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    if (typeof reader.result === 'string') {
+                      const currentItems = content.items || [];
+                      const newItem = {
+                        id: `gal_item_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                        url: reader.result as string,
+                        altText: file.name.replace(/\.[^/.]+$/, ''),
+                      };
+                      onUpdateContent({ ...content, items: [...currentItems, newItem] });
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                });
+                e.target.value = '';
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setIsMediaModalOpen(true)}
+            className="px-2.5 py-1 rounded-lg bg-[#1E3A5F] hover:bg-[#2D5D86] text-white text-xs font-bold cursor-pointer shadow-2xs flex items-center gap-1"
+          >
+            <FolderOpen className="w-3 h-3 text-[#7DD3FC]" />
+            <span>Pop Out Media Gallery</span>
+          </button>
+        </div>
+      </div>
+
       <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">
-          Image URLs (one per line)
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="font-bold text-[#1E3A5F]">
+            Image URLs ({content.items?.length || 0} Images)
+          </label>
+          <button
+            type="button"
+            onClick={() => setIsMediaModalOpen(true)}
+            className="text-[10px] font-bold text-[#0EA5E9] hover:text-[#0284C7] flex items-center gap-1 cursor-pointer"
+          >
+            <FolderOpen className="w-3 h-3 text-[#0EA5E9]" />
+            <span>+ Add from Media Gallery</span>
+          </button>
+        </div>
         <textarea
-          rows={4}
+          rows={3}
           value={(content.items || []).map((i) => i.url).join('\n')}
           onChange={(e) => {
             const urls = e.target.value.split('\n').filter((u) => u.trim());
@@ -720,9 +812,25 @@ const GalleryEditor: React.FC<{
             }));
             onUpdateContent({ ...content, items });
           }}
-          className="w-full p-2.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
+          className="w-full p-2.5 rounded-lg border border-[#BCD5E6] bg-white font-mono text-[11px] text-[#1E3A5F]"
+          placeholder="https://..."
         />
       </div>
+
+      <MediaGalleryModal
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelectImage={(url) => {
+          const currentItems = content.items || [];
+          const newItem = {
+            id: `gal_item_${Date.now()}`,
+            url,
+            altText: `Gallery asset ${currentItems.length + 1}`,
+          };
+          onUpdateContent({ ...content, items: [...currentItems, newItem] });
+        }}
+        title="Select Image to Add to Gallery"
+      />
     </div>
   );
 };
@@ -784,74 +892,82 @@ const StatusBadgeEditor: React.FC<{
 };
 
 // =========================================================================
-// 9. PROFILE ORBIT ELEMENT
+// 9. PROFILE ORBIT & ROTATING SITES ELEMENT
 // =========================================================================
-const ProfileOrbitRender: React.FC<{ content: ProfileOrbitContent; settings: ElementSettings }> = ({
-  content,
-  settings,
-}) => {
-  const photo = content.imageUrl || defaultRussellPhoto;
-  const badges = content.badges && content.badges.length > 0 ? content.badges : [
-    { name: 'Shopify Plus' },
-    { name: 'TikTok Shop' },
-    { name: 'Home Depot US' },
-    { name: 'WooCommerce' },
-    { name: 'Zendrop & CJ' },
-    { name: 'Wayfair' },
-  ];
+const ProfileOrbitRender: React.FC<{
+  content: ProfileOrbitContent;
+  settings: ElementSettings;
+  onUpdateContent?: (c: any) => void;
+}> = ({ content, settings }) => {
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const rotatingSites =
+    content.rotatingSites && content.rotatingSites.length > 0
+      ? content.rotatingSites
+      : undefined;
 
   return (
-    <div className={`w-full flex flex-col items-center justify-center p-2 relative ${settings.customClass || ''}`}>
-      <div className="relative w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px] flex items-center justify-center">
-        {/* Ambient liquid glow */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#38BDF8]/40 via-[#0EA5E9]/30 to-[#1E3A5F]/20 blur-2xl -z-10 animate-hero-glow" />
+    <div
+      className={`w-full flex flex-col items-center justify-center p-2 relative group ${
+        settings.customClass || ''
+      }`}
+    >
+      {/* Quick Action Overlay for CMS Canvas */}
+      <div className="absolute top-2 right-2 z-30 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+          className="px-3 py-1.5 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-xs font-bold shadow-lg flex items-center gap-1.5 cursor-pointer backdrop-blur-xs transition-all hover:scale-105"
+          title="Add a new rotating site to the orbit"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>+ Add Rotating Site</span>
+        </button>
 
-        {/* Dynamic morph frame */}
-        <div className="absolute inset-2 bg-gradient-to-br from-[#38BDF8] via-[#1E3A5F] to-[#7DD3FC] opacity-80 -z-10 shadow-xl animate-hero-morph" />
-
-        {/* Center Portrait Frame */}
-        <div className="relative w-4/5 h-4/5 flex items-center justify-center overflow-hidden shadow-2xl border-4 border-white bg-white animate-hero-morph">
-          <img
-            src={photo}
-            alt={content.altText || 'Russell Taga-an'}
-            className="w-full h-full object-cover object-top select-none scale-105"
-          />
-        </div>
-
-        {/* Orbiting / Surrounding Badges */}
-        {badges.slice(0, 6).map((b, idx) => {
-          const angles = [30, 90, 150, 210, 270, 330];
-          const angle = angles[idx % angles.length];
-          const rad = (angle * Math.PI) / 180;
-          const r = 44;
-          const x = 50 + r * Math.cos(rad);
-          const y = 50 + r * Math.sin(rad);
-
-          return (
-            <div
-              key={idx}
-              className="absolute hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-[#BCD5E6] shadow-md text-[10px] font-bold text-[#1E3A5F] hover:scale-105 transition-all z-10 select-none whitespace-nowrap"
-              style={{
-                left: `${x}%`,
-                top: `${y}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]" />
-              <span>{b.name}</span>
-            </div>
-          );
-        })}
+        <button
+          type="button"
+          onClick={() => setIsManagerOpen(true)}
+          className="px-3 py-1.5 rounded-xl bg-[#1E3A5F] hover:bg-[#2D5D86] text-white text-xs font-bold shadow-lg flex items-center gap-1.5 cursor-pointer backdrop-blur-xs transition-all hover:scale-105"
+          title="Manage all concentric rotating sites"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#7DD3FC]" />
+          <span>Manage Orbit Sites</span>
+        </button>
       </div>
 
-      {/* Badges row for small screens */}
-      <div className="flex sm:hidden flex-wrap items-center justify-center gap-1.5 mt-3">
-        {badges.map((b, i) => (
-          <span key={i} className="px-2.5 py-0.5 rounded-full bg-white border border-[#BCD5E6] text-[10px] font-bold text-[#1E3A5F] shadow-xs">
-            {b.name}
-          </span>
-        ))}
-      </div>
+      <CirclesVisualization
+        customItems={rotatingSites}
+        customCenterPhoto={content.imageUrl}
+        onManageRotatingSites={() => setIsManagerOpen(true)}
+        isEditableInCanvas={true}
+      />
+
+      {/* Orbit Management Modals */}
+      <RotatingSitesManagerModal
+        isOpen={isManagerOpen}
+        onClose={() => setIsManagerOpen(false)}
+      />
+
+      <RotatingSiteEditModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={async (newSite) => {
+          const current =
+            content.rotatingSites && content.rotatingSites.length > 0
+              ? content.rotatingSites
+              : DEFAULT_ORBIT_ITEMS;
+          const updated = [...current, newSite];
+          // Save to globals & dispatch
+          try {
+            await contentService.saveGlobals({ rotatingSites: updated });
+            window.dispatchEvent(
+              new CustomEvent('content_service_rotating_sites_updated', {
+                detail: { sites: updated },
+              })
+            );
+          } catch {}
+        }}
+      />
     </div>
   );
 };
@@ -860,36 +976,142 @@ const ProfileOrbitEditor: React.FC<{
   content: ProfileOrbitContent;
   onUpdateContent: (c: ProfileOrbitContent) => void;
 }> = ({ content, onUpdateContent }) => {
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const rotatingSites =
+    content.rotatingSites && content.rotatingSites.length > 0
+      ? content.rotatingSites
+      : DEFAULT_ORBIT_ITEMS;
+
   return (
-    <div className="space-y-3 text-xs">
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Portrait Image URL</label>
-        <input
-          type="text"
-          value={content.imageUrl || ''}
-          onChange={(e) => onUpdateContent({ ...content, imageUrl: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="https://..."
-        />
-        <p className="text-[10px] text-slate-400 mt-0.5">Leave blank to use Russell's default cutout photo.</p>
+    <div className="space-y-4 text-xs font-inter text-[#1E3A5F]">
+      {/* Prominent Rotating Sites Management Box */}
+      <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#E0F2FE] to-[#EFF6FB] border border-[#BCD5E6] space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#0EA5E9]" />
+            <h4 className="font-urbanist font-extrabold text-sm text-[#1E3A5F]">
+              Rotating Stores ({rotatingSites.length})
+            </h4>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-2.5 py-1 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-[11px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs transition-transform hover:scale-102"
+          >
+            <Plus className="w-3 h-3" />
+            <span>+ Add Site</span>
+          </button>
+        </div>
+
+        <p className="text-[11px] text-slate-600">
+          Stores rotate in 2 concentric orbits on Homepage with official logos, URLs, and tooltips.
+        </p>
+
+        {/* Quick List preview */}
+        <div className="space-y-1.5 max-h-48 overflow-y-auto">
+          {rotatingSites.map((site) => (
+            <div
+              key={site.id}
+              className="px-2.5 py-1.5 rounded-xl bg-white border border-[#BCD5E6] flex items-center justify-between gap-2"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center shrink-0 overflow-hidden text-[9px] font-bold text-slate-700">
+                  {site.logoUrl ? (
+                    <img src={site.logoUrl} alt={site.name} className="w-full h-full object-contain" />
+                  ) : site.faviconDomain ? (
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${site.faviconDomain}&sz=64`}
+                      alt={site.name}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    site.fallbackInitials
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="font-bold text-[11px] text-slate-800 block truncate">
+                    {site.name}
+                  </span>
+                  <span className="text-[9.5px] text-slate-400 block truncate">
+                    {site.orbitIndex === 1 ? 'Inner Orbit (295px)' : 'Outer Orbit (390px)'}
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-[#0EA5E9] shrink-0">
+                {site.angle}°
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsManagerOpen(true)}
+          className="w-full py-2 rounded-xl bg-[#1E3A5F] hover:bg-[#2D5D86] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#7DD3FC]" />
+          <span>Open Full Orbit Manager</span>
+        </button>
       </div>
 
+      {/* Hero Center Hub Portrait with UniversalImageUploader */}
       <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Orbiting Brand Badges (comma-separated)</label>
-        <textarea
-          rows={3}
-          value={(content.badges || []).map((b) => b.name).join(', ')}
-          onChange={(e) => {
-            const names = e.target.value.split(',').map((n) => n.trim()).filter(Boolean);
-            onUpdateContent({
-              ...content,
-              badges: names.map((name) => ({ name })),
-            });
-          }}
-          className="w-full p-2 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="Shopify, TikTok Shop, Home Depot, WooCommerce, Zendrop, CJ"
+        <UniversalImageUploader
+          label="Center Hub Portrait Photo"
+          helperText="Upload transparent cutout or portrait photo for the central blob on the Homepage. Drag & drop, browse device, or choose from Media Gallery."
+          value={content.imageUrl || ''}
+          onChange={(url) => onUpdateContent({ ...content, imageUrl: url })}
+          aspectRatio="1/1"
+          placeholder="Leave blank to use Russell's default cutout photo..."
+          galleryTitle="Choose Hero Portrait from Media Gallery"
         />
       </div>
+
+      {/* Modals */}
+      <RotatingSitesManagerModal
+        isOpen={isManagerOpen}
+        onClose={() => setIsManagerOpen(false)}
+        onSaved={() => {
+          contentService.getPageBySlug('homepage').then((page) => {
+            const orbitEl = page?.sections
+              ?.flatMap((s) => s.columns)
+              ?.flatMap((c) => c.elements)
+              ?.find((e) => e.type === 'profileOrbit');
+            const orbitData = (orbitEl?.content as any)?.data;
+            if (orbitData?.rotatingSites) {
+              onUpdateContent({
+                ...content,
+                rotatingSites: orbitData.rotatingSites,
+              });
+            }
+          });
+        }}
+      />
+
+      <RotatingSiteEditModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={(newSite) => {
+          const current =
+            content.rotatingSites && content.rotatingSites.length > 0
+              ? content.rotatingSites
+              : DEFAULT_ORBIT_ITEMS;
+          const updated = [...current, newSite];
+          onUpdateContent({ ...content, rotatingSites: updated });
+          // Save and broadcast
+          contentService.saveGlobals({ rotatingSites: updated }).catch(() => {});
+          window.dispatchEvent(
+            new CustomEvent('content_service_rotating_sites_updated', {
+              detail: { sites: updated },
+            })
+          );
+        }}
+        existingSitesCount={{
+          inner: rotatingSites.filter((s) => s.orbitIndex === 1).length,
+          outer: rotatingSites.filter((s) => s.orbitIndex !== 1).length,
+        }}
+      />
     </div>
   );
 };
@@ -1016,17 +1238,16 @@ const ProfileCardEditor: React.FC<{
 }> = ({ content, onUpdateContent }) => {
   return (
     <div className="space-y-3 text-xs">
-      <div>
-        <label className="block font-bold text-[#1E3A5F] mb-1">Image URL</label>
-        <input
-          type="text"
-          value={content.imageUrl || ''}
-          onChange={(e) => onUpdateContent({ ...content, imageUrl: e.target.value })}
-          className="w-full px-3 py-1.5 rounded-lg border border-[#BCD5E6] bg-white text-[#1E3A5F]"
-          placeholder="https://..."
-        />
-        <p className="text-[10px] text-slate-400 mt-0.5">Leave blank to use Russell's default portrait.</p>
-      </div>
+      <UniversalImageUploader
+        label="Profile Card Portrait Photo"
+        value={content.imageUrl || ''}
+        onChange={(url) => onUpdateContent({ ...content, imageUrl: url })}
+        aspectRatio="1/1"
+        compact={true}
+        galleryTitle="Choose Profile Portrait from Media Gallery"
+        placeholder="Leave blank to use Russell's default portrait..."
+        helperText="Drag & drop portrait, browse device, or pop out Media Gallery."
+      />
       <div>
         <label className="block font-bold text-[#1E3A5F] mb-1">Full Name</label>
         <input

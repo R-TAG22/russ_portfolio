@@ -22,6 +22,7 @@ import {
   CloudCheck,
   Check,
   Globe,
+  Sparkles,
 } from 'lucide-react';
 import {
   PageDocument,
@@ -30,6 +31,7 @@ import {
   MediaItem,
   WorkShowcaseProject,
   WorkShowcaseContent,
+  StoreOrbitItem,
 } from '../types/schema';
 import { PageSummary } from '../repositories/ContentRepository';
 import { contentService } from '../services/ContentServiceFactory';
@@ -44,6 +46,9 @@ import { GlobalContentEditor, GlobalSectionKey } from './GlobalContentEditor';
 import { MediaLibraryView } from './MediaLibraryView';
 import { WorkCardLeftEditor } from './WorkCardLeftEditor';
 import { BlogManagementView } from './BlogManagementView';
+import { RotatingSiteEditModal } from './RotatingSiteEditModal';
+import { RotatingSitesManagerModal } from './RotatingSitesManagerModal';
+import { DEFAULT_ORBIT_ITEMS } from '../../components/CirclesVisualization';
 import { useAuth } from '../auth/AuthContext';
 
 type StudioViewMode = 'split' | 'builder' | 'preview';
@@ -80,6 +85,8 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
   const [isFirebaseGuideOpen, setIsFirebaseGuideOpen] = useState(false);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isAddRotatingSiteOpen, setIsAddRotatingSiteOpen] = useState(false);
+  const [isManageRotatingSitesOpen, setIsManageRotatingSitesOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [saveToast, setSaveToast] = useState<string | null>(null);
@@ -135,6 +142,65 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
       showToast('Failed to publish changes.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveNewRotatingSiteFromStudio = async (newSite: StoreOrbitItem) => {
+    try {
+      const page = await contentService.getPageBySlug('homepage');
+      let updatedSites: StoreOrbitItem[] = [];
+      if (page) {
+        let found = false;
+        const newSections = page.sections.map((row) => ({
+          ...row,
+          columns: row.columns.map((col) => ({
+            ...col,
+            elements: col.elements.map((el) => {
+              if (el.type === 'profileOrbit') {
+                found = true;
+                const existing = (el.content?.data as any)?.rotatingSites || DEFAULT_ORBIT_ITEMS;
+                const existsIdx = existing.findIndex((s: StoreOrbitItem) => s.id === newSite.id);
+                if (existsIdx >= 0) {
+                  updatedSites = existing.map((s: StoreOrbitItem) => (s.id === newSite.id ? newSite : s));
+                } else {
+                  updatedSites = [...existing, newSite];
+                }
+                return {
+                  ...el,
+                  content: {
+                    ...el.content,
+                    data: {
+                      ...(el.content as any).data,
+                      rotatingSites: updatedSites,
+                    },
+                  },
+                };
+              }
+              return el;
+            }),
+          })),
+        }));
+
+        if (found) {
+          const updatedPageDoc = { ...page, sections: newSections };
+          await contentService.savePage(updatedPageDoc);
+          if (currentPage?.slug === 'homepage') {
+            setCurrentPage(updatedPageDoc);
+          }
+        }
+      }
+
+      await contentService.saveGlobals({ rotatingSites: updatedSites });
+      window.dispatchEvent(
+        new CustomEvent('content_service_rotating_sites_updated', {
+          detail: { sites: updatedSites },
+        })
+      );
+      showToast(`Added "${newSite.name}" as rotating site!`);
+      setHasPendingChanges(false);
+    } catch (err) {
+      console.error(err);
+      showToast('Error adding rotating site.');
     }
   };
 
@@ -711,6 +777,29 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                 Editing: <strong className="text-[#1E3A5F]">{currentPage.title}</strong>
               </span>
             )}
+
+            {activeSection.type === 'page' && currentPage?.slug === 'homepage' && (
+              <div className="flex items-center gap-1.5 sm:ml-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddRotatingSiteOpen(true)}
+                  className="px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] shadow-xs flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102"
+                  title="Add a new rotating store to the Homepage orbit"
+                >
+                  <Plus className="w-3 h-3 text-white" />
+                  <span>+ Add Rotating Site</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsManageRotatingSitesOpen(true)}
+                  className="px-2.5 py-1 rounded-full bg-white hover:bg-sky-50 border border-[#BCD5E6] text-[#1E3A5F] font-bold text-[11px] shadow-2xs flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Manage all rotating sites"
+                >
+                  <Sparkles className="w-3 h-3 text-[#0EA5E9]" />
+                  <span className="hidden md:inline">Orbit Sites</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Center: WPBakery View Mode Selector (When editing a page) */}
@@ -849,6 +938,8 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                 onOpenPublicSite={() => {
                   if (onExitAdmin) onExitAdmin();
                 }}
+                onOpenAddRotatingSite={() => setIsAddRotatingSiteOpen(true)}
+                onOpenManageRotatingSites={() => setIsManageRotatingSitesOpen(true)}
               />
             </div>
           )}
@@ -888,6 +979,8 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                       onSelectProjectCard={handleSelectProjectCard}
                       onDeleteProjectCard={handleDeleteProjectCardDirect}
                       onAddProjectCard={handleAddProjectCardDirect}
+                      onOpenAddRotatingSite={() => setIsAddRotatingSiteOpen(true)}
+                      onOpenManageRotatingSites={() => setIsManageRotatingSitesOpen(true)}
                     />
                   </div>
                 </div>
@@ -934,6 +1027,8 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                           onSelectProjectCard={handleSelectProjectCard}
                           onDeleteProjectCard={handleDeleteProjectCardDirect}
                           onAddProjectCard={handleAddProjectCardDirect}
+                          onOpenAddRotatingSite={() => setIsAddRotatingSiteOpen(true)}
+                          onOpenManageRotatingSites={() => setIsManageRotatingSitesOpen(true)}
                         />
                       </div>
                     )}
@@ -1184,6 +1279,25 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
           <span>{saveToast}</span>
         </div>
       )}
+
+      {/* Rotating Site Edit Modal (Direct Add from Header / Dashboard) */}
+      <RotatingSiteEditModal
+        isOpen={isAddRotatingSiteOpen}
+        onClose={() => setIsAddRotatingSiteOpen(false)}
+        onSave={(newSite) => {
+          handleSaveNewRotatingSiteFromStudio(newSite);
+          setIsAddRotatingSiteOpen(false);
+        }}
+      />
+
+      {/* Rotating Sites Manager Modal */}
+      <RotatingSitesManagerModal
+        isOpen={isManageRotatingSitesOpen}
+        onClose={() => setIsManageRotatingSitesOpen(false)}
+        onSaved={async () => {
+          await loadAllData();
+        }}
+      />
     </div>
   );
 };

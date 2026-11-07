@@ -11,6 +11,11 @@ import {
   Layers,
   Sparkles,
   X,
+  RotateCcw,
+  RotateCw,
+  Globe,
+  ExternalLink,
+  Edit3,
 } from 'lucide-react';
 import {
   PageDocument,
@@ -19,9 +24,14 @@ import {
   ElementBlock,
   ColumnWidth,
   ElementType,
+  StoreOrbitItem,
 } from '../types/schema';
 import { ELEMENT_REGISTRY } from '../registry/ElementRegistry';
 import { SelectedItem } from './PropertyInspector';
+import { DEFAULT_ORBIT_ITEMS } from '../../components/CirclesVisualization';
+import { RotatingSiteEditModal } from './RotatingSiteEditModal';
+import { RotatingSitesManagerModal } from './RotatingSitesManagerModal';
+import { contentService } from '../services/ContentServiceFactory';
 
 interface WpBakeryBuilderProps {
   page: PageDocument;
@@ -43,6 +53,8 @@ interface WpBakeryBuilderProps {
     projectIndex: number
   ) => void;
   onAddProjectCard?: (rowId: string, colId: string, elId: string) => void;
+  onOpenAddRotatingSite?: () => void;
+  onOpenManageRotatingSites?: () => void;
 }
 
 export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
@@ -53,8 +65,19 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
   onSelectProjectCard,
   onDeleteProjectCard,
   onAddProjectCard,
+  onOpenAddRotatingSite,
+  onOpenManageRotatingSites,
 }) => {
   const [deleteConfirmProjectKey, setDeleteConfirmProjectKey] = useState<string | null>(null);
+  const [deleteConfirmSiteKey, setDeleteConfirmSiteKey] = useState<string | null>(null);
+  const [editingRotatingSite, setEditingRotatingSite] = useState<{
+    rowId: string;
+    colId: string;
+    elId: string;
+    site: StoreOrbitItem | null;
+  } | null>(null);
+  const [isManagingRotatingSites, setIsManagingRotatingSites] = useState(false);
+
   // Modal states for adding elements or picking column layout
   const [targetColForElement, setTargetColForElement] = useState<{
     rowId: string;
@@ -62,6 +85,123 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
   } | null>(null);
 
   const [targetRowForColumns, setTargetRowForColumns] = useState<string | null>(null);
+
+  // ---------------- Rotating Sites Operations ----------------
+  const handleSaveRotatingSite = async (
+    rowId: string,
+    colId: string,
+    elId: string,
+    siteToSave: StoreOrbitItem
+  ) => {
+    const el = page.sections
+      ?.find((r) => r.id === rowId)
+      ?.columns.find((c) => c.id === colId)
+      ?.elements.find((e) => e.id === elId);
+    const existing: StoreOrbitItem[] =
+      (el?.content as any)?.data?.rotatingSites && (el?.content as any)?.data?.rotatingSites.length > 0
+        ? (el?.content as any)?.data?.rotatingSites
+        : DEFAULT_ORBIT_ITEMS;
+
+    const existsIdx = existing.findIndex((s) => s.id === siteToSave.id);
+    let updatedSites: StoreOrbitItem[];
+    if (existsIdx >= 0) {
+      updatedSites = existing.map((s) => (s.id === siteToSave.id ? siteToSave : s));
+    } else {
+      updatedSites = [...existing, siteToSave];
+    }
+
+    const newSections = page.sections.map((r) => {
+      if (r.id !== rowId) return r;
+      return {
+        ...r,
+        columns: r.columns.map((c) => {
+          if (c.id !== colId) return c;
+          return {
+            ...c,
+            elements: c.elements.map((e) => {
+              if (e.id !== elId) return e;
+              return {
+                ...e,
+                content: {
+                  ...e.content,
+                  data: {
+                    ...(e.content as any).data,
+                    rotatingSites: updatedSites,
+                  },
+                },
+              };
+            }),
+          };
+        }),
+      };
+    });
+
+    onUpdatePage({ ...page, sections: newSections });
+
+    try {
+      await contentService.saveGlobals({ rotatingSites: updatedSites });
+      window.dispatchEvent(
+        new CustomEvent('content_service_rotating_sites_updated', {
+          detail: { sites: updatedSites },
+        })
+      );
+    } catch {}
+  };
+
+  const handleDeleteRotatingSite = async (
+    rowId: string,
+    colId: string,
+    elId: string,
+    siteId: string
+  ) => {
+    const el = page.sections
+      ?.find((r) => r.id === rowId)
+      ?.columns.find((c) => c.id === colId)
+      ?.elements.find((e) => e.id === elId);
+    const existing: StoreOrbitItem[] =
+      (el?.content as any)?.data?.rotatingSites && (el?.content as any)?.data?.rotatingSites.length > 0
+        ? (el?.content as any)?.data?.rotatingSites
+        : DEFAULT_ORBIT_ITEMS;
+
+    const updatedSites = existing.filter((s) => s.id !== siteId);
+
+    const newSections = page.sections.map((r) => {
+      if (r.id !== rowId) return r;
+      return {
+        ...r,
+        columns: r.columns.map((c) => {
+          if (c.id !== colId) return c;
+          return {
+            ...c,
+            elements: c.elements.map((e) => {
+              if (e.id !== elId) return e;
+              return {
+                ...e,
+                content: {
+                  ...e.content,
+                  data: {
+                    ...(e.content as any).data,
+                    rotatingSites: updatedSites,
+                  },
+                },
+              };
+            }),
+          };
+        }),
+      };
+    });
+
+    onUpdatePage({ ...page, sections: newSections });
+
+    try {
+      await contentService.saveGlobals({ rotatingSites: updatedSites });
+      window.dispatchEvent(
+        new CustomEvent('content_service_rotating_sites_updated', {
+          detail: { sites: updatedSites },
+        })
+      );
+    } catch {}
+  };
 
   // ---------------- Row Operations ----------------
   const handleAddRow = () => {
@@ -588,6 +728,176 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
                                     </div>
                                   </div>
                                 )}
+
+                                {/* Special Rotating Sites Quick-Access for profileOrbit */}
+                                {el.type === 'profileOrbit' && (
+                                  <div
+                                    className="px-3 pb-3 pt-1 border-t border-slate-100 space-y-2 bg-[#F8FAFC]/60 rounded-b-lg"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="flex items-center justify-between text-[10.5px] font-bold">
+                                      <span className="flex items-center gap-1.5 text-[#1E3A5F]">
+                                        <Sparkles className="w-3.5 h-3.5 text-[#0EA5E9]" />
+                                        <span>
+                                          Concentric Rotating Sites (
+                                          {(
+                                            ((el.content as any).data?.rotatingSites &&
+                                            (el.content as any).data?.rotatingSites.length > 0)
+                                              ? (el.content as any).data?.rotatingSites
+                                              : DEFAULT_ORBIT_ITEMS
+                                          ).length}
+                                          )
+                                        </span>
+                                      </span>
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (onOpenAddRotatingSite) {
+                                              onOpenAddRotatingSite();
+                                            } else {
+                                              setEditingRotatingSite({
+                                                rowId: row.id,
+                                                colId: col.id,
+                                                elId: el.id,
+                                                site: null,
+                                              });
+                                            }
+                                          }}
+                                          className="px-2.5 py-1 rounded-md bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-all shadow-xs hover:scale-102"
+                                          title="Add a new rotating site to the Homepage orbit"
+                                        >
+                                          <Plus className="w-3 h-3 text-white" />
+                                          <span>+ Add Rotating Site</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (onOpenManageRotatingSites) {
+                                              onOpenManageRotatingSites();
+                                            } else {
+                                              setIsManagingRotatingSites(true);
+                                            }
+                                          }}
+                                          className="px-2 py-1 rounded-md bg-[#1E3A5F] hover:bg-[#2D5D86] text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-xs"
+                                          title="Manage all rotating sites"
+                                        >
+                                          <Sparkles className="w-2.5 h-2.5 text-[#7DD3FC]" />
+                                          <span>Manage Orbit</span>
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {/* List of active rotating sites */}
+                                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                      {(
+                                        (((el.content as any).data?.rotatingSites &&
+                                        (el.content as any).data?.rotatingSites.length > 0)
+                                          ? (el.content as any).data?.rotatingSites
+                                          : DEFAULT_ORBIT_ITEMS) as StoreOrbitItem[]
+                                      ).map((site, sIdx) => {
+                                        const siteKey = `${el.id}_${site.id || sIdx}`;
+                                        const isConfirmingDelete = deleteConfirmSiteKey === siteKey;
+
+                                        return (
+                                          <div
+                                            key={site.id || sIdx}
+                                            className="p-1.5 rounded-lg bg-white hover:bg-[#EFF6FB] border border-[#BCD5E6] flex items-center justify-between gap-2 text-xs transition-colors"
+                                          >
+                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                              {/* Logo / Favicon / Initials badge */}
+                                              <div className="w-6 h-6 rounded-full bg-slate-100 border border-[#1E3A5F]/20 flex items-center justify-center shrink-0 overflow-hidden text-[9px] font-bold text-[#1E3A5F] shadow-2xs">
+                                                {site.logoUrl ? (
+                                                  <img
+                                                    src={site.logoUrl}
+                                                    alt={site.name}
+                                                    className="w-full h-full object-contain p-0.5"
+                                                  />
+                                                ) : site.faviconDomain ? (
+                                                  <img
+                                                    src={`https://www.google.com/s2/favicons?domain=${site.faviconDomain}&sz=64`}
+                                                    alt={site.name}
+                                                    className="w-full h-full object-contain p-0.5"
+                                                  />
+                                                ) : (
+                                                  <span>{site.fallbackInitials || 'ST'}</span>
+                                                )}
+                                              </div>
+
+                                              <div className="min-w-0 flex-1">
+                                                <span className="font-bold text-[11px] text-[#1E3A5F] block truncate">
+                                                  {site.name}
+                                                </span>
+                                                <span className="text-[9.5px] text-slate-500 block truncate">
+                                                  {site.orbitIndex === 1
+                                                    ? 'Inner Orbit (295px • CCW)'
+                                                    : 'Outer Orbit (390px • CW)'}
+                                                </span>
+                                              </div>
+
+                                              <span className="text-[10px] font-mono font-bold text-[#0EA5E9] px-1.5 py-0.2 rounded bg-sky-50 border border-sky-200 shrink-0">
+                                                {site.angle}°
+                                              </span>
+                                            </div>
+
+                                            <div
+                                              className="flex items-center gap-1 shrink-0"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  setEditingRotatingSite({
+                                                    rowId: row.id,
+                                                    colId: col.id,
+                                                    elId: el.id,
+                                                    site,
+                                                  })
+                                                }
+                                                className="text-[9.5px] px-2 py-0.5 rounded bg-white text-slate-700 hover:text-[#0EA5E9] border border-slate-300 hover:border-[#0EA5E9] cursor-pointer font-bold transition-colors"
+                                                title="Edit rotating site details and logo"
+                                              >
+                                                Edit
+                                              </button>
+
+                                              {isConfirmingDelete ? (
+                                                <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded animate-fade-in">
+                                                  <span className="text-[9px] font-bold text-red-700">Delete?</span>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setDeleteConfirmSiteKey(null);
+                                                      handleDeleteRotatingSite(row.id, col.id, el.id, site.id);
+                                                    }}
+                                                    className="px-1.5 py-0.5 rounded bg-red-600 hover:bg-red-700 text-white font-extrabold text-[9px] cursor-pointer shadow-2xs"
+                                                  >
+                                                    Yes
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setDeleteConfirmSiteKey(null)}
+                                                    className="px-1 py-0.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[9px] cursor-pointer"
+                                                  >
+                                                    No
+                                                  </button>
+                                                </div>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setDeleteConfirmSiteKey(siteKey)}
+                                                  className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                                  title={`Delete "${site.name}"`}
+                                                >
+                                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
@@ -740,6 +1050,35 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
           </div>
         </div>
       )}
+
+      {/* Rotating Site Edit Modal */}
+      {editingRotatingSite && (
+        <RotatingSiteEditModal
+          isOpen={true}
+          onClose={() => setEditingRotatingSite(null)}
+          initialSite={editingRotatingSite.site}
+          onSave={(savedSite) => {
+            handleSaveRotatingSite(
+              editingRotatingSite.rowId,
+              editingRotatingSite.colId,
+              editingRotatingSite.elId,
+              savedSite
+            );
+            setEditingRotatingSite(null);
+          }}
+        />
+      )}
+
+      {/* Rotating Sites Manager Modal */}
+      <RotatingSitesManagerModal
+        isOpen={isManagingRotatingSites}
+        onClose={() => setIsManagingRotatingSites(false)}
+        onSaved={() => {
+          contentService.getPageBySlug(page.slug).then((updatedDoc) => {
+            if (updatedDoc) onUpdatePage(updatedDoc);
+          });
+        }}
+      />
     </div>
   );
 };

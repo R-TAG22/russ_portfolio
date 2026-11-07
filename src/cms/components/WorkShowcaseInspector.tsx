@@ -20,9 +20,11 @@ import {
   Link2,
   Globe,
   Upload,
+  FolderOpen,
 } from 'lucide-react';
 import { WorkShowcaseContent, WorkShowcaseProject } from '../types/schema';
 import { WorkProjectEditModal } from './WorkProjectEditModal';
+import { MediaGalleryModal } from './MediaGalleryModal';
 
 interface WorkShowcaseInspectorProps {
   content: WorkShowcaseContent;
@@ -36,6 +38,7 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
   const [editingProject, setEditingProject] = useState<WorkShowcaseProject | null>(null);
   const [editingProjectIndex, setEditingProjectIndex] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
+  const [activeMediaModal, setActiveMediaModal] = useState<{ projectIndex: number; target: 'primary' | 'gallery' } | null>(null);
 
   // Category filter state
   const [newCategoryInput, setNewCategoryInput] = useState('');
@@ -499,26 +502,37 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-0.5">
                       <label className="block font-bold text-slate-700">Primary Photo</label>
-                      <label className="text-[9.5px] font-bold text-[#0EA5E9] hover:underline flex items-center gap-1 cursor-pointer">
-                        <Upload className="w-2.5 h-2.5" />
-                        <span>Upload File</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              if (typeof reader.result === 'string') {
-                                handleInlineUpdateProject(idx, 'imageUrl', reader.result);
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }}
-                        />
-                      </label>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[9.5px] font-bold text-[#0EA5E9] hover:underline flex items-center gap-1 cursor-pointer">
+                          <Upload className="w-2.5 h-2.5" />
+                          <span>Upload File</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                if (typeof reader.result === 'string') {
+                                  handleInlineUpdateProject(idx, 'imageUrl', reader.result);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMediaModal({ projectIndex: idx, target: 'primary' })}
+                          className="text-[9.5px] font-bold text-[#1E3A5F] hover:text-[#0EA5E9] flex items-center gap-1 cursor-pointer"
+                          title="Pop out Media Gallery"
+                        >
+                          <FolderOpen className="w-2.5 h-2.5 text-[#0EA5E9]" />
+                          <span>Media Gallery</span>
+                        </button>
+                      </div>
                     </div>
                     <div
                       onDragOver={(e) => e.preventDefault()}
@@ -667,36 +681,47 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
                       <label className="block font-bold text-slate-700 text-[10.5px]">
                         Proof of Work Gallery ({1 + (proj.galleryImages?.length || 0)} Photos)
                       </label>
-                      <label className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer shadow-2xs">
-                        <Upload className="w-2.5 h-2.5" />
-                        <span>Upload Photos</span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files || []) as File[];
-                            if (!files.length) return;
-                            files.forEach((file: File) => {
-                              const reader = new FileReader();
-                              reader.onload = () => {
-                                if (typeof reader.result === 'string') {
-                                  const newImg = {
-                                    id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-                                    url: reader.result,
-                                    caption: file.name.replace(/\.[^/.]+$/, ''),
-                                    altText: proj.title,
-                                  };
-                                  const currentGallery = proj.galleryImages || [];
-                                  handleInlineUpdateProject(idx, 'galleryImages', [...currentGallery, newImg]);
-                                }
-                              };
-                              reader.readAsDataURL(file);
-                            });
-                          }}
-                        />
-                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <label className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer shadow-2xs">
+                          <Upload className="w-2.5 h-2.5" />
+                          <span>Upload Photos</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []) as File[];
+                              if (!files.length) return;
+                              files.forEach((file: File) => {
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  if (typeof reader.result === 'string') {
+                                    const newImg = {
+                                      id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                                      url: reader.result,
+                                      caption: file.name.replace(/\.[^/.]+$/, ''),
+                                      altText: proj.title,
+                                    };
+                                    const currentGallery = proj.galleryImages || [];
+                                    handleInlineUpdateProject(idx, 'galleryImages', [...currentGallery, newImg]);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              });
+                            }}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMediaModal({ projectIndex: idx, target: 'gallery' })}
+                          className="px-2 py-0.5 rounded bg-[#1E3A5F] hover:bg-[#2D5D86] text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
+                          title="Pop out Media Gallery"
+                        >
+                          <FolderOpen className="w-2.5 h-2.5 text-[#7DD3FC]" />
+                          <span>Media Gallery</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Drag and Drop Zone */}
@@ -850,6 +875,40 @@ export const WorkShowcaseInspector: React.FC<WorkShowcaseInspectorProps> = ({
             setEditingProjectIndex(null);
           }}
           onSave={handleSaveModalProject}
+        />
+      )}
+
+      {/* Inline Media Gallery Pop-out Modal */}
+      {activeMediaModal !== null && (
+        <MediaGalleryModal
+          isOpen={true}
+          onClose={() => setActiveMediaModal(null)}
+          onSelectImage={(url) => {
+            const { projectIndex, target } = activeMediaModal;
+            if (target === 'primary') {
+              handleInlineUpdateProject(projectIndex, 'imageUrl', url);
+            } else {
+              const currentGallery = projects[projectIndex]?.galleryImages || [];
+              const newImg = {
+                id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                url,
+                caption: 'Proof Photo',
+                altText: projects[projectIndex]?.title || 'Proof Photo',
+              };
+              handleInlineUpdateProject(projectIndex, 'galleryImages', [...currentGallery, newImg]);
+            }
+            setActiveMediaModal(null);
+          }}
+          selectedUrl={
+            activeMediaModal.target === 'primary'
+              ? projects[activeMediaModal.projectIndex]?.imageUrl
+              : undefined
+          }
+          title={
+            activeMediaModal.target === 'primary'
+              ? `Choose Primary Mockup for ${projects[activeMediaModal.projectIndex]?.title || 'Project'}`
+              : `Add Proof Photo for ${projects[activeMediaModal.projectIndex]?.title || 'Project'}`
+          }
         />
       )}
     </div>

@@ -160,6 +160,21 @@ export interface StatusBadgeContent {
   subtle?: boolean;
 }
 
+export interface StoreOrbitItem {
+  id: string;
+  name: string;
+  sublabel: string;
+  url: string;
+  angle: number;
+  radius?: number;
+  size?: number;
+  orbitIndex: number; // 1 = Inner Orbit (CCW 36s, r=295), 2 = Outer Orbit (CW 48s, r=390)
+  flyInDelay?: number;
+  fallbackInitials: string;
+  faviconDomain?: string;
+  logoUrl?: string; // Custom uploaded logo or media gallery image
+}
+
 export interface ProfileOrbitBadge {
   name: string;
   sublabel?: string;
@@ -172,6 +187,7 @@ export interface ProfileOrbitContent {
   altText?: string;
   glowColor?: string;
   badges: ProfileOrbitBadge[];
+  rotatingSites?: StoreOrbitItem[];
 }
 
 export interface ClientMarqueeLogo {
@@ -372,12 +388,30 @@ export interface ConnectSocialsConfig {
   items: ConnectSocialItem[];
 }
 
+export interface FooterLogoMarqueeItem {
+  id: string;
+  name: string;
+  category: string;
+  type?: 'design' | 'marketing' | 'ecommerce' | 'custom';
+  logoUrl?: string; // Custom image / SVG uploaded via UniversalImageUploader
+  linkUrl?: string;
+  enabled?: boolean;
+}
+
+export interface FooterLogoMarqueeConfig {
+  enabled: boolean;
+  speedSec?: number;
+  pauseOnHover?: boolean;
+  items: FooterLogoMarqueeItem[];
+}
+
 export interface FooterConfig {
   copyrightText: string;
   subtext: string;
   showSocials: boolean;
   socialLinks: { platform: string; url: string }[];
   connectSocials?: ConnectSocialsConfig;
+  logoMarquee?: FooterLogoMarqueeConfig;
 }
 
 export interface ContactConfig {
@@ -413,4 +447,5 @@ export interface GlobalConfigurations {
   contact: ContactConfig;
   buttons: ButtonCtaConfig;
   settings: WebsiteSettingsConfig;
+  rotatingSites?: StoreOrbitItem[];
 }

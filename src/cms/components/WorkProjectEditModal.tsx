@@ -17,8 +17,10 @@ import {
   Globe,
   Hexagon,
   Eye,
+  FolderOpen,
 } from 'lucide-react';
 import { WorkShowcaseProject, WorkShowcaseGalleryImage } from '../types/schema';
+import { MediaGalleryModal } from './MediaGalleryModal';
 
 interface WorkProjectEditModalProps {
   project: WorkShowcaseProject;
@@ -61,6 +63,8 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
   const [activeTab, setActiveTab] = useState<'basic' | 'content' | 'gallery' | 'tags' | 'links'>('basic');
   const [isDraggingPrimary, setIsDraggingPrimary] = useState(false);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
+  const [isPrimaryMediaModalOpen, setIsPrimaryMediaModalOpen] = useState(false);
+  const [isGalleryMediaModalOpen, setIsGalleryMediaModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -579,6 +583,14 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                       <Upload className="w-3.5 h-3.5 text-[#10B981]" />
                       <span>Upload / Drop Image</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsPrimaryMediaModalOpen(true)}
+                      className="px-3 py-1.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-[#4ADE80]" />
+                      <span>Media Gallery</span>
+                    </button>
                     {formData.imageUrl && (
                       <button
                         type="button"
@@ -677,8 +689,16 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
                     </button>
                     <button
                       type="button"
+                      onClick={() => setIsGalleryMediaModalOpen(true)}
+                      className="px-3 py-1.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-[#4ADE80]" />
+                      <span>Media Gallery</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleAddGalleryImage()}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#143020] hover:bg-[#1E442D] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-300"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>+ Add Image URL</span>
@@ -966,6 +986,34 @@ export const WorkProjectEditModal: React.FC<WorkProjectEditModalProps> = ({
           </div>
         </form>
       </div>
+
+      {/* Primary Photo Media Gallery Modal */}
+      <MediaGalleryModal
+        isOpen={isPrimaryMediaModalOpen}
+        onClose={() => setIsPrimaryMediaModalOpen(false)}
+        onSelectImage={(url) => handleFieldChange('imageUrl', url)}
+        selectedUrl={formData.imageUrl}
+        title="Select Primary Mockup Photo from Media Gallery"
+      />
+
+      {/* Additional Proof Photos Media Gallery Modal */}
+      <MediaGalleryModal
+        isOpen={isGalleryMediaModalOpen}
+        onClose={() => setIsGalleryMediaModalOpen(false)}
+        onSelectImage={(url, item) => {
+          const newImg: WorkShowcaseGalleryImage = {
+            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            url,
+            caption: item?.fileName?.replace(/\.[^/.]+$/, '') || `${formData.title} View`,
+            altText: item?.altText || formData.title,
+          };
+          setFormData((prev) => ({
+            ...prev,
+            galleryImages: [...(prev.galleryImages || []), newImg],
+          }));
+        }}
+        title="Add Proof of Work Photo from Media Gallery"
+      />
     </div>
   );
 };
