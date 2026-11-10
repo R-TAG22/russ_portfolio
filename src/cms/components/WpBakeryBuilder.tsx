@@ -16,6 +16,11 @@ import {
   Globe,
   ExternalLink,
   Edit3,
+  Eye,
+  EyeOff,
+  Save,
+  FileText,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   PageDocument,
@@ -55,6 +60,10 @@ interface WpBakeryBuilderProps {
   onAddProjectCard?: (rowId: string, colId: string, elId: string) => void;
   onOpenAddRotatingSite?: () => void;
   onOpenManageRotatingSites?: () => void;
+  onSaveAsDraft?: () => void;
+  onPublishChanges?: () => void;
+  onToggleHidePage?: () => void;
+  isSaving?: boolean;
 }
 
 export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
@@ -67,6 +76,10 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
   onAddProjectCard,
   onOpenAddRotatingSite,
   onOpenManageRotatingSites,
+  onSaveAsDraft,
+  onPublishChanges,
+  onToggleHidePage,
+  isSaving = false,
 }) => {
   const [deleteConfirmProjectKey, setDeleteConfirmProjectKey] = useState<string | null>(null);
   const [deleteConfirmSiteKey, setDeleteConfirmSiteKey] = useState<string | null>(null);
@@ -367,6 +380,100 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4 pb-20 select-none">
+      {/* Persistent Page Status & Quick Actions Bar */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-[#BCD5E6] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#EFF6FB] border border-[#BCD5E6] flex items-center justify-center shrink-0">
+            <Layers className="w-5 h-5 text-[#0EA5E9]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="font-urbanist font-extrabold text-base sm:text-lg text-[#1E3A5F] leading-tight">
+                {page.title}
+              </h2>
+              <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                /{page.slug}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                  page.isHidden
+                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                    : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    page.isHidden ? 'bg-amber-500' : 'bg-emerald-500'
+                  }`}
+                />
+                {page.isHidden ? 'Hidden from Public' : 'Publicly Visible'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              {page.isHidden
+                ? 'This page is currently HIDDEN from public visitors. Public navigation links to this page are hidden.'
+                : 'This page is LIVE and publicly accessible by all visitors.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          {/* Quick Hide / Unhide Toggle */}
+          {onToggleHidePage && (
+            <button
+              type="button"
+              onClick={onToggleHidePage}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
+                page.isHidden
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                  : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-300'
+              }`}
+              title={page.isHidden ? 'Make page public for visitors' : 'Hide this page from visitors'}
+            >
+              {page.isHidden ? (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Unhide Page</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Hide Page</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Save Draft */}
+          {onSaveAsDraft && (
+            <button
+              type="button"
+              onClick={onSaveAsDraft}
+              disabled={isSaving}
+              className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition-all shadow-2xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              title="Save work as draft without publishing live"
+            >
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
+            </button>
+          )}
+
+          {/* Save & Publish */}
+          {onPublishChanges && (
+            <button
+              type="button"
+              onClick={onPublishChanges}
+              disabled={isSaving}
+              className="px-4 py-1.5 rounded-xl bg-[#1E3A5F] hover:bg-[#2D5D86] text-white font-extrabold text-xs transition-all shadow-sm cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              title="Publish all page changes to live site"
+            >
+              <Save className="w-3.5 h-3.5 text-[#7DD3FC]" />
+              <span>{isSaving ? 'Publishing...' : 'Save & Publish'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Visual Canvas Rows */}
       {(page.sections || []).length === 0 ? (
         <div className="p-12 text-center rounded-2xl border-2 border-dashed border-[#BCD5E6] bg-white">
@@ -927,8 +1034,8 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
         ))
       )}
 
-      {/* Canvas Bottom Action: Add Row */}
-      <div className="pt-2 flex justify-center">
+      {/* Canvas Bottom Action Bar */}
+      <div className="pt-4 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#BCD5E6]">
         <button
           type="button"
           onClick={handleAddRow}
@@ -937,6 +1044,33 @@ export const WpBakeryBuilder: React.FC<WpBakeryBuilderProps> = ({
           <Plus className="w-4 h-4 text-[#0EA5E9]" />
           <span>Add New Row</span>
         </button>
+
+        <div className="flex items-center gap-2">
+          {onSaveAsDraft && (
+            <button
+              type="button"
+              onClick={onSaveAsDraft}
+              disabled={isSaving}
+              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              title="Save work as draft without publishing live"
+            >
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
+            </button>
+          )}
+          {onPublishChanges && (
+            <button
+              type="button"
+              onClick={onPublishChanges}
+              disabled={isSaving}
+              className="px-5 py-2 rounded-xl bg-[#1E3A5F] hover:bg-[#2D5D86] text-white font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              title="Publish all page changes to live site"
+            >
+              <Save className="w-3.5 h-3.5 text-[#7DD3FC]" />
+              <span>{isSaving ? 'Publishing...' : 'Save & Publish'}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* =========================================================================

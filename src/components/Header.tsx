@@ -16,23 +16,41 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [customLogoUrl, setCustomLogoUrl] = useState<string>('');
+  const [hiddenPages, setHiddenPages] = useState<Record<string, boolean>>({});
+  const [isBlogHidden, setIsBlogHidden] = useState(false);
 
   useEffect(() => {
-    const loadLogo = async () => {
+    const loadData = async () => {
       try {
-        const globals = await contentService.getGlobals();
+        const [globals, pages] = await Promise.all([
+          contentService.getGlobals(),
+          contentService.listPages(),
+        ]);
         if (globals?.header?.logoUrl) {
           setCustomLogoUrl(globals.header.logoUrl);
+        }
+        setIsBlogHidden(!!globals?.isBlogHidden);
+        if (pages && Array.isArray(pages)) {
+          const map: Record<string, boolean> = {};
+          pages.forEach((p) => {
+            map[p.slug] = !!p.isHidden;
+          });
+          setHiddenPages(map);
         }
       } catch {
         // Fallback
       }
     };
-    loadLogo();
+    loadData();
 
-    const handleUpdate = () => loadLogo();
-    window.addEventListener('content_service_globals_updated', handleUpdate);
-    return () => window.removeEventListener('content_service_globals_updated', handleUpdate);
+    const handleGlobalsUpdate = () => loadData();
+    const handlePagesUpdate = () => loadData();
+    window.addEventListener('content_service_globals_updated', handleGlobalsUpdate);
+    window.addEventListener('content_service_pages_updated', handlePagesUpdate);
+    return () => {
+      window.removeEventListener('content_service_globals_updated', handleGlobalsUpdate);
+      window.removeEventListener('content_service_pages_updated', handlePagesUpdate);
+    };
   }, []);
 
   return (
@@ -77,54 +95,62 @@ export const Header: React.FC<HeaderProps> = ({
         id="desktop-nav-center"
         className="hidden md:flex items-center gap-1.5 p-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#BCD5E6] shadow-xs"
       >
-        <button
-          id="nav-link-home"
-          type="button"
-          onClick={() => onSelectTab('home')}
-          className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
-            activeTab === 'home'
-              ? 'bg-[#1E3A5F] text-white shadow-xs'
-              : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
-          }`}
-        >
-          Home
-        </button>
-        <button
-          id="nav-link-about"
-          type="button"
-          onClick={() => onSelectTab('about')}
-          className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
-            activeTab === 'about'
-              ? 'bg-[#1E3A5F] text-white shadow-xs'
-              : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
-          }`}
-        >
-          About
-        </button>
-        <button
-          id="nav-link-work"
-          type="button"
-          onClick={() => onSelectTab('work')}
-          className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
-            activeTab === 'work'
-              ? 'bg-[#1E3A5F] text-white shadow-xs'
-              : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
-          }`}
-        >
-          Work
-        </button>
-        <button
-          id="nav-link-blog"
-          type="button"
-          onClick={() => onSelectTab('blog')}
-          className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
-            activeTab === 'blog'
-              ? 'bg-[#1E3A5F] text-white shadow-xs'
-              : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
-          }`}
-        >
-          Blog
-        </button>
+        {!hiddenPages['homepage'] && (
+          <button
+            id="nav-link-home"
+            type="button"
+            onClick={() => onSelectTab('home')}
+            className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
+              activeTab === 'home'
+                ? 'bg-[#1E3A5F] text-white shadow-xs'
+                : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
+            }`}
+          >
+            Home
+          </button>
+        )}
+        {!hiddenPages['about'] && (
+          <button
+            id="nav-link-about"
+            type="button"
+            onClick={() => onSelectTab('about')}
+            className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
+              activeTab === 'about'
+                ? 'bg-[#1E3A5F] text-white shadow-xs'
+                : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
+            }`}
+          >
+            About
+          </button>
+        )}
+        {!hiddenPages['work'] && (
+          <button
+            id="nav-link-work"
+            type="button"
+            onClick={() => onSelectTab('work')}
+            className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
+              activeTab === 'work'
+                ? 'bg-[#1E3A5F] text-white shadow-xs'
+                : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
+            }`}
+          >
+            Work
+          </button>
+        )}
+        {!isBlogHidden && (
+          <button
+            id="nav-link-blog"
+            type="button"
+            onClick={() => onSelectTab('blog')}
+            className={`px-5 py-2 rounded-full text-sm font-bold tracking-tight transition-all cursor-pointer ${
+              activeTab === 'blog'
+                ? 'bg-[#1E3A5F] text-white shadow-xs'
+                : 'text-[#1E3A5F]/80 hover:text-[#1E3A5F] hover:bg-[#38BDF8]/10'
+            }`}
+          >
+            Blog
+          </button>
+        )}
       </nav>
 
       {/* Right Top Corner: Hire Me button with Rotating Steel Blue & Ice Cyan Border */}
@@ -161,6 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
           id="mobile-nav-drawer"
           className="absolute top-full left-0 right-0 bg-[#1E3A5F] text-white border-b-2 border-[#38BDF8]/40 px-8 py-6 flex flex-col gap-3 md:hidden shadow-2xl z-50 rounded-b-2xl animate-fade-down backdrop-blur-md"
         >
+        {!hiddenPages['homepage'] && (
           <button
             type="button"
             onClick={() => {
@@ -173,6 +200,8 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Home
           </button>
+        )}
+        {!hiddenPages['about'] && (
           <button
             type="button"
             onClick={() => {
@@ -185,6 +214,8 @@ export const Header: React.FC<HeaderProps> = ({
           >
             About
           </button>
+        )}
+        {!hiddenPages['work'] && (
           <button
             type="button"
             onClick={() => {
@@ -197,6 +228,8 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Work
           </button>
+        )}
+        {!isBlogHidden && (
           <button
             type="button"
             onClick={() => {
@@ -209,6 +242,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Blog
           </button>
+        )}
           <button
             type="button"
             onClick={() => {

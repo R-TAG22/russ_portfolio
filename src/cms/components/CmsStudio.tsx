@@ -23,6 +23,7 @@ import {
   Check,
   Globe,
   Sparkles,
+  EyeOff,
 } from 'lucide-react';
 import {
   PageDocument,
@@ -130,18 +131,89 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
     setIsSaving(true);
     try {
       if (currentPage && activeSection.type === 'page') {
-        await contentService.savePage(currentPage);
+        const pageToSave: PageDocument = {
+          ...currentPage,
+          status: 'published',
+        };
+        await contentService.savePage(pageToSave);
+        setCurrentPage(pageToSave);
       }
       const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       setLastPublishedTime(`Today at ${nowStr}`);
       setHasPendingChanges(false);
       await loadAllData();
-      showToast('All changes successfully committed and published live!');
+      showToast(`Page "${currentPage?.title || 'Page'}" published live!`);
     } catch (err) {
       console.error(err);
       showToast('Failed to publish changes.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveAsDraft = async () => {
+    setIsSaving(true);
+    try {
+      if (currentPage && activeSection.type === 'page') {
+        const pageToSave: PageDocument = {
+          ...currentPage,
+          status: 'draft',
+        };
+        await contentService.savePage(pageToSave);
+        setCurrentPage(pageToSave);
+      }
+      setHasPendingChanges(false);
+      await loadAllData();
+      showToast(`Page "${currentPage?.title || 'Page'}" saved as Draft.`);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save draft.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggleHidePage = async (slug: string) => {
+    try {
+      const page = await contentService.getPageBySlug(slug);
+      if (!page) return;
+      const nextHidden = !page.isHidden;
+      const updatedPage: PageDocument = {
+        ...page,
+        isHidden: nextHidden,
+      };
+      await contentService.savePage(updatedPage);
+      if (currentPage?.slug === slug) {
+        setCurrentPage(updatedPage);
+      }
+      await loadAllData();
+      showToast(
+        nextHidden
+          ? `Page "${page.title}" is now Hidden from public visitors.`
+          : `Page "${page.title}" is now Publicly Visible!`
+      );
+    } catch (err) {
+      console.error('Failed to toggle page visibility', err);
+      showToast('Failed to change page visibility.');
+    }
+  };
+
+  const isBlogHidden = !!globals?.isBlogHidden;
+
+  const handleToggleHideBlog = async () => {
+    try {
+      const current = await contentService.getGlobals();
+      const nextHidden = !current?.isBlogHidden;
+      const updated = await contentService.saveGlobals({ isBlogHidden: nextHidden });
+      setGlobals(updated);
+      showToast(
+        nextHidden
+          ? 'Blog page is now Hidden from public visitors.'
+          : 'Blog page is now Publicly Visible!'
+      );
+    } catch (err) {
+      console.error('Failed to toggle blog visibility', err);
+      showToast('Failed to change blog page visibility.');
     }
   };
 
@@ -747,6 +819,12 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
         }}
         pageCount={pages.length}
         blogCount={blogCount}
+        pages={pages}
+        onToggleHidePage={handleToggleHidePage}
+        isBlogHidden={isBlogHidden}
+        onToggleHideBlog={handleToggleHideBlog}
+        onOpenAddRotatingSite={() => setIsAddRotatingSiteOpen(true)}
+        onOpenManageRotatingSites={() => setIsManageRotatingSitesOpen(true)}
       />
 
       {/* =========================================================================
@@ -773,9 +851,74 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
             </div>
 
             {activeSection.type === 'page' && currentPage && (
-              <span className="hidden sm:inline text-xs font-semibold text-slate-500">
-                Editing: <strong className="text-[#1E3A5F]">{currentPage.title}</strong>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline text-xs font-semibold text-slate-500">
+                  Editing: <strong className="text-[#1E3A5F]">{currentPage.title}</strong>
+                </span>
+
+                {/* Hide / Unhide Page Quick Toggle */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleHidePage(currentPage.slug)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border shadow-2xs ${
+                    currentPage.isHidden
+                      ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                  }`}
+                  title={
+                    currentPage.isHidden
+                      ? 'This page is currently hidden from public visitors. Click to unhide.'
+                      : 'This page is currently visible to all visitors. Click to hide.'
+                  }
+                >
+                  {currentPage.isHidden ? (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Hidden (Click to Unhide)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Live (Click to Hide)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {activeSection.type === 'blogs' && (
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline text-xs font-semibold text-slate-500">
+                  Editing: <strong className="text-[#1E3A5F]">Blog Articles</strong>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleToggleHideBlog}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border shadow-2xs ${
+                    isBlogHidden
+                      ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                  }`}
+                  title={
+                    isBlogHidden
+                      ? 'Blog is currently hidden from public visitors. Click to unhide.'
+                      : 'Blog is currently visible to all visitors. Click to hide.'
+                  }
+                >
+                  {isBlogHidden ? (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Hidden (Click to Unhide)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Live (Click to Hide)</span>
+                    </>
+                  )}
+                </button>
+              </div>
             )}
 
             {activeSection.type === 'page' && currentPage?.slug === 'homepage' && (
@@ -911,15 +1054,28 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
               <span className="hidden sm:inline">Preview Website</span>
             </button>
 
-            {/* Publish Changes Button */}
+            {/* Save as Draft Button */}
+            <button
+              type="button"
+              onClick={handleSaveAsDraft}
+              disabled={isSaving}
+              className="px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition-all shadow-2xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              title="Save changes as a draft without publishing live"
+            >
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
+            </button>
+
+            {/* Save & Publish Live Changes Button */}
             <button
               type="button"
               onClick={handlePublishChanges}
               disabled={isSaving}
               className="px-5 py-1.5 rounded-full bg-[#1E3A5F] hover:bg-[#2D5D86] text-white font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              title="Publish all changes live to the public website"
             >
               <Save className="w-3.5 h-3.5 text-[#7DD3FC]" />
-              <span>{isSaving ? 'Publishing...' : 'Publish Changes'}</span>
+              <span>{isSaving ? 'Publishing...' : 'Save & Publish'}</span>
             </button>
           </div>
         </header>
@@ -940,6 +1096,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                 }}
                 onOpenAddRotatingSite={() => setIsAddRotatingSiteOpen(true)}
                 onOpenManageRotatingSites={() => setIsManageRotatingSitesOpen(true)}
+                onToggleHidePage={handleToggleHidePage}
+                isBlogHidden={isBlogHidden}
+                onToggleHideBlog={handleToggleHideBlog}
+                onSelectBlogPage={() => handleSelectSection({ type: 'blogs' })}
               />
             </div>
           )}
@@ -981,6 +1141,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                       onAddProjectCard={handleAddProjectCardDirect}
                       onOpenAddRotatingSite={() => setIsAddRotatingSiteOpen(true)}
                       onOpenManageRotatingSites={() => setIsManageRotatingSitesOpen(true)}
+                      onSaveAsDraft={handleSaveAsDraft}
+                      onPublishChanges={handlePublishChanges}
+                      onToggleHidePage={() => handleToggleHidePage(currentPage.slug)}
+                      isSaving={isSaving}
                     />
                   </div>
                 </div>
@@ -1029,6 +1193,10 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                           onAddProjectCard={handleAddProjectCardDirect}
                           onOpenAddRotatingSite={() => setIsAddRotatingSiteOpen(true)}
                           onOpenManageRotatingSites={() => setIsManageRotatingSitesOpen(true)}
+                          onSaveAsDraft={handleSaveAsDraft}
+                          onPublishChanges={handlePublishChanges}
+                          onToggleHidePage={() => handleToggleHidePage(currentPage.slug)}
+                          isSaving={isSaving}
                         />
                       </div>
                     )}
@@ -1130,6 +1298,8 @@ export const CmsStudio: React.FC<CmsStudioProps> = ({ onExitAdmin }) => {
                 window.location.hash = 'blog';
                 window.location.reload();
               }}
+              isBlogHidden={isBlogHidden}
+              onToggleHideBlog={handleToggleHideBlog}
             />
           )}
 

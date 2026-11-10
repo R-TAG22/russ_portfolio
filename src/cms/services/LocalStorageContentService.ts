@@ -1340,6 +1340,7 @@ export class LocalStorageContentService implements ContentRepository {
       authorName: p.authorName,
       updatedAt: p.updatedAt,
       sectionCount: p.sections?.length || 0,
+      isHidden: !!p.isHidden,
     }));
   }
 

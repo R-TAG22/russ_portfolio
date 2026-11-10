@@ -323,6 +323,7 @@ export interface PageDocument {
   slug: string;
   title: string;
   status: PageStatus;
+  isHidden?: boolean;
   createdAt: string;
   updatedAt: string;
   authorId: string;
@@ -448,4 +449,5 @@ export interface GlobalConfigurations {
   buttons: ButtonCtaConfig;
   settings: WebsiteSettingsConfig;
   rotatingSites?: StoreOrbitItem[];
+  isBlogHidden?: boolean;
 }

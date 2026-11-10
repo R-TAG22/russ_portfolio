@@ -21,7 +21,10 @@ import {
   BookOpen,
   Plus,
   RotateCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+import { PageSummary } from '../repositories/ContentRepository';
 
 export type AdminActiveSection =
   | { type: 'dashboard' }
@@ -38,6 +41,10 @@ interface AdminSidebarProps {
   onReturnToHome: () => void;
   pageCount: number;
   blogCount?: number;
+  pages?: PageSummary[];
+  onToggleHidePage?: (slug: string) => void;
+  isBlogHidden?: boolean;
+  onToggleHideBlog?: () => void;
   onOpenAddRotatingSite?: () => void;
   onOpenManageRotatingSites?: () => void;
 }
@@ -49,6 +56,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onReturnToHome,
   pageCount,
   blogCount,
+  pages,
+  onToggleHidePage,
+  isBlogHidden,
+  onToggleHideBlog,
   onOpenAddRotatingSite,
   onOpenManageRotatingSites,
 }) => {
@@ -119,10 +130,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           ].map((page) => {
             const Icon = page.icon;
             const active = isPageActive(page.slug);
+            const pageSummary = pages?.find((p) => p.slug === page.slug);
+            const isHidden = !!pageSummary?.isHidden || pageSummary?.status === 'draft';
             return (
               <div key={page.slug} className="space-y-1">
-                <button
-                  type="button"
+                <div
                   onClick={() => onSelectSection({ type: 'page', slug: page.slug })}
                   className={`w-full px-3 py-2 rounded-xl font-medium flex items-center justify-between transition-all cursor-pointer ${
                     active
@@ -130,12 +142,44 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       : 'hover:bg-white/10 text-slate-300 hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 truncate">
+                  <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
                     <Icon className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{page.label}</span>
                   </div>
-                  {active && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </button>
+
+                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {isHidden && (
+                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold uppercase tracking-wider">
+                        Hidden
+                      </span>
+                    )}
+
+                    {onToggleHidePage && (
+                      <button
+                        type="button"
+                        onClick={() => onToggleHidePage(page.slug)}
+                        className={`p-1 rounded-md transition-colors cursor-pointer ${
+                          isHidden
+                            ? 'text-amber-400 hover:text-amber-200 hover:bg-amber-400/20'
+                            : 'text-white/40 hover:text-white hover:bg-white/10'
+                        }`}
+                        title={
+                          isHidden
+                            ? `Unhide "${page.label}" (make visible on visitor website)`
+                            : `Hide "${page.label}" from public visitors`
+                        }
+                      >
+                        {isHidden ? (
+                          <EyeOff className="w-3.5 h-3.5 text-amber-300" />
+                        ) : (
+                          <Eye className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    )}
+
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />}
+                  </div>
+                </div>
 
                 {page.slug === 'homepage' && active && (
                   <div className="pl-4 pr-1 py-1 space-y-1 bg-black/20 rounded-xl">
@@ -187,8 +231,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </span>
             )}
           </div>
-          <button
-            type="button"
+          <div
             onClick={() => onSelectSection({ type: 'blogs' })}
             className={`w-full px-3 py-2 rounded-xl font-medium flex items-center justify-between transition-all cursor-pointer ${
               activeSection.type === 'blogs'
@@ -196,12 +239,44 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 : 'hover:bg-white/10 text-slate-300 hover:text-white'
             }`}
           >
-            <div className="flex items-center gap-2.5 truncate">
+            <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
               <BookOpen className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Blog Posts</span>
             </div>
-            {activeSection.type === 'blogs' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-          </button>
+
+            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+              {isBlogHidden && (
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold uppercase tracking-wider">
+                  Hidden
+                </span>
+              )}
+
+              {onToggleHideBlog && (
+                <button
+                  type="button"
+                  onClick={onToggleHideBlog}
+                  className={`p-1 rounded-md transition-colors cursor-pointer ${
+                    isBlogHidden
+                      ? 'text-amber-400 hover:text-amber-200 hover:bg-amber-400/20'
+                      : 'text-white/40 hover:text-white hover:bg-white/10'
+                  }`}
+                  title={
+                    isBlogHidden
+                      ? 'Unhide Blog Page (make visible on visitor website)'
+                      : 'Hide Blog Page from public visitors'
+                  }
+                >
+                  {isBlogHidden ? (
+                    <EyeOff className="w-3.5 h-3.5 text-amber-300" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              )}
+
+              {activeSection.type === 'blogs' && <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />}
+            </div>
+          </div>
         </div>
 
         {/* 3. NAVIGATION */}
@@ -230,7 +305,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </div>
           {[
             { key: 'header' as const, label: 'Header', icon: PanelTop },
-            { key: 'footer' as const, label: 'Footer & CONNECT Socials', icon: PanelBottom },
+            { key: 'footer' as const, label: 'Footer, Marquees & Socials', icon: PanelBottom },
             { key: 'buttons' as const, label: 'Buttons / CTAs', icon: MousePointerClick },
             { key: 'contact' as const, label: 'Contact Information', icon: PhoneCall },
           ].map((item) => {

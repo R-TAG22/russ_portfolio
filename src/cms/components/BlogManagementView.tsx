@@ -19,6 +19,7 @@ import {
   Flame,
   CheckCircle2,
   FileText,
+  EyeOff,
 } from 'lucide-react';
 import { BlogPost } from '../types/schema';
 import { contentService } from '../services/ContentServiceFactory';
@@ -27,6 +28,8 @@ import { UniversalImageUploader } from './UniversalImageUploader';
 interface BlogManagementViewProps {
   onReturnToHome: () => void;
   onPreviewBlog?: (slug: string) => void;
+  isBlogHidden?: boolean;
+  onToggleHideBlog?: () => void;
 }
 
 const SAMPLE_COVER_IMAGES = [
@@ -60,6 +63,8 @@ const PRESET_CATEGORIES = [
 export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
   onReturnToHome,
   onPreviewBlog,
+  isBlogHidden = false,
+  onToggleHideBlog,
 }) => {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +73,7 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Form State for modal
   const [formData, setFormData] = useState<Partial<BlogPost>>({});
@@ -131,9 +137,9 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
     setEditingPost(post);
   };
 
-  const handleSavePost = async () => {
+  const handleSavePost = async (statusOverride?: 'published' | 'draft') => {
     if (!formData.title?.trim()) {
-      alert('Please enter an article title.');
+      showToast('Please enter an article title.');
       return;
     }
 
@@ -143,6 +149,9 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)+/g, '');
+
+    const finalStatus: 'published' | 'draft' =
+      statusOverride || (formData.status as 'published' | 'draft') || 'published';
 
     const postToSave: BlogPost = {
       id: formData.id || `blog_${Date.now()}`,
@@ -168,7 +177,7 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
       readTime: formData.readTime || '5 min read',
       tags: formData.tags || ['Shopify Plus'],
       featured: !!formData.featured,
-      status: formData.status || 'published',
+      status: finalStatus,
       viewsCount: formData.viewsCount || 0,
     };
 
@@ -176,21 +185,31 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
       await contentService.saveBlog(postToSave);
       await loadBlogs();
       setEditingPost(null);
-      showToast(isCreatingNew ? 'New blog post published!' : 'Blog post updated successfully.');
+      showToast(
+        finalStatus === 'draft'
+          ? 'Blog post saved as draft.'
+          : isCreatingNew
+          ? 'New blog post published live!'
+          : 'Blog post changes published live!'
+      );
     } catch (err) {
       console.error('Failed to save blog post', err);
-      alert('Failed to save blog post.');
+      showToast('Failed to save blog post.');
     }
   };
 
-  const handleDeletePost = async (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
+  const handleDeletePost = async (id: string, title?: string) => {
     try {
       await contentService.deleteBlog(id);
       await loadBlogs();
-      showToast('Blog post deleted.');
+      setDeleteConfirmId(null);
+      if (editingPost && (editingPost.id === id || editingPost.slug === id)) {
+        setEditingPost(null);
+      }
+      showToast(`Blog post "${title || 'Post'}" deleted.`);
     } catch (err) {
       console.error('Failed to delete blog post', err);
+      showToast('Failed to delete blog post.');
     }
   };
 
@@ -297,7 +316,36 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+          {onToggleHideBlog && (
+            <button
+              type="button"
+              onClick={onToggleHideBlog}
+              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
+                isBlogHidden
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-300'
+              }`}
+              title={
+                isBlogHidden
+                  ? 'Blog is hidden from public visitors. Click to make public'
+                  : 'Blog is live for public visitors. Click to hide'
+              }
+            >
+              {isBlogHidden ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Hidden (Click to Unhide)</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Live (Click to Hide)</span>
+                </>
+              )}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onReturnToHome}
@@ -316,6 +364,34 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Hidden Blog Alert Banner */}
+      {isBlogHidden && (
+        <div className="mx-4 sm:mx-6 mt-4 p-3.5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
+              <EyeOff className="w-4 h-4 text-amber-700" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-amber-900">
+                Blog Page is Currently Hidden from Public Visitors
+              </p>
+              <p className="text-[11px] text-amber-700">
+                The "Blog" navigation link is hidden from the header and mobile menu, and visitors navigating directly to /#blog see a private draft screen.
+              </p>
+            </div>
+          </div>
+          {onToggleHideBlog && (
+            <button
+              type="button"
+              onClick={onToggleHideBlog}
+              className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs cursor-pointer transition-colors shrink-0"
+            >
+              Make Blog Public
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="p-4 sm:px-6 bg-white/70 border-b border-[#BCD5E6]/60 flex flex-wrap items-center justify-between gap-3">
@@ -495,14 +571,36 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
                     </button>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() => handleDeletePost(post.id, post.title)}
-                    className="p-2 rounded-xl border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all cursor-pointer"
-                    title="Delete post"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {deleteConfirmId === post.id ? (
+                    <div
+                      className="flex items-center gap-1 bg-red-50 p-1 rounded-xl border border-red-200 animate-fade-in"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePost(post.id, post.title)}
+                        className="px-2 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] cursor-pointer shadow-2xs"
+                      >
+                        Confirm Delete
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="px-1.5 py-1 rounded-lg bg-white text-slate-600 hover:bg-slate-100 font-semibold text-[10px] cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmId(post.id)}
+                      className="p-2 rounded-xl border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all cursor-pointer"
+                      title="Delete post"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </article>
             ))}
@@ -744,23 +842,47 @@ export const BlogManagementView: React.FC<BlogManagementViewProps> = ({
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-slate-100 border-t border-slate-200 flex items-center justify-between shrink-0">
-              <button
-                type="button"
-                onClick={() => setEditingPost(null)}
-                className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-white text-slate-700 font-bold text-xs transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
+            <div className="px-6 py-4 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingPost(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-white text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                {!isCreatingNew && editingPost && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePost(editingPost.id, editingPost.title)}
+                    className="px-3 py-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                    title="Delete this article"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Article</span>
+                  </button>
+                )}
+              </div>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleSavePost}
-                  className="px-6 py-2.5 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-extrabold text-xs shadow-md transition-all hover:scale-105 cursor-pointer flex items-center gap-1.5"
+                  onClick={() => handleSavePost('draft')}
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                  title="Save post as draft (hidden from public visitors)"
+                >
+                  <FileText className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Save as Draft</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSavePost('published')}
+                  className="px-6 py-2.5 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-extrabold text-xs shadow-md transition-all hover:scale-102 cursor-pointer flex items-center gap-1.5"
+                  title="Publish post live on the website"
                 >
                   <Check className="w-4 h-4" />
-                  <span>{isCreatingNew ? 'Publish Article' : 'Save Changes'}</span>
+                  <span>{isCreatingNew ? 'Publish Article' : 'Save & Publish'}</span>
                 </button>
               </div>
             </div>

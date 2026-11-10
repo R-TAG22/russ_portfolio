@@ -14,6 +14,7 @@ export interface PageSummary {
   authorName: string;
   updatedAt: string;
   sectionCount: number;
+  isHidden?: boolean;
 }
 
 /**
